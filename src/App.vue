@@ -1,26 +1,21 @@
 <template>
-  <div id="app">
-  </div>
+  <v-app>
+    <v-main>
+
+    </v-main>
+  </v-app>
 </template>
 
 <script>
-// import Component from './components/component.vue'
+// import Component from './components/Component';
 
 export default {
   name: 'App',
+
   components: {
+  },
 
-  }
-}
+  data: () => ({
+  }),
+};
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
