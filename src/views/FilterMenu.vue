@@ -19,6 +19,7 @@
                   clearable
                   multiple
                   chips
+                  deletable-chips
               ></v-combobox>
               <v-select
                   v-model="sample.words.language"
@@ -41,6 +42,7 @@
                   clearable
                   multiple
                   chips
+                  deletable-chips
               ></v-combobox>
             </v-card-text>
           </v-card>
