@@ -10,15 +10,19 @@
           <v-card class="mb-5">
             <v-card-title>Words</v-card-title>
             <v-card-text>
-              <v-text-field
-                  v-for="item in words"
+              <v-combobox
+                  v-for="item in labels.words"
+                  v-model="sample.words[item.key]"
                   :key="item.label"
                   :hint="item.hint"
                   :label="item.label"
                   clearable
-              ></v-text-field>
+                  multiple
+                  chips
+              ></v-combobox>
               <v-select
-                  :items="language"
+                  v-model="sample.words.language"
+                  :items="labels.language"
                   hint="Language"
                   persistent-hint
               ></v-select>
@@ -28,13 +32,16 @@
           <v-card>
             <v-card-title>Accounts</v-card-title>
             <v-card-text>
-              <v-text-field
-                  v-for="item in accounts"
+              <v-combobox
+                  v-for="item in labels.accounts"
+                  v-model="sample.accounts[item.key]"
                   :key="item.label"
                   :hint="item.hint"
                   :label="item.label"
                   clearable
-              ></v-text-field>
+                  multiple
+                  chips
+              ></v-combobox>
             </v-card-text>
           </v-card>
         </v-col>
@@ -43,13 +50,13 @@
           <v-card class="mb-5">
             <v-card-title>Filters</v-card-title>
             <v-card-text>
-              <v-switch label="Replies" v-model="repliesSwitch"></v-switch>
-              <v-radio-group v-model="repliesRadio" v-if="repliesSwitch">
+              <v-switch label="Replies" v-model="sample.filters.replies"></v-switch>
+              <v-radio-group v-model="sample.filters.repliesValue" v-if="sample.filters.links">
                 <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
                 <v-radio label="Only show replies" value="only-replies"></v-radio>
               </v-radio-group>
-              <v-switch label="Links" v-model="linksSwitch"></v-switch>
-              <v-radio-group v-model="linksRadio" v-if="linksSwitch">
+              <v-switch label="Links" v-model="sample.filters.links"></v-switch>
+              <v-radio-group v-model="sample.filters.repliesValue" v-if="sample.filters.links">
                 <v-radio label="Include Tweets with links" value="include-links"></v-radio>
                 <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
               </v-radio-group>
@@ -60,7 +67,8 @@
             <v-card-title>Engagement</v-card-title>
             <v-card-text>
               <v-text-field
-                  v-for="item in engagement"
+                  v-for="item in labels.engagement"
+                  v-model="sample.engagement[item.key]"
                   :key="item.label"
                   :hint="item.hint"
                   :label="item.label"
@@ -79,7 +87,7 @@
               >
                 <template v-slot:activator="{ on, attrs }">
                   <v-text-field
-                      :value="fromDate"
+                      :value="sample.dates.from"
                       label="From"
                       prepend-icon="mdi-calendar"
                       readonly
@@ -91,8 +99,8 @@
                 </template>
                 <v-date-picker
                     clearable
-                    v-model="fromDate"
-                    :max="toDate"
+                    v-model="sample.dates.from"
+                    :max="sample.dates.to"
                     @input="fromMenu = false"
                 ></v-date-picker>
               </v-menu>
@@ -103,7 +111,7 @@
               >
                 <template v-slot:activator="{ on, attrs }">
                   <v-text-field
-                      v-model="toDate"
+                      v-model="sample.dates.to"
                       label="To"
                       prepend-icon="mdi-calendar"
                       readonly
@@ -113,8 +121,8 @@
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                    v-model="toDate"
-                    :min="fromDate"
+                    v-model="sample.dates.to"
+                    :min="sample.dates.from"
                     @input="toMenu = false"
                 ></v-date-picker>
               </v-menu>
@@ -131,109 +139,146 @@ export default {
   name: 'FilterMenu',
 
   data: () => ({
-    toMenu: false,
-    toDate: "",
-    fromMenu: false,
-    fromDate: "",
-    repliesSwitch: true,
-    linksSwitch: true,
-    repliesRadio: "replies-and-tweets",
-    linksRadio: "include-links",
-    words: {
-      all: {
-        hint: 'Example: what’s happening · contains both “what’s” and “happening”',
-        label: "All of these words"
+    sample: {
+      words: {
+        all: "",
+        exact: "",
+        any: "",
+        none: "",
+        hashtags: "",
+        language: "Any language"
       },
-      exact: {
-        hint: 'Example: happy hour · contains the exact phrase “happy hour”',
-        label: "This exact phrase"
+      accounts: {
+        from: "",
+        to: "",
+        mentioning: ""
       },
-      any: {
-        hint: 'Example: cats dogs · contains either “cats” or “dogs” (or both)',
-        label: "Any of these words"
+      filters: {
+        replies: true,
+        repliesValue: "replies-and-tweets",
+        links: true,
+        linksValue: "include-links"
       },
-      none: {
-        hint: 'Example: cats dogs · does not contain “cats” and does not contain “dogs”',
-        label: "None of these words"
+      engagement: {
+        minReplies: "",
+        minLikes: "",
+        minRetweets: ""
       },
-      hashtag: {
-        hint: 'Example: #ThrowbackThursday · contains the hashtag #ThrowbackThursday',
-        label: "These hashtags"
+      dates: {
+        from: "",
+        to: ""
       }
     },
-    accounts: {
-      from: {
-        hint: "Example: @Twitter · sent from @Twitter",
-        label: "From these accounts"
+    toMenu: false,
+    fromMenu: false,
+    labels: {
+      words: {
+        all: {
+          hint: 'Example: what’s happening · contains both “what’s” and “happening”',
+          label: "All of these words",
+          key: "all"
+        },
+        exact: {
+          hint: 'Example: happy hour · contains the exact phrase “happy hour”',
+          label: "This exact phrase",
+          key: "exact"
+        },
+        any: {
+          hint: 'Example: cats dogs · contains either “cats” or “dogs” (or both)',
+          label: "Any of these words",
+          key: "any"
+        },
+        none: {
+          hint: 'Example: cats dogs · does not contain “cats” and does not contain “dogs”',
+          label: "None of these words",
+          key: "none"
+        },
+        hashtags: {
+          hint: 'Example: #ThrowbackThursday · contains the hashtag #ThrowbackThursday',
+          label: "These hashtags",
+          key: "hashtags"
+        }
       },
-      to: {
-        hint: "Example: @Twitter · sent in reply to @Twitter",
-        label: "To these accounts"
+      accounts: {
+        from: {
+          hint: "Example: @Twitter · sent from @Twitter",
+          label: "From these accounts",
+          key: "from"
+        },
+        to: {
+          hint: "Example: @Twitter · sent in reply to @Twitter",
+          label: "To these accounts",
+          key: "to"
+        },
+        mentioning: {
+          hint: "Example: @SFBART @Caltrain · mentions @SFBART or mentions @Caltrain",
+          label: "Mentioning these accounts",
+          key: "mentioning"
+        },
       },
-      mention: {
-        hint: "Example: @SFBART @Caltrain · mentions @SFBART or mentions @Caltrain",
-        label: "Mentioning these accounts"
+      engagement: {
+        minReplies: {
+          hint: "Example: 280 · Tweets with at least 280 replies",
+          label: "Minimum replies",
+          key: "minReplies"
+        },
+        minLikes: {
+          hint: "Example: 280 · Tweets with at least 280 Likes",
+          label: "Minimum Likes",
+          key: "minLikes"
+        },
+        minRetweets: {
+          hint: "Example: 280 · Tweets with at least 280 Retweets",
+          label: "Minimum Retweets",
+          key: "minRetweets"
+        },
       },
-    },
-    engagement: {
-      replies: {
-        hint: "Example: 280 · Tweets with at least 280 replies",
-        label: "Minimum replies"
-      },
-      likes: {
-        hint: "Example: 280 · Tweets with at least 280 Likes",
-        label: "Minimum Likes"
-      },
-      retweets: {
-        hint: "Example: 280 · Tweets with at least 280 Retweets",
-        label: "Minimum Retweets"
-      },
-    },
-    language: [
-      "Any language",
-      "Arabic",
-      "Bangla",
-      "Basque",
-      "Bulgarian",
-      "Catalan",
-      "Croatian",
-      "Czech",
-      "Danish",
-      "Dutch",
-      "English",
-      "Finnish",
-      "French",
-      "German",
-      "Greek",
-      "Gujarati",
-      "Hebrew",
-      "Hindi",
-      "Hungarian",
-      "Indonesian",
-      "Italian",
-      "Japanese",
-      "Kannada",
-      "Korean",
-      "Marathi",
-      "Norwegian",
-      "Persian",
-      "Polish",
-      "Portuguese",
-      "Romanian",
-      "Russian",
-      "Serbian",
-      "Simplified Chinese",
-      "Slovak",
-      "Spanish",
-      "Swedish",
-      "Tamil",
-      "Thai",
-      "Traditional Chinese",
-      "Turkish",
-      "Ukrainian",
-      "Urdu",
-      "Vietnamese"
-    ]
+      language: [
+        "Any language",
+        "Arabic",
+        "Bangla",
+        "Basque",
+        "Bulgarian",
+        "Catalan",
+        "Croatian",
+        "Czech",
+        "Danish",
+        "Dutch",
+        "English",
+        "Finnish",
+        "French",
+        "German",
+        "Greek",
+        "Gujarati",
+        "Hebrew",
+        "Hindi",
+        "Hungarian",
+        "Indonesian",
+        "Italian",
+        "Japanese",
+        "Kannada",
+        "Korean",
+        "Marathi",
+        "Norwegian",
+        "Persian",
+        "Polish",
+        "Portuguese",
+        "Romanian",
+        "Russian",
+        "Serbian",
+        "Simplified Chinese",
+        "Slovak",
+        "Spanish",
+        "Swedish",
+        "Tamil",
+        "Thai",
+        "Traditional Chinese",
+        "Turkish",
+        "Ukrainian",
+        "Urdu",
+        "Vietnamese"
+      ]
+    }
   })
 }
 </script>
