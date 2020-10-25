@@ -2,17 +2,19 @@
   <v-container>
     <v-form>
       <v-row>
-        <v-col>
           <v-container>
             <v-btn color="primary" class="mr-1">Submit</v-btn>
             <v-btn color="secondary">Clear</v-btn>
           </v-container>
-          <v-card class="mb-5">
+      </v-row>
+      <v-row>
+        <v-col>
+        <v-card class="mb-5">
             <v-card-title>Words</v-card-title>
             <v-card-text>
               <v-combobox
                   v-for="item in labels.words"
-                  v-model="sample.words[item.key]"
+                  v-model="filter.words[item.key]"
                   :key="item.label"
                   :hint="item.hint"
                   :label="item.label"
@@ -22,8 +24,8 @@
                   deletable-chips
               ></v-combobox>
               <v-select
-                  v-model="sample.words.language"
-                  :items="labels.language"
+                  v-model="filter.words.language"
+                  :items="languageArray"
                   hint="Language"
                   persistent-hint
               ></v-select>
@@ -35,7 +37,7 @@
             <v-card-text>
               <v-combobox
                   v-for="item in labels.accounts"
-                  v-model="sample.accounts[item.key]"
+                  v-model="filter.accounts[item.key]"
                   :key="item.label"
                   :hint="item.hint"
                   :label="item.label"
@@ -52,13 +54,13 @@
           <v-card class="mb-5">
             <v-card-title>Filters</v-card-title>
             <v-card-text>
-              <v-switch label="Replies" v-model="sample.filters.replies"></v-switch>
-              <v-radio-group v-model="sample.filters.repliesValue" v-if="sample.filters.links">
+              <v-switch label="Replies" v-model="filter.filters.replies"></v-switch>
+              <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.links">
                 <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
                 <v-radio label="Only show replies" value="only-replies"></v-radio>
               </v-radio-group>
-              <v-switch label="Links" v-model="sample.filters.links"></v-switch>
-              <v-radio-group v-model="sample.filters.repliesValue" v-if="sample.filters.links">
+              <v-switch label="Links" v-model="filter.filters.links"></v-switch>
+              <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.links">
                 <v-radio label="Include Tweets with links" value="include-links"></v-radio>
                 <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
               </v-radio-group>
@@ -70,7 +72,7 @@
             <v-card-text>
               <v-text-field
                   v-for="item in labels.engagement"
-                  v-model="sample.engagement[item.key]"
+                  v-model="filter.engagement[item.key]"
                   :key="item.label"
                   :hint="item.hint"
                   :label="item.label"
@@ -89,7 +91,7 @@
               >
                 <template v-slot:activator="{ on, attrs }">
                   <v-text-field
-                      :value="sample.dates.from"
+                      :value="filter.dates.from"
                       label="From"
                       prepend-icon="mdi-calendar"
                       readonly
@@ -101,8 +103,8 @@
                 </template>
                 <v-date-picker
                     clearable
-                    v-model="sample.dates.from"
-                    :max="sample.dates.to"
+                    v-model="filter.dates.from"
+                    :max="filter.dates.to"
                     @input="fromMenu = false"
                 ></v-date-picker>
               </v-menu>
@@ -113,7 +115,7 @@
               >
                 <template v-slot:activator="{ on, attrs }">
                   <v-text-field
-                      v-model="sample.dates.to"
+                      v-model="filter.dates.to"
                       label="To"
                       prepend-icon="mdi-calendar"
                       readonly
@@ -123,8 +125,8 @@
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                    v-model="sample.dates.to"
-                    :min="sample.dates.from"
+                    v-model="filter.dates.to"
+                    :min="filter.dates.from"
                     @input="toMenu = false"
                 ></v-date-picker>
               </v-menu>
@@ -137,18 +139,20 @@
 </template>
 
 <script>
+import language from "../../language.json"
+
 export default {
   name: 'FilterMenu',
-
   data: () => ({
-    sample: {
+    languageArray: null,
+    filter: {
       words: {
         all: "",
         exact: "",
         any: "",
         none: "",
         hashtags: "",
-        language: "Any language"
+        language: ""
       },
       accounts: {
         from: "",
@@ -234,54 +238,17 @@ export default {
           label: "Minimum Retweets",
           key: "minRetweets"
         },
-      },
-      language: [
-        "Any language",
-        "Arabic",
-        "Bangla",
-        "Basque",
-        "Bulgarian",
-        "Catalan",
-        "Croatian",
-        "Czech",
-        "Danish",
-        "Dutch",
-        "English",
-        "Finnish",
-        "French",
-        "German",
-        "Greek",
-        "Gujarati",
-        "Hebrew",
-        "Hindi",
-        "Hungarian",
-        "Indonesian",
-        "Italian",
-        "Japanese",
-        "Kannada",
-        "Korean",
-        "Marathi",
-        "Norwegian",
-        "Persian",
-        "Polish",
-        "Portuguese",
-        "Romanian",
-        "Russian",
-        "Serbian",
-        "Simplified Chinese",
-        "Slovak",
-        "Spanish",
-        "Swedish",
-        "Tamil",
-        "Thai",
-        "Traditional Chinese",
-        "Turkish",
-        "Ukrainian",
-        "Urdu",
-        "Vietnamese"
-      ]
+      }
     }
-  })
+  }),
+  mounted() {
+      let arr = [];
+      for( const lang in language ) {
+        arr.push(language[lang]);
+      }
+      this.languageArray = arr;
+      this.filter.words.language = "Any language"
+  }
 }
 </script>
 
