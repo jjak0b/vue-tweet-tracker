@@ -1,0 +1,20 @@
+
+#home_back{
+    width: 100vw;
+    height: 100vh;
+    background-image: url("background.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    padding-bottom: 7%;
+}
+
+#second_row{
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
