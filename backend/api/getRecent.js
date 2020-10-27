@@ -1,84 +1,58 @@
+const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
-const needle = require('needle');
-const crypto = require('crypto');
-
-const API_searchRecent = 'https://api.twitter.com/2/tweets/search/recent';
-let auto20 = {
-    "authorization": `Bearer ${ process.env.TWITTER_API_BEARER_TOKEN }`
-};
-
-// va verificare
-// https://developer.twitter.com/en/docs/authentication/oauth-1-0a/creating-a-signature
-
-const signature_method = "SHA1"; // HMAC-SHA1
-let signingKey = `${encodeURIComponent(process.env.TWITTER_API_CONSUMER_SECRET)}&${encodeURIComponent(process.env.TWITTER_API_ACCESS_TOKEN_SECRET)}`;
-
-var signature = crypto.createHmac(signature_method, signingKey).update(signingKey).digest('base64');
-
-let auto10a = {
-    "authorization" : "OAuth " +
-        `oauth_consumer_key="${process.env.TWITTER_API_CONSUMER_KEY}", ` +
-        `oauth_token="${process.env.TWITTER_API_ACCESS_TOKEN}", ` +
-        `oauth_signature="${signature}", ` +
-        `oauth_signature_method="${ signature_method }", ` +
-        `oauth_version="${"1.0"}, `
-}
-
-let auth = auto10a;
-
+const TwitterAPIController = require( "../TwitterAPIController");
 
 router.get( "/:query", (req, res) => {
-    let now = Date.now();
-    let nonce = now;
-    auto10a.authorization +=    `oauth_nonce="${nonce}", ` +
-                                `oauth_timestamp="${now}"`;
-    console.log( auto10a );
-    const params = {            //parametri della richiesta
+
+    // Make the request
+    let params = {            // request parameters
         query: req.params.query,
-        max_results: 100,
+
+        max_results: TwitterAPIController.MAX_RESULT_PER_REQUEST,
         expansions: [
-            //"author_id",
+            "author_id",
             "geo.place_id",
         ].join(),
         "tweet.fields": [
             "id",
+            "lang",
             "text",
-            "author_id",
-            "created_at",
             "possibly_sensitive",
-            "geo",
+            "context_annotations",
+            "geo"
         ].join(),
         "place.fields": [
             "id",
             "full_name",
             "name",
             "country_code",
+            "country",
             "geo",
             "contained_within",
             "place_type" /* city | poi */
         ].join(),
-       /* 'user.fields': [
+        "user.fields": [
             "name",
+            "location",
             "created_at"
-        ].join()*/
-    }
+         ].join()
+    };
 
-    needle(
-        'get',
-        API_searchRecent,
-        params,
-        {
-            headers: auth
-        }
-    )
-        .then( (data) => {
-            res.write( JSON.stringify( data.body, null, 4 ) );
+    TwitterAPIController.request("get", TwitterAPIController.API_ROUTES.SEARCH.RECENT, params )
+        .then( (apiResponse) => {
+            res.setHeader("content-type'", "application/json");
+            res.write(
+                JSON.stringify( apiResponse.body, null, 4 ),
+                apiResponse.headers.charset
+            );
+
             res.end();
         })
         .catch( (err) => {
             console.error(err);
+            res.status( StatusCodes.INTERNAL_SERVER_ERROR );
         });
 });
 
