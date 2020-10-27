@@ -13,7 +13,8 @@
                   :key="item"
               >
                 <v-list-item-content>
-                  <v-list-item-title v-text="item"></v-list-item-title>
+                  <v-list-item-title v-text="item.name"></v-list-item-title>
+                  <v-list-item-subtitle v-text="item.author"></v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
             </v-list-item-group>
@@ -122,7 +123,11 @@ export default {
     tweetNames: function () {
       let tweets = [];
       for (const tweet of this.tweets.statuses) {
-        tweets.push(this.getSubString(tweet.text))
+        tweets.push({
+          name: this.getSubString(tweet.text),
+          author: '@' + tweet.user.screen_name
+        })
+
       }
       return tweets
     },
