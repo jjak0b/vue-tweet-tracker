@@ -17,24 +17,48 @@
           justify="space-around"
       >
         <v-btn
-            outlined
+            id="btn_CreaE"
+            tile
+            dark
+            large
             color="indigo"
         >
-          Crea Evento
+          <v-icon left>
+            mdi-pencil
+          </v-icon>
+
+          New Event
+
         </v-btn>
 
         <v-btn
-            outlined
+            id="btn_CreaC"
+            tile
+            dark
+            large
             color="indigo"
         >
-          Nuovo Campionamento
+          <v-icon left>
+            mdi-plus
+          </v-icon>
+
+          New Sample
+
         </v-btn>
 
         <v-btn
-            outlined
+            id="btn_ListaC"
+            tile
+            dark
+            large
             color="indigo"
         >
-          Lista Campionamenti
+          <v-icon left>
+            mdi-format-list-bulleted-square
+          </v-icon>
+
+          Samples List
+
         </v-btn>
 
       </v-row>
