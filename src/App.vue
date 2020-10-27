@@ -1,26 +1,25 @@
 <template>
   <v-app>
-    <v-system-bar app color="blue"></v-system-bar>
-    <v-navigation-drawer app>
-      <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title class="title">
-            Twitter tracker
-          </v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
+    <v-app-bar app color="blue">
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-toolbar-title class="white--text">Twitter tracker</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn text class="white--text mr-2" to="/">
+        <v-icon left>mdi-view-dashboard</v-icon>
+        Dashboard
+      </v-btn>
+      <v-btn text class="white--text" to="/filter">
+        <v-icon left>mdi-plus-circle</v-icon>
+        Create new sample
+      </v-btn>
+      </v-app-bar>
+    <v-navigation-drawer app v-model="drawer" bottom>
+      <h3 class="pa-3">Samples List</h3>
       <v-divider></v-divider>
       <v-list dense nav>
-        <v-list-item link to="/">
-          <v-list-item-icon><v-icon>mdi-view-dashboard</v-icon></v-list-item-icon>
+        <v-list-item link v-for="item in samplesList" :key="item">
           <v-list-item-content>
-            <v-list-item-title>Dashboard</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item link to="/filter">
-          <v-list-item-icon><v-icon>mdi-plus-circle</v-icon></v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>New sample</v-list-item-title>
+            <v-list-item-title>{{ item }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -40,7 +39,8 @@ export default {
   name: 'App',
 
   data: () => ({
-
+    drawer: true,
+    samplesList: ["sample 1", "sample 2", "sample 3"]
   }),
 };
 </script>

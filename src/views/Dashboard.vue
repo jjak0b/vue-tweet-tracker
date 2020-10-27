@@ -1,15 +1,6 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="2">
-        <v-select
-            :items="sampleNames"
-            label="Select sample"
-            solo
-        ></v-select>
-      </v-col>
-    </v-row>
-    <v-row>
       <v-col cols="4">
         <v-card>
           <v-card-title>Tweets</v-card-title>
@@ -148,7 +139,6 @@ export default {
     showUser: false,
     language: language,
     tweets: json,
-    sampleNames: ['sample1', 'sample2', 'sample3'],
     selectedTweetIndex: null
   }),
   methods: {
