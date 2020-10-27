@@ -14,5 +14,6 @@ app.use(cookieParser());
 
 app.use("/api/test", require("./api/test") );
 app.use("/api/getRecent", require("./api/getRecent") );
+app.use("/api/samples", require("./api/samples") );
 
 module.exports = app;

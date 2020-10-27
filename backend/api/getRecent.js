@@ -2,7 +2,8 @@ const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
-const TwitterAPIController = require( "../TwitterAPIController");
+const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
+const twitterAPIControllerInstance = require( "../TwitterAPIController").instance;
 
 router.get( "/:query", (req, res) => {
 
@@ -40,7 +41,7 @@ router.get( "/:query", (req, res) => {
          ].join()
     };
 
-    TwitterAPIController.request("get", TwitterAPIController.API_ROUTES.SEARCH.RECENT, params )
+    twitterAPIControllerInstance.request("get", TwitterAPIController.ENUM.SEARCH.RECENT.API, params )
         .then( (apiResponse) => {
             res.setHeader("content-type'", "application/json");
             res.write(
