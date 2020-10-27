@@ -1,8 +1,9 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import FilterMenu from "@/views/FilterMenu";
 import Dashboard from "@/views/Dashboard";
 import HomePage from "@/views/HomePage";
+import MainPage from "@/views/MainPage";
+import FilterMenu from "@/views/FilterMenu";
 
 Vue.use(VueRouter)
 
@@ -13,15 +14,22 @@ const routes = [
     component: HomePage
   },
   {
-    path: '/samples',
-    name: 'Dashboard',
-    component: Dashboard
+    path: '/app',
+    name: 'HomePage',
+    component: MainPage,
+    children: [
+      {
+        path: '/app',
+        name: 'Dashboard',
+        component: Dashboard
+      },
+      {
+        path: '/app/filter',
+        name: 'New sample',
+        component: FilterMenu
+      }
+    ]
   },
-  {
-    path: '/filter',
-    name: 'New sample',
-    component: FilterMenu
-  }
 ]
 
 const router = new VueRouter({

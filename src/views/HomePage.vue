@@ -37,6 +37,7 @@
             dark
             large
             color="indigo"
+            to="app/filter"
         >
           <v-icon left>
             mdi-plus
@@ -52,6 +53,7 @@
             dark
             large
             color="indigo"
+            to="/app"
         >
           <v-icon left>
             mdi-format-list-bulleted-square
