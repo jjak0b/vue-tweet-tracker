@@ -9,6 +9,20 @@
       </v-row>
       <v-row>
         <v-col>
+
+        <v-card class="mb-5">
+          <v-card-title>Name</v-card-title>
+          <v-card-text>
+            <v-text-field
+                v-model="filter.name"
+                :key="labels.name.key"
+                :hint="labels.name.hint"
+                :label="labels.name.label"
+                clearable
+            ></v-text-field>
+          </v-card-text>
+        </v-card>
+
         <v-card class="mb-5">
             <v-card-title>Words</v-card-title>
             <v-card-text>
@@ -32,7 +46,7 @@
             </v-card-text>
           </v-card>
 
-          <v-card>
+          <v-card class="mb-5">
             <v-card-title>Accounts</v-card-title>
             <v-card-text>
               <v-combobox
@@ -146,6 +160,7 @@ export default {
   data: () => ({
     languageArray: null,
     filter: {
+      name: "",
       words: {
         all: "",
         exact: "",
@@ -178,6 +193,11 @@ export default {
     toMenu: false,
     fromMenu: false,
     labels: {
+      name: {
+        hint: "Name of the sample",
+        label: "Name",
+        key: "name"
+      },
       words: {
         all: {
           hint: 'Example: what’s happening · contains both “what’s” and “happening”',
