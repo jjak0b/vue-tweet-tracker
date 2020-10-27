@@ -4,7 +4,7 @@
      <v-container>
       <v-row id="first_row">
         <v-img
-            src="./assets/img/titolo1.png"
+            src="@/assets/img/titolo1.png"
             contain
         >
         </v-img>
