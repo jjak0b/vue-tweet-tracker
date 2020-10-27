@@ -1,0 +1,257 @@
+<template>
+  <v-container>
+    <v-form>
+      <v-row>
+          <v-container>
+            <v-btn color="primary" class="mr-1">Submit</v-btn>
+            <v-btn color="secondary">Clear</v-btn>
+          </v-container>
+      </v-row>
+      <v-row>
+        <v-col>
+        <v-card class="mb-5">
+            <v-card-title>Words</v-card-title>
+            <v-card-text>
+              <v-combobox
+                  v-for="item in labels.words"
+                  v-model="filter.words[item.key]"
+                  :key="item.label"
+                  :hint="item.hint"
+                  :label="item.label"
+                  clearable
+                  multiple
+                  chips
+                  deletable-chips
+              ></v-combobox>
+              <v-select
+                  v-model="filter.words.language"
+                  :items="languageArray"
+                  hint="Language"
+                  persistent-hint
+              ></v-select>
+            </v-card-text>
+          </v-card>
+
+          <v-card>
+            <v-card-title>Accounts</v-card-title>
+            <v-card-text>
+              <v-combobox
+                  v-for="item in labels.accounts"
+                  v-model="filter.accounts[item.key]"
+                  :key="item.label"
+                  :hint="item.hint"
+                  :label="item.label"
+                  clearable
+                  multiple
+                  chips
+                  deletable-chips
+              ></v-combobox>
+            </v-card-text>
+          </v-card>
+        </v-col>
+
+        <v-col>
+          <v-card class="mb-5">
+            <v-card-title>Filters</v-card-title>
+            <v-card-text>
+              <v-switch label="Replies" v-model="filter.filters.replies"></v-switch>
+              <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.links">
+                <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
+                <v-radio label="Only show replies" value="only-replies"></v-radio>
+              </v-radio-group>
+              <v-switch label="Links" v-model="filter.filters.links"></v-switch>
+              <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.links">
+                <v-radio label="Include Tweets with links" value="include-links"></v-radio>
+                <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
+              </v-radio-group>
+            </v-card-text>
+          </v-card>
+
+          <v-card class="mb-5">
+            <v-card-title>Engagement</v-card-title>
+            <v-card-text>
+              <v-text-field
+                  v-for="item in labels.engagement"
+                  v-model="filter.engagement[item.key]"
+                  :key="item.label"
+                  :hint="item.hint"
+                  :label="item.label"
+                  clearable
+              ></v-text-field>
+            </v-card-text>
+          </v-card>
+
+          <v-card class="mb-5">
+            <v-card-title>Dates</v-card-title>
+            <v-card-text>
+              <v-menu
+                  v-model="fromMenu"
+                  :close-on-content-click="false"
+                  min-width="290px"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-text-field
+                      :value="filter.dates.from"
+                      label="From"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
+                      clearable
+                      @click:clear="fromDate = ''"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                    clearable
+                    v-model="filter.dates.from"
+                    :max="filter.dates.to"
+                    @input="fromMenu = false"
+                ></v-date-picker>
+              </v-menu>
+              <v-menu
+                  v-model="toMenu"
+                  :close-on-content-click="false"
+                  min-width="290px"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-text-field
+                      v-model="filter.dates.to"
+                      label="To"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
+                      clearable
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                    v-model="filter.dates.to"
+                    :min="filter.dates.from"
+                    @input="toMenu = false"
+                ></v-date-picker>
+              </v-menu>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-form>
+  </v-container>
+</template>
+
+<script>
+import language from "../../language.json"
+
+export default {
+  name: 'FilterMenu',
+  data: () => ({
+    languageArray: null,
+    filter: {
+      words: {
+        all: "",
+        exact: "",
+        any: "",
+        none: "",
+        hashtags: "",
+        language: ""
+      },
+      accounts: {
+        from: "",
+        to: "",
+        mentioning: ""
+      },
+      filters: {
+        replies: true,
+        repliesValue: "replies-and-tweets",
+        links: true,
+        linksValue: "include-links"
+      },
+      engagement: {
+        minReplies: "",
+        minLikes: "",
+        minRetweets: ""
+      },
+      dates: {
+        from: "",
+        to: ""
+      }
+    },
+    toMenu: false,
+    fromMenu: false,
+    labels: {
+      words: {
+        all: {
+          hint: 'Example: what’s happening · contains both “what’s” and “happening”',
+          label: "All of these words",
+          key: "all"
+        },
+        exact: {
+          hint: 'Example: happy hour · contains the exact phrase “happy hour”',
+          label: "This exact phrase",
+          key: "exact"
+        },
+        any: {
+          hint: 'Example: cats dogs · contains either “cats” or “dogs” (or both)',
+          label: "Any of these words",
+          key: "any"
+        },
+        none: {
+          hint: 'Example: cats dogs · does not contain “cats” and does not contain “dogs”',
+          label: "None of these words",
+          key: "none"
+        },
+        hashtags: {
+          hint: 'Example: #ThrowbackThursday · contains the hashtag #ThrowbackThursday',
+          label: "These hashtags",
+          key: "hashtags"
+        }
+      },
+      accounts: {
+        from: {
+          hint: "Example: @Twitter · sent from @Twitter",
+          label: "From these accounts",
+          key: "from"
+        },
+        to: {
+          hint: "Example: @Twitter · sent in reply to @Twitter",
+          label: "To these accounts",
+          key: "to"
+        },
+        mentioning: {
+          hint: "Example: @SFBART @Caltrain · mentions @SFBART or mentions @Caltrain",
+          label: "Mentioning these accounts",
+          key: "mentioning"
+        },
+      },
+      engagement: {
+        minReplies: {
+          hint: "Example: 280 · Tweets with at least 280 replies",
+          label: "Minimum replies",
+          key: "minReplies"
+        },
+        minLikes: {
+          hint: "Example: 280 · Tweets with at least 280 Likes",
+          label: "Minimum Likes",
+          key: "minLikes"
+        },
+        minRetweets: {
+          hint: "Example: 280 · Tweets with at least 280 Retweets",
+          label: "Minimum Retweets",
+          key: "minRetweets"
+        },
+      }
+    }
+  }),
+  mounted() {
+      let arr = [];
+      for( const lang in language ) {
+        arr.push(language[lang]);
+      }
+      this.languageArray = arr;
+      this.filter.words.language = "Any language"
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
