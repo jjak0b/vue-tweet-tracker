@@ -41,7 +41,7 @@ router.get( "/:query", (req, res) => {
          ].join()
     };
 
-    twitterAPIControllerInstance.request("get", TwitterAPIController.ENUM.SEARCH.RECENT.API, params )
+    twitterAPIControllerInstance.requestAPI("get", TwitterAPIController.ENUM.SEARCH.RECENT.API, params)
         .then( (apiResponse) => {
             res.setHeader("content-type'", "application/json");
             res.write(
