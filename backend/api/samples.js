@@ -57,7 +57,7 @@ function API_addSample(req, res) {
     let sampleTag = req.params.tag;
 
     console.log( "received", sampleTag );
-    let filter = "dog has:images"; // this should be an object, i use this for testing
+    let filter = req.query.filter || "dog has:images"; // this should be an object, i use this for testing
 
     let promise = twitterAPIControllerInstance.addSample( sampleTag, filter )
     promise
@@ -142,32 +142,4 @@ function API_pauseSample( req, res ) {
         })
 }
 
-// https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
-function streamConnect() {
-    //Listen to the stream
-    const options = {
-        timeout: 20000
-    }
-    const stream = twitterAPIControllerInstance.requestAPI("get", TwitterAPIController.ENUM.SEARCH.STREAM.API, null, {
-        add: [rule]
-    }, true);
-
-    stream
-        .on('data', data => {
-            try {
-                const json = JSON.parse(data);
-                console.log(json);
-            }
-            catch (e) {
-                // Keep alive signal received. Do nothing.
-            }
-        })
-        .on('error', error => {
-            if (error.code === 'ETIMEDOUT') {
-                stream.emit('timeout');
-            }
-        });
-
-    return stream;
-}
 module.exports = router;
