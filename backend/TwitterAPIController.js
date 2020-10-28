@@ -248,7 +248,7 @@ class TwitterAPIController {
 
                                 resolve(StatusCodes.OK);
                             }
-                            else if( apiResponse.body.meta.summary.not_deleted) {
+                            else {
                                 /*
                                     For some reason the sample can't be delete
                                 */
@@ -257,7 +257,7 @@ class TwitterAPIController {
                                     but if we are here is because the sample was already been delete from API
                                     or the sample id doesn't match with remote API ID
                                  */
-                                reject(StatusCodes.CONFLICT);
+                                reject(StatusCodes.INTERNAL_SERVER_ERROR);
                             }
                         }
                     })
