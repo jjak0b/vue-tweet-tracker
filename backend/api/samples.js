@@ -5,7 +5,16 @@ const fs = require('fs');
 const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
 const twitterAPIControllerInstance = require( "../TwitterAPIController").instance;
 
-router.get( "/", (req, res) => {
+router.get( "/", API_getSamples );
+/**
+ * Get samples list in some states
+ * @API GET /samples/
+ * @query states: "active" , "paused" or a string that contains both; will consider both if not specified
+ * @StatusCodes: StatusCodes.OK
+ * @Body : (in function of "states" parameter ) { active: array of sample description, paused: array of sample description }
+ *
+ */
+function API_getSamples( req, res ) {
     // TODO: return list of samples
     let statesQuery = req.query.states;
 
@@ -17,13 +26,34 @@ router.get( "/", (req, res) => {
         data.paused = twitterAPIControllerInstance.getPausedSamples();
     }
    res.json( data );
-});
+}
 
-router.get( "/:tag", (req, res) => {
+router.get( "/:tag", API_getSampleData );
+/**
+ * Get sample' tweets
+ * @API GET /samples/:tag
+ * @query N/A
+ * @StatusCodes N/A
+ * @Body N/A
+ *
+ */
+function API_getSampleData( req, res ) {
     // TODO: return sample' tweets
-})
+}
 
-router.put( "/:tag", (req, res) => {
+router.put( "/:tag", API_addSample );
+/**
+ * Add but not replace the specified sample of request's body
+ * @API PUT /samples/:tag
+ * @query N/A
+ * ## StatusCodes: StatusCodes
+ * - StatusCode.OK
+ * - StatusCodes.TOO_MANY_REQUESTS if a sample is paused, but the current number of requests has been reached and can't set to active
+ * - StatusCodes.CONFLICT if a sample with the same tag or same filter configuration already exists
+ * - StatusCodes of POST /samples/:tag/resume
+ *
+ */
+function API_addSample(req, res) {
     let sampleTag = req.params.tag;
 
     console.log( "received", sampleTag );
@@ -38,9 +68,19 @@ router.put( "/:tag", (req, res) => {
             res.sendStatus( errCode );
         })
 
-});
+}
 
-router.delete( "/:tag", (req, res) => {
+router.delete( "/:tag", API_deleteSample );
+/**
+ * Delete the specified sample
+ * @API DELETE /samples/:tag
+ * @query N/A
+ * ## StatusCodes: StatusCodes
+ * - StatusCode.OK
+ * - StatusCodes of POST /samples/:tag/pause except StatusCodes.METHOD_NOT_ALLOWED
+ *
+ */
+function API_deleteSample( req, res ) {
     let sampleTag = req.params.tag;
 
     twitterAPIControllerInstance.deleteSample( sampleTag )
@@ -50,9 +90,23 @@ router.delete( "/:tag", (req, res) => {
         .catch( (errCode) => {
             res.sendStatus( errCode );
         })
-});
+}
 
-router.post( "/:tag/resume", (req, res) => {
+router.post( "/:tag/resume", API_resumeSample );
+/**
+ * Resume the sample from "paused" state to "active" state and resume sampling
+ * @API POST /samples/:tag/resume
+ * @query N/A
+ * ## StatusCodes: StatusCodes
+ * - StatusCode.OK
+ * - StatusCodes.METHOD_NOT_ALLOWED : The sample is already in active state so the state doesn't change
+ * - StatusCodes.NOT_FOUND if the sample can't be found
+ * - StatusCodes.NOT_ACCEPTABLE if the filter is not valid
+ * - StatusCodes.CONFLICT if the sample was in paused state but it can't be set to "active" state because another sample with same filter rule is in "active" state ( duplicated fitler rule )
+ * - StatusCodes.BAD_GATEWAY : the twitter api responded in unexpected way
+ *
+ */
+function API_resumeSample( req, res ) {
     let sampleTag = req.params.tag;
 
     twitterAPIControllerInstance.resumeSample( sampleTag )
@@ -63,9 +117,20 @@ router.post( "/:tag/resume", (req, res) => {
             res.sendStatus( errCode );
         })
 
-});
+}
 
-router.post( "/:tag/pause", (req, res) => {
+router.post( "/:tag/pause", API_pauseSample );
+/**
+ * Pause the sample from "active" state to "paused" state and stop sampling
+ * @API POST /samples/:tag/resume
+ * @query N/A
+ * ## StatusCodes: StatusCodes
+ * - StatusCode.OK
+ * - StatusCodes.METHOD_NOT_ALLOWED : The sample is already in paused state so the state doesn't change
+ * - StatusCodes.NOT_FOUND if the sample can't be found
+ * - StatusCodes.NOT_ACCEPTABLE if the filter is not valid
+ */
+function API_pauseSample( req, res ) {
     let sampleTag = req.params.tag;
 
     twitterAPIControllerInstance.pauseSample( sampleTag )
@@ -75,7 +140,7 @@ router.post( "/:tag/pause", (req, res) => {
         .catch( (errCode) => {
             res.sendStatus( errCode );
         })
-});
+}
 
 // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
 function streamConnect() {
