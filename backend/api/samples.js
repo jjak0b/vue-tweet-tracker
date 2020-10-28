@@ -11,19 +11,19 @@ router.get( "/", API_getSamples );
  * @API GET /samples/
  * @query states: "active" , "paused" or a string that contains both; will consider both if not specified
  * @StatusCodes: StatusCodes.OK
- * @Body : (in function of "states" parameter ) { active: array of sample description, paused: array of sample description }
+ * @Body : (in function of "states" parameter ) { active: array of sample tag, paused: array of sample tag }
  *
  */
 function API_getSamples( req, res ) {
-    // TODO: return list of samples
+    // TODO: return list of samples tags
     let statesQuery = req.query.states;
 
     let data = {};
     if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "active" ) ) {
-        data.active = twitterAPIControllerInstance.getActiveSamples();
+        data.active = twitterAPIControllerInstance.getActiveSamples().map(sample => sample.rule.tag );
     }
     if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "paused" ) ) {
-        data.paused = twitterAPIControllerInstance.getPausedSamples();
+        data.paused = twitterAPIControllerInstance.getPausedSamples().map(sample => sample.rule.tag );;
     }
    res.json( data );
 }
