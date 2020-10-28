@@ -1,8 +1,10 @@
 const crypto = require('crypto');
+const fs = require('fs');
 const OAuth = require('oauth-1.0a');
 const needle = require("needle");
 const StatusCodes = require("http-status-codes").StatusCodes;
 const qs = require('querystring');
+const JSONStream = require('JSONStream');
 
 class TwitterAPIController {
     static MAX_RESULT_PER_REQUEST = 100;
@@ -39,6 +41,7 @@ class TwitterAPIController {
                             this.activeStreams.push( sample );
                         });
                         console.log( "[TwitterAPIController", "Detected samples:", this.activeStreams );
+                        this.startSampling();
                     }
                     else {
                         console.log( "[TwitterAPIController", "No active samples detected" );
@@ -221,6 +224,76 @@ class TwitterAPIController {
         return Promise.reject( StatusCodes.NOT_FOUND );
     }
 
+
+    startSampling() {
+        let timeout = 0;
+        let handlers = {
+            // will be popolated below, justy here to reference "reconnect" function
+        };
+
+        let self = this;
+        function timeoutHandler() {
+            // Reconnect on error
+            console.warn('A connection error occurred. Reconnecting…');
+            setTimeout(
+                () => { timeout++; self.streamConnect( handlers ); },
+                2 ** timeout
+            );
+            self.streamConnect( handlers );
+        }
+
+        handlers.timeout = timeoutHandler;
+        handlers.error = console.error;
+        handlers.data = this.onStreamDataReceived;
+
+        return self.streamConnect( handlers );
+    }
+
+    // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
+    streamConnect( handlers ) {
+        //Listen to the stream
+        let requestOptions = {
+            timeout: 20000,
+            accept : 'application/json'
+        }
+        let url = TwitterAPIController.ENUM.SEARCH.STREAM.API + "?tweet.fields=created_at&expansions=author_id&user.fields=created_at"
+
+        requestOptions.headers = {
+            "authorization": this.getAuthorizationHeader( url, true )
+        };
+        // let pip = fs.createWriteStream('data.json');
+       let stream = needle.get( url, requestOptions );
+       stream
+           .pipe( JSONStream.parse() )
+            .on('error', (error) => {
+                if (error.code === 'ETIMEDOUT') {
+                    stream.emit('timeout');
+                }
+                else {
+                    if( "error" in handlers )
+                        handlers[ "error" ]( error );
+                }
+            })
+            .on('data', (data) => {
+                // console.log( data.toString() );
+                try {
+                    if( "data" in handlers )
+                        handlers[ "data" ]( data );
+                }
+                catch (e) {
+                    if( "error" in handlers )
+                        handlers[ "error" ]( e );
+                    // Keep alive signal received. Do nothing.
+                }
+            })
+            .on('timeout', handlers[ "timeout" ] );
+
+        return stream;
+    }
+
+    onStreamDataReceived( data ) {
+       console.log( "Received" ,  data );
+    }
 
     pauseSample( tag ) {
         console.log( "[TwitterAPIController]", "Request of pause sample with tag ", `"${tag}"`);
