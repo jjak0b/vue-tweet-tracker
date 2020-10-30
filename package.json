@@ -9,13 +9,14 @@
   },
   "dependencies": {
     "@vue/cli": "^4.5.8",
+    "axios": "^0.21.0",
     "core-js": "^3.6.5",
     "rainbowvis.js": "^1.0.1",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
     "vue-tweet-embed": "^2.4.0",
-    "vuetify": "^2.2.11",
     "vue2-google-maps": "^0.10.7",
+    "vuetify": "^2.2.11",
     "vuewordcloud": "^18.7.12"
   },
   "devDependencies": {
