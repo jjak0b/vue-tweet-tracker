@@ -25,6 +25,7 @@ class TwitterAPIController {
     };
 
     constructor() {
+        this.isSampling = false;
         this.activeStreams = [];
         this.pausedStreams = [];
 
@@ -32,7 +33,7 @@ class TwitterAPIController {
         this.requestAPI("get", TwitterAPIController.ENUM.SEARCH.STREAM.RULES.API, null, null, true)
             .then( (apiResponse) => {
                 if( apiResponse.statusCode === StatusCodes.OK ) {
-                    if( Array.isArray( apiResponse.body.data ) ) {
+                    if( Array.isArray( apiResponse.body.data ) && apiResponse.body.data.length > 0 ) {
                         apiResponse.body.data.forEach( (rule) => {
                             let sample = {
                                 id: rule.id,
@@ -195,6 +196,10 @@ class TwitterAPIController {
                                 else if (apiResponse.body.meta.summary.not_created) {
                                     reject(StatusCodes.BAD_GATEWAY);
                                 }
+
+                                if( !this.isSampling ) {
+                                    this.startSampling();
+                                }
                             }
                             else {
 
@@ -248,6 +253,7 @@ class TwitterAPIController {
         handlers.error = console.error;
         handlers.data = this.onStreamDataReceived.bind( self );
 
+        this.isSampling = true;
         return self.streamConnect( handlers );
     }
 
