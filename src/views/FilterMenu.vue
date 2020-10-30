@@ -153,7 +153,7 @@
 </template>
 
 <script>
-import language from "../../language.json"
+import language from "@/assets/language.json"
 
 export default {
   name: 'FilterMenu',

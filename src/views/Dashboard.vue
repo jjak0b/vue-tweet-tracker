@@ -111,7 +111,7 @@
 <script>
 import {Tweet} from 'vue-tweet-embed'
 import json from "../../repositories/tweets.json"
-import language from "../../language.json"
+import language from "@/assets/language.json"
 
 export default {
 
