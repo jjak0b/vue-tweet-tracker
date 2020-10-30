@@ -41,8 +41,16 @@ function API_getSampleData( req, res ) {
     let tag = req.params.tag;
     let sample = twitterAPIControllerInstance.getSample(tag);
     if( sample ) {
-        let collection = sample.collection;
-        res.json( collection );
+        sample.getCollection( true )
+            .then( (jsonCollection) => {
+                res.setHeader('Content-Type', 'application/json');
+                res.write( jsonCollection );
+                res.end();
+            })
+            .catch( ( err ) => {
+                res.sendStatus( StatusCodes.INTERNAL_SERVER_ERROR );
+                console.error( "[GET API/samples/:tag]", err );
+            });
     }
     else {
         res.sendStatus( StatusCodes.NOT_FOUND );
