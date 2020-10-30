@@ -5,7 +5,7 @@ function parseData(tweets){
 
     let users = tweets.includes.users
     let data = tweets.data
-        if(tweets.hasOwnProperty('geo')){
+        if(tweets.includes.hasOwnProperty('place')){
             let place = tweets.includes.place
 
             tweet ={
@@ -24,8 +24,6 @@ function parseData(tweets){
                     users
                 }
             }
-
-
     }
     tweetarray.push(tweet)
     //console.log(tweetarray)

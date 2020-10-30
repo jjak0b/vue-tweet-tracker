@@ -28,7 +28,7 @@ class TwitterAPIController {
     constructor() {
         this.activeStreams = [];
         this.pausedStreams = [];
-
+        
         console.log( "[TwitterAPIController", "Fetching active stream rules ...");
         this.requestAPI("get", TwitterAPIController.ENUM.SEARCH.STREAM.RULES.API, null, null, true)
             .then( (apiResponse) => {
@@ -37,7 +37,7 @@ class TwitterAPIController {
                         apiResponse.body.data.forEach( (rule) => {
                             let sample = {
                                 id: rule.id,
-                                rule: { tag: rule.tag, value: rule.value },
+                                rule: { tag: rule.tag, value: rule.value},
                             }
                             this.activeStreams.push( sample );
                         });
