@@ -7,6 +7,7 @@ const qs = require('querystring');
 const JSONStream = require('JSONStream');
 const Tweet = require( "./js/Tweet" );
 const Sample = require( "./js/Sample" );
+const FilterConverter = require( "./js/filterConverter");
 
 class TwitterAPIController {
     static MAX_RESULT_PER_REQUEST = 100;
@@ -24,6 +25,35 @@ class TwitterAPIController {
                 }
             }
         }
+    };
+
+    static PARAMETERS = {
+        expansions: [
+            "author_id",
+            "geo.place_id",
+        ].join(),
+        "tweet.fields": [
+            "geo",
+            "public_metrics",
+            "lang",
+            "text",
+            "possibly_sensitive",
+            // "context_annotations",
+        ].join(),
+        "place.fields": [
+            "id",
+            "geo",
+            "place_type", /* city | poi */
+            "full_name",
+            "country_code",
+            "country",
+            "contained_within"
+        ].join(),
+        "user.fields": [
+            "name",
+            "location",
+            "created_at"
+        ].join()
     };
 
     constructor() {
@@ -64,8 +94,7 @@ class TwitterAPIController {
         return this.pausedStreams;
     }
     static getQueryFromFilter( filter ) {
-        // TODO
-        return filter;
+        return FilterConverter.convertfilter( filter );
     }
 
     getPausedSampleIndex(tag) {
@@ -133,7 +162,7 @@ class TwitterAPIController {
         if( !sample ) {
             //stringify filter into query filter
             let queryFilter = TwitterAPIController.getQueryFromFilter( filter );
-            let sample = new Sample( null,  { tag: tag, value: queryFilter } );
+            let sample = new Sample( null,  { tag: tag, value: queryFilter }, filter );
             console.log( "Add new sample to paused streams", sample );
             this.getPausedSamples().push( sample );
             return this.resumeSample( tag );
@@ -251,34 +280,7 @@ class TwitterAPIController {
     // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
     streamConnect( handlers ) {
         //Listen to the stream
-        let params = {
-            expansions: [
-                "author_id",
-                "geo.place_id",
-            ].join(),
-            "tweet.fields": [
-                "geo",
-                "public_metrics",
-                "lang",
-                "text",
-                "possibly_sensitive",
-                // "context_annotations",
-            ].join(),
-            "place.fields": [
-                "id",
-                "geo",
-                "place_type", /* city | poi */
-                "full_name",
-                "country_code",
-                "country",
-                "contained_within"
-            ].join(),
-            "user.fields": [
-                "name",
-                "location",
-                "created_at"
-            ].join()
-        };
+        let params = TwitterAPIController.PARAMETERS;
 
         let endPointURL = TwitterAPIController.ENUM.SEARCH.STREAM.API;
         if( params ) {

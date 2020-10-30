@@ -67,15 +67,15 @@ router.put( "/:tag", API_addSample );
  * - StatusCodes.TOO_MANY_REQUESTS if a sample is paused, but the current number of requests has been reached and can't set to active
  * - StatusCodes.CONFLICT if a sample with the same tag or same filter configuration already exists
  * - StatusCodes of POST /samples/:tag/resume
- *
+ * @body: require the filter into the request's body
  */
 function API_addSample(req, res) {
     let sampleTag = req.params.tag;
 
     console.log( "received", sampleTag );
-    let filter = req.query.filter || "dog has:images"; // this should be an object, i use this for testing
+    let filter = req.body;
 
-    let promise = twitterAPIControllerInstance.addSample( sampleTag, filter )
+    let promise = filter ? twitterAPIControllerInstance.addSample( sampleTag, filter ) : Promise.reject( StatusCodes.BAD_REQUEST );
     promise
         .then( (statusCode) => {
             res.sendStatus( statusCode );
