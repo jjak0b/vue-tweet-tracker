@@ -31,12 +31,13 @@ class TwitterAPIController {
         console.log( "[TwitterAPIController", "Fetching active stream rules ...");
         this.requestAPI("get", TwitterAPIController.ENUM.SEARCH.STREAM.RULES.API, null, null, true)
             .then( (apiResponse) => {
-                if( apiResponse.statusCode == StatusCodes.OK ) {
+                if( apiResponse.statusCode === StatusCodes.OK ) {
                     if( Array.isArray( apiResponse.body.data ) ) {
                         apiResponse.body.data.forEach( (rule) => {
                             let sample = {
                                 id: rule.id,
                                 rule: { tag: rule.tag, value: rule.value },
+                                collection : []
                             }
                             this.activeStreams.push( sample );
                         });
@@ -71,7 +72,7 @@ class TwitterAPIController {
     getPausedSampleIndex(tag) {
         let samples = this.getPausedSamples();
         for (let i = 0; i < samples.length; i++) {
-            if( samples[ i ].rule.tag == tag ) {
+            if( samples[ i ].rule.tag === tag ) {
                 return i;
             }
         }
@@ -81,7 +82,7 @@ class TwitterAPIController {
     getActiveSampleIndex(tag) {
         let samples = this.getActiveSamples();
         for (let i = 0; i < samples.length; i++) {
-            if( samples[ i ].rule.tag == tag ) {
+            if( samples[ i ].rule.tag === tag ) {
                 return i;
             }
         }
@@ -137,7 +138,8 @@ class TwitterAPIController {
                 id: null,
                 rule: {
                     tag: tag,
-                    value: queryFilter
+                    value: queryFilter,
+                    collection: []
                 }
             }
             console.log( "Add new sample to paused streams", sample );
@@ -244,7 +246,7 @@ class TwitterAPIController {
 
         handlers.timeout = timeoutHandler;
         handlers.error = console.error;
-        handlers.data = this.onStreamDataReceived;
+        handlers.data = this.onStreamDataReceived.bind( self );
 
         return self.streamConnect( handlers );
     }
@@ -292,7 +294,29 @@ class TwitterAPIController {
     }
 
     onStreamDataReceived( data ) {
-       console.log( "Received" ,  data );
+        console.log( "Received", data );
+        let destinations = data.matching_rules;
+        data.matching_rules = null;
+        this.routesDataToSamples(data, destinations );
+    }
+
+    routesDataToSamples( dataToAssign, destinationRules) {
+        for (let i = 0; i < destinationRules.length; i++) {
+
+            // TODO: use method to merge data and includes info
+            let tweet = dataToAssign.data;
+
+            let tag = destinationRules[ i ].tag;
+            let sampleIndex = this.getActiveSampleIndex( tag );
+            if( sampleIndex >= 0 ) {
+                let sample = this.getActiveSamples()[ sampleIndex ];
+                sample.collection.push( tweet )
+            }
+            else {
+                // ley us know if something doesn't behave like it should
+                console.error( "[TwitterAPIControlle:routesDataToSamples]", `Unable to find route for "${tag}" sample in active samples`, "So the data has been ignores");
+            }
+        }
     }
 
     pauseSample( tag ) {

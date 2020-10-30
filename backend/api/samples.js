@@ -1,8 +1,8 @@
 const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
+// const fs = require('fs');
+// const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
 const twitterAPIControllerInstance = require( "../TwitterAPIController").instance;
 
 router.get( "/", API_getSamples );
@@ -23,7 +23,7 @@ function API_getSamples( req, res ) {
         data.active = twitterAPIControllerInstance.getActiveSamples().map(sample => sample.rule.tag );
     }
     if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "paused" ) ) {
-        data.paused = twitterAPIControllerInstance.getPausedSamples().map(sample => sample.rule.tag );;
+        data.paused = twitterAPIControllerInstance.getPausedSamples().map(sample => sample.rule.tag );
     }
    res.json( data );
 }
@@ -34,11 +34,19 @@ router.get( "/:tag", API_getSampleData );
  * @API GET /samples/:tag
  * @query N/A
  * @StatusCodes N/A
- * @Body N/A
+ * @Body JSON Array of tweets for the sample tag provided
  *
  */
 function API_getSampleData( req, res ) {
-    // TODO: return sample' tweets
+    let tag = req.params.tag;
+    let sample = twitterAPIControllerInstance.getSample(tag);
+    if( sample ) {
+        let collection = sample.collection;
+        res.json( collection );
+    }
+    else {
+        res.sendStatus( StatusCodes.NOT_FOUND );
+    }
 }
 
 router.put( "/:tag", API_addSample );
