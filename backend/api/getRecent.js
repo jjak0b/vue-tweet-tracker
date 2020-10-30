@@ -57,11 +57,12 @@ router.get( "/:query", (req, res) => {
         });
 });
 
-async function saveData(data){  //funzione per salvare i dati ottenuti in un file json
+/*async function saveData(data){  //funzione per salvare i dati ottenuti in un file json
+
     let jsondata = JSON.stringify(data, null, 4)
     fs.writeFileSync('../tweets.json', jsondata, (err) =>{
         if (err) throw err;
     })
-}
+}*/
 
 module.exports = router;
