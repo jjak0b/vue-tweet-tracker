@@ -3,7 +3,7 @@ const path = require("path");
 
 class Sample {
 
-    constructor( id, rule ) {
+    constructor( id, rule, filter ) {
         this.path = path.join( global.__basedir, process.env.PATH_REPOSITORIES_SAMPLES, `${rule.tag}.json` );
         this.count = 0;
         fs.outputFile(
@@ -12,7 +12,14 @@ class Sample {
             { encoding: "utf-8", flag: 'wx' },
             (err) => {
                 if (err) {
-                    console.error( "[Sample]", "Error while creating sample repo at ", this.path, ";cause:", err);
+                    switch( err.code ) {
+                        case "EEXIST":
+                            // this is not a problem, simply we will append to it
+                            break;
+                        default:
+                            console.error( "[Sample]", "Error while creating sample repo at ", this.path, "cause:", err);
+                            break;
+                    }
                 }
                 else {
                     let isfirstSkipped = false;
@@ -31,7 +38,7 @@ class Sample {
                             }
                         })
                         .on('end', () => {
-                            console.log( `Deteted ${this.count} items` );
+                            console.log( `Detected ${this.count} items` );
                         });
                 }
             }
@@ -40,6 +47,7 @@ class Sample {
 
         this.id = id;
         this.rule = rule;
+        this.filter = filter;
     }
 
     add( /*Tweet*/ tweet ) {

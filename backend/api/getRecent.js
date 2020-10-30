@@ -5,41 +5,14 @@ const fs = require('fs');
 const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
 const twitterAPIControllerInstance = require( "../TwitterAPIController").instance;
 
-router.get( "/:query", (req, res) => {
+router.get( "/", (req, res) => {
 
     // Make the request
     let params = {            // request parameters
-        query: req.params.query,
-
+        query: TwitterAPIController.getQueryFromFilter( req.body ),
         max_results: TwitterAPIController.MAX_RESULT_PER_REQUEST,
-        expansions: [
-            "author_id",
-            "geo.place_id",
-        ].join(),
-        "tweet.fields": [
-            "id",
-            "lang",
-            "text",
-            "possibly_sensitive",
-            "context_annotations",
-            "geo"
-        ].join(),
-        "place.fields": [
-            "id",
-            "full_name",
-            "name",
-            "country_code",
-            "country",
-            "geo",
-            "contained_within",
-            "place_type" /* city | poi */
-        ].join(),
-        "user.fields": [
-            "name",
-            "location",
-            "created_at"
-         ].join()
     };
+    params = Object.assign( params, TwitterAPIController.PARAMETERS );
 
     twitterAPIControllerInstance.requestAPI("get", TwitterAPIController.ENUM.SEARCH.RECENT.API, params)
         .then( (apiResponse) => {

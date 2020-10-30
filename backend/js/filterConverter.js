@@ -1,20 +1,75 @@
 function convertFilter(filter){
 
-    let APIfilter = {
-        standardfilter: filter.words.all.toString().replace(/,/g, " "),
-        exact: `"${filter.words.exact.toString().replace(/,/g, " ")}"`,
-        any: filter.words.any.toString().replace(/,/g, " ").replace(/ /g, " OR "),
-        none: `-${filter.words.none.toString().replace(/,/g, " -")}`,
-        hashtags: filter.words.hashtags.toString().replace(/,/g, " "),
-        lang: convertLang(filter.words.language),
-        from: `from:${filter.accounts.from.toString().replace(/@/g, "").replace(",", " from:")}`,
-        to: `to:${filter.accounts.to.toString().replace(/@/g, "").replace(",", " to:")}`,
-        mention: filter.accounts.mentioning.toString().replace(/,/g, " "),
-        since: `since:${filter.dates.from.toString().replace(/,/g, " ")}`,
-        until: `until:${filter.dates.to.toString().replace(/,/g, " ")}`,
-        links: hasLinks(filter.filters)
+    let query = "";
+    if( filter ) {
+        if( filter.words ) {
+            if( filter.words.all ) {
+                query += ` ${ filter.words.all.join( " " )}`;
+            }
+            if( filter.words.exact ) {
+                query += ` "${filter.words.exact.join( " " )}"`;
+            }
+            if( filter.words.any ) {
+                query += ` ${ filter.words.any.join( " OR " )}`;
+            }
+            if( filter.words.none ) {
+                query += ` -${filter.words.none.join( " -" )}`;
+            }
+
+            if( filter.words.hashtags ) {
+                filter.words.hashtags.forEach( (item, key, array) => array[ key ] = item.replace(/#/g, "") )
+                query += ` #${filter.words.hashtags.join( " #" )}`;
+            }
+
+            if( filter.words.language ) {
+                query += ` lang:${ convertLang(filter.words.language) }`;
+            }
+        }
+
+        if( filter.accounts ) {
+            if( filter.accounts.from ) {
+                filter.accounts.from.forEach( (item, key, array) => array[ key ] = item.replace(/@/g, "") )
+                query += ` from:${filter.accounts.from.join( " from:")}`;
+            }
+            if( filter.accounts.to ) {
+                filter.accounts.to.forEach( (item, key, array) => array[ key ] = item.replace(/@/g, "") )
+                query += ` to:${filter.accounts.to.join( " to:")}`;
+            }
+            if( filter.accounts.mentioning ) {
+                filter.accounts.mentioning.forEach( (item, key, array) => array[ key ] = item.replace(/@/g, "") )
+                query += ` @${filter.accounts.mentioning.join( " @")}`;
+            }
+        }
+
+        if( filter.dates ) {
+            if( filter.dates.from || filter.dates.since ) {
+                query += ` since:${ filter.dates.from || filter.dates.since }`;
+            }
+            if( filter.dates.to || filter.dates.until ) {
+                query += ` until:${ filter.dates.to || filter.dates.until }`;
+            }
+        }
+
+        if( filter.filters ) {
+            if( filter.filters.links ) {
+                query += ` filter:links`;
+            }
+            if( filter.filters.linksValue ) {
+                query += ` url:${filter.filters.linksValue}`;
+            }
+            if( filter.filters.replies ) {
+                query += ` filter:links`;
+            }
+        }
+        if( filter.engagement) {
+            if( filter.engagement ) {
+                query += ` filter:links`;
+            }
+        }
+
+        query = query.trim();
     }
-    return APIfilter
+    return query;
 }
 
 function convertLang(lang){
@@ -169,10 +224,4 @@ function convertLang(lang){
     }*/
 }
 
-function hasLinks(filters){
-    if((filters.links == true) && filters.linksValue == "include-links"){
-        return 'has:links'
-    }
-}
-
-module.exports.convertfilter = convertFilter()
+module.exports.convertfilter = convertFilter;
