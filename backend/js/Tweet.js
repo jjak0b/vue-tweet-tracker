@@ -2,8 +2,10 @@ class Tweet {
 
     constructor( tweet ) {
         this.data = tweet.data;
-        this.users = tweet.includes.users;
-        this.place = tweet.includes.place;
+        Object.keys(  tweet.includes )
+            .forEach( (includeName) => {
+                this[ includeName ] = tweet.includes[ includeName ][ 0 ];
+            });
     }
 }
 

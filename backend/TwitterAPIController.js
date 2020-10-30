@@ -251,17 +251,50 @@ class TwitterAPIController {
     // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
     streamConnect( handlers ) {
         //Listen to the stream
+        let params = {
+            expansions: [
+                "author_id",
+                "geo.place_id",
+            ].join(),
+            "tweet.fields": [
+                "geo",
+                "public_metrics",
+                "lang",
+                "text",
+                "possibly_sensitive",
+                // "context_annotations",
+            ].join(),
+            "place.fields": [
+                "id",
+                "geo",
+                "place_type", /* city | poi */
+                "full_name",
+                "country_code",
+                "country",
+                "contained_within"
+            ].join(),
+            "user.fields": [
+                "name",
+                "location",
+                "created_at"
+            ].join()
+        };
+
+        let endPointURL = TwitterAPIController.ENUM.SEARCH.STREAM.API;
+        if( params ) {
+            endPointURL += `?${qs.stringify(params)}`;
+        }
+
         let requestOptions = {
             timeout: 20000,
-            accept : 'application/json'
+            accept : 'application/json',
+            headers: {
+                "authorization": this.getAuthorizationHeader( endPointURL, true )
+            }
         }
-        let url = TwitterAPIController.ENUM.SEARCH.STREAM.API + "?tweet.fields=created_at&expansions=author_id&user.fields=created_at"
 
-        requestOptions.headers = {
-            "authorization": this.getAuthorizationHeader( url, true )
-        };
         // let pip = fs.createWriteStream('data.json');
-       let stream = needle.get( url, requestOptions );
+       let stream = needle.get( endPointURL, requestOptions );
        stream
            .pipe( JSONStream.parse() )
             .on('error', (error) => {
@@ -291,7 +324,6 @@ class TwitterAPIController {
     }
 
     onStreamDataReceived( data ) {
-        console.log( "Received", data );
         let destinations = data.matching_rules;
         data.matching_rules = null;
         this.routesDataToSamples(data, destinations );
@@ -302,9 +334,11 @@ class TwitterAPIController {
 
             let tweet = new Tweet( dataToAssign );
             let tag = destinationRules[ i ].tag;
+            // console.log( "Received data" , tweet, "for", tag );
             let sampleIndex = this.getActiveSampleIndex( tag );
             if( sampleIndex >= 0 ) {
                 let sample = this.getActiveSamples()[ sampleIndex ];
+
                 sample.add( tweet );
             }
             else {
@@ -312,8 +346,6 @@ class TwitterAPIController {
                 console.error( "[TwitterAPIControlle:routesDataToSamples]", `Unable to find route for "${tag}" sample in active samples`, "So the data has been ignores");
             }
         }
-
-        console.log( "Received" , dataToAssign );
     }
 
     pauseSample( tag ) {

@@ -10,14 +10,14 @@ class Sample {
             this.path,
             "[\n",
             { encoding: "utf-8", flag: 'wx' },
-            function (err) {
+            (err) => {
                 if (err) {
                     console.error( "[Sample]", "Error while creating sample repo at ", this.path, ";cause:", err);
                 }
                 else {
                     let isfirstSkipped = false;
                     fs.createReadStream( this.path )
-                        .on('data', function(chunk) {
+                        .on('data', (chunk) => {
                             for (let i=0; i < chunk.length; ++i) {
                                 if (chunk[i] == 10) {
                                     if( isfirstSkipped ) {
@@ -30,8 +30,8 @@ class Sample {
                                 }
                             }
                         })
-                        .on('end', function() {
-                            this.count ++;
+                        .on('end', () => {
+                            console.log( `Deteted ${this.count} items` );
                         });
                 }
             }
@@ -44,17 +44,16 @@ class Sample {
 
     add( /*Tweet*/ tweet ) {
         let json = JSON.stringify(tweet);
-        if( this.count > 0 ) {
-            // add ",\n" as prefix so it's close to a valid json
-            json = json.replace(/^/,',\n');
-        }
+        // add ",\n" as postfix so it's close to a valid json
+        json += ",\n";
+
         fs.appendFile(
             this.path,
             json,
             {encoding: "utf-8"},
             (err) => {
                  if( err ) {
-                     console.error( "[Sample]", "Error appenind data to", this.tag );
+                     console.error( "[Sample]", "Error appendind data to", this.tag );
                  }
                  else {
                      ++this.count;
@@ -74,6 +73,10 @@ class Sample {
                        return;
                    }
 
+                   if( this.count > 0 ) {
+                       // remove last comma ","
+                       dataBuffer = dataBuffer.substring(0,dataBuffer.length() - 2);
+                   }
                    dataBuffer += "]";
                    if( shouldGetPlainText ) {
                        resolve( dataBuffer );
