@@ -5,6 +5,7 @@ const needle = require("needle");
 const StatusCodes = require("http-status-codes").StatusCodes;
 const qs = require('querystring');
 const JSONStream = require('JSONStream');
+const parsedata = require('./api/getTweetInfo').parsedata
 
 class TwitterAPIController {
     static MAX_RESULT_PER_REQUEST = 100;
@@ -311,7 +312,7 @@ class TwitterAPIController {
 
             // TODO: use method to merge data and includes info
             let tweet = dataToAssign.data;
-
+            // parsedata(data)
             let tag = destinationRules[ i ].tag;
             let sampleIndex = this.getActiveSampleIndex( tag );
             if( sampleIndex >= 0 ) {
@@ -323,6 +324,8 @@ class TwitterAPIController {
                 console.error( "[TwitterAPIControlle:routesDataToSamples]", `Unable to find route for "${tag}" sample in active samples`, "So the data has been ignores");
             }
         }
+
+        console.log( "Received" ,  data );
     }
 
     pauseSample( tag ) {
