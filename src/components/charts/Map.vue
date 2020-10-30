@@ -125,11 +125,11 @@ export default {
 
       samples.forEach( (sample) => {
         let position = null;
-        let sampleData = sample.attributes;
-        if( sampleData ) {
+        let sampleData = sample;
+        if( sampleData && sampleData.geo ) {
           // specific location can be defined
-          if( sampleData.geo && sampleData.geo.coordinates ) {
-            if( sampleData.geo.coordinates.type == "Point" ) {
+          if( sampleData.geo.coordinates ) {
+            if( sampleData.geo.coordinates.type === "Point" ) {
               if( sampleData.geo.coordinates.coordinates ) {
                 position = new Marker(
                     sampleData.geo.coordinates.coordinates[ 0 ],
@@ -139,7 +139,15 @@ export default {
               }
             }
           }
-          // TODO: else create using bounding box
+          else if( sampleData.places ) {
+            if( sampleData.places.geo && sampleData.places.geo.bbox ) {
+              position = new Marker(
+                  (sampleData.geo.bbox[ 0 ] + sampleData.geo.bbox[ 2 ]) / 2.0,
+                  (sampleData.geo.bbox[ 1 ] + sampleData.geo.bbox[ 3 ]) / 2.0,
+                  sampleData.text
+              );
+            }
+          }
         }
         if( position )
           markers.push( position );
