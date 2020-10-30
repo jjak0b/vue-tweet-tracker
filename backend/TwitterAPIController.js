@@ -5,7 +5,7 @@ const needle = require("needle");
 const StatusCodes = require("http-status-codes").StatusCodes;
 const qs = require('querystring');
 const JSONStream = require('JSONStream');
-const parsedata = require('./api/getTweetInfo').parsedata
+const Tweet = require( "./js/Tweet" );
 
 class TwitterAPIController {
     static MAX_RESULT_PER_REQUEST = 100;
@@ -310,9 +310,7 @@ class TwitterAPIController {
     routesDataToSamples( dataToAssign, destinationRules) {
         for (let i = 0; i < destinationRules.length; i++) {
 
-            // TODO: use method to merge data and includes info
-            let tweet = dataToAssign.data;
-            // parsedata(data)
+            let tweet = new Tweet( dataToAssign );
             let tag = destinationRules[ i ].tag;
             let sampleIndex = this.getActiveSampleIndex( tag );
             if( sampleIndex >= 0 ) {
@@ -325,7 +323,7 @@ class TwitterAPIController {
             }
         }
 
-        console.log( "Received" ,  data );
+        console.log( "Received" , dataToAssign );
     }
 
     pauseSample( tag ) {
