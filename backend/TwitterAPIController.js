@@ -5,6 +5,7 @@ const needle = require("needle");
 const StatusCodes = require("http-status-codes").StatusCodes;
 const qs = require('querystring');
 const JSONStream = require('JSONStream');
+const parsedata = require('./api/getTweetInfo').parsedata
 
 class TwitterAPIController {
     static MAX_RESULT_PER_REQUEST = 100;
@@ -292,7 +293,8 @@ class TwitterAPIController {
     }
 
     onStreamDataReceived( data ) {
-       console.log( "Received" ,  data );
+        parsedata(data)
+        console.log( "Received" ,  data );
     }
 
     pauseSample( tag ) {
