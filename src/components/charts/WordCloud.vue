@@ -127,8 +127,8 @@ export default {
     },
     computeWordsBySamples( wordToFilter ) {
       for (let i = 0; i < this.samples.length; i++) {
-        if( this.samples[ i ] && this.samples[ i ].attributes ) {
-          let text = this.samples[ i ].attributes.full_text;
+        if( this.samples[ i ] && this.samples[ i ].text ) {
+          let text = this.samples[ i ].text;
           if( !wordToFilter || text.includes( wordToFilter ) ) {
             this.computeWords( text );
           }
