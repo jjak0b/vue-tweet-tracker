@@ -6,6 +6,7 @@ const StatusCodes = require("http-status-codes").StatusCodes;
 const qs = require('querystring');
 const JSONStream = require('JSONStream');
 const Tweet = require( "./js/Tweet" );
+const Sample = require( "./js/Sample" );
 
 class TwitterAPIController {
     static MAX_RESULT_PER_REQUEST = 100;
@@ -36,11 +37,7 @@ class TwitterAPIController {
                 if( apiResponse.statusCode === StatusCodes.OK ) {
                     if( Array.isArray( apiResponse.body.data ) && apiResponse.body.data.length > 0 ) {
                         apiResponse.body.data.forEach( (rule) => {
-                            let sample = {
-                                id: rule.id,
-                                rule: { tag: rule.tag, value: rule.value },
-                                collection : []
-                            }
+                            let sample = new Sample( rule.id,  { tag: rule.tag, value: rule.value } );
                             this.activeStreams.push( sample );
                         });
                         console.log( "[TwitterAPIController", "Detected samples:", this.activeStreams );
@@ -136,14 +133,7 @@ class TwitterAPIController {
         if( !sample ) {
             //stringify filter into query filter
             let queryFilter = TwitterAPIController.getQueryFromFilter( filter );
-            sample = {
-                id: null,
-                rule: {
-                    tag: tag,
-                    value: queryFilter,
-                    collection: []
-                }
-            }
+            let sample = new Sample( null,  { tag: tag, value: queryFilter } );
             console.log( "Add new sample to paused streams", sample );
             this.getPausedSamples().push( sample );
             return this.resumeSample( tag );
@@ -315,7 +305,7 @@ class TwitterAPIController {
             let sampleIndex = this.getActiveSampleIndex( tag );
             if( sampleIndex >= 0 ) {
                 let sample = this.getActiveSamples()[ sampleIndex ];
-                sample.collection.push( tweet )
+                sample.add( tweet );
             }
             else {
                 // ley us know if something doesn't behave like it should
