@@ -18,9 +18,26 @@
           :position="m.getPosition()"
           :clickable="true"
           :draggable="false"
-          @click="center=m"
+          :icon="m.icon"
+          @click="selectedMarker=center=m"
+
       >
-        <!-- Marker window <GmapInfoWindow></GmapInfoWindow>-->
+        <GmapInfoWindow
+
+            :key="m.reference.data.id"
+            v-if="selectedMarker === m"
+        >
+          <Tweet
+            class="mb-7"
+            :id="m.reference.data.id"
+            :key="m.reference.data.id"
+          >
+            <v-skeleton-loader
+                width="10rem"
+                type="card"
+            ></v-skeleton-loader>
+        </Tweet>
+        </GmapInfoWindow>
       </GmapMarker>
     </GmapMap>
   </v-card>
@@ -30,7 +47,7 @@
 import Position from "@/js/Position";
 import Vue from 'vue'
 import * as VueGoogleMaps from 'vue2-google-maps'
-
+import {Tweet} from 'vue-tweet-embed';
 
 Vue.use(VueGoogleMaps, {
   load: {
@@ -60,27 +77,38 @@ class MapPosition extends Position {
 }
 
 class Marker extends MapPosition {
+
+  static icons = {
+    Point: null,
+    Feature: {
+      url: require( "../../assets/img/markers/marker-area-location-icon.png" ),
+      scaledSize: {width: 28, height: 42},
+    }
+  };
+
   constructor(
       /*double*/ latitude,
       /*double*/ longitude,
-      /*String*/ description
+      /*String*/ type,
+      /*Object*/ reference
   ) {
     super( latitude, longitude );
 
-    this.description = description;
+    this.type = type;
+    this.reference = reference;
   }
 
-  getDescription() {
-    return this.description;
+  get icon() {
+    return this.type && (this.type in Marker.icons) ?  Marker.icons[ this.type ] : null;
   }
 
-  setDescription(/*String*/ description) {
-    this.description = description;
-  }
 }
 
 export default {
   name: "Map",
+  components: {
+    Tweet,
+  },
   props: {
     samples: Array,
     centerPosition: Position
@@ -89,9 +117,13 @@ export default {
     return {
       markers: [],
       center: undefined,
+      selectedMarker: null,
     }
   },
   watch: {
+    selectedMaker: function (newMarker) {
+      this.$emit("input", newMarker.reference );
+    },
     centerPosition: function (newCenter) {
       if( newCenter ) {
         this.updateCenter( newCenter );
@@ -131,7 +163,8 @@ export default {
           position = new Marker(
               geo.coordinates.coordinates[ 1 ],
               geo.coordinates.coordinates[ 0 ],
-              sample.data.text
+              geo.coordinates.type,
+              sample
           );
         }
         else if( isGeoInPlaces ){
@@ -139,7 +172,8 @@ export default {
           position = new Marker(
               (geo.bbox[ 1 ] + geo.bbox[ 3 ]) / 2.0,
               (geo.bbox[ 0 ] + geo.bbox[ 2 ]) / 2.0,
-              sample.data.text
+              geo.type,
+              sample
           );
         }
 
