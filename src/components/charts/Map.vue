@@ -13,8 +13,8 @@
         :street-view-control="false"
     >
       <GmapMarker
-          :key="index"
           v-for="(m, index) in markers"
+          :key="'marker_'+index"
           :position="m.getPosition()"
           :clickable="true"
           :draggable="false"
@@ -107,8 +107,7 @@ export default {
     }
   },
   created() {
-    // Rome
-    this.updateCenter( new Position( 41.902782,12.496366 ) );
+    this.updateCenter( this.centerPosition );
     this.markers = this.createMarkersForSamples( this.samples );
   },
   methods: {
@@ -122,36 +121,32 @@ export default {
       if( !samples ) {
         return markers;
       }
-
+      let position = null;
       samples.forEach( (sample) => {
-        let position = null;
-        let sampleData = sample;
-        if( sampleData && sampleData.geo ) {
-          // specific location can be defined
-          if( sampleData.geo.coordinates ) {
-            if( sampleData.geo.coordinates.type === "Point" ) {
-              if( sampleData.geo.coordinates.coordinates ) {
-                position = new Marker(
-                    sampleData.geo.coordinates.coordinates[ 0 ],
-                    sampleData.geo.coordinates.coordinates[ 1 ],
-                    sampleData.text
-                );
-              }
-            }
-          }
-          else if( sampleData.places ) {
-            if( sampleData.places.geo && sampleData.places.geo.bbox ) {
-              position = new Marker(
-                  (sampleData.geo.bbox[ 0 ] + sampleData.geo.bbox[ 2 ]) / 2.0,
-                  (sampleData.geo.bbox[ 1 ] + sampleData.geo.bbox[ 3 ]) / 2.0,
-                  sampleData.text
-              );
-            }
-          }
+        position = null;
+        let isGeoInData = sample.data && sample.data.geo && sample.data.geo.coordinates;
+        let isGeoInPlaces = sample.places && sample.places.geo && sample.places.geo.bbox;
+        if( isGeoInData ) {
+          let geo = sample.data.geo;
+          position = new Marker(
+              geo.coordinates.coordinates[ 1 ],
+              geo.coordinates.coordinates[ 0 ],
+              sample.data.text
+          );
         }
+        else if( isGeoInPlaces ){
+          let geo = sample.places.geo;
+          position = new Marker(
+              (geo.bbox[ 1 ] + geo.bbox[ 3 ]) / 2.0,
+              (geo.bbox[ 0 ] + geo.bbox[ 2 ]) / 2.0,
+              sample.data.text
+          );
+        }
+
         if( position )
           markers.push( position );
       });
+      return markers;
     }
   }
 }
