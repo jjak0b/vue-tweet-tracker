@@ -33,13 +33,24 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "MainPage",
 
   data: () => ({
     drawer: true,
     samplesList: ["sample 1", "sample 2", "sample 3"]
-  })
+  }),
+  created() {
+    axios.get("/api/samples/")
+      .then( (data) => {
+        this.samplesList = data.active;
+      })
+      .catch( (err) => {
+        console.error( err );
+      });
+  }
 }
 </script>
 
