@@ -130,15 +130,18 @@
 
 <script>
 import {Tweet} from 'vue-tweet-embed'
-import json from "../../repositories/tweets.json"
 import language from "@/assets/language.json"
 import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
 import Position from "@/js/Position";
+import axios from "axios";
 
 export default {
 
   name: "Dashboard",
+  props: {
+    selectedSample: String
+  },
   components: {
     WordCloud,
     Map,
@@ -164,14 +167,27 @@ export default {
     }
   },
   data: () => ({
+    tweets: [],
     centerPosition: new Position( 41.902782,12.496366 ),// Rome
     showLocation: false,
     showTweet: false,
     showUser: false,
     language: language,
-    tweets: json,
     selectedTweetIndex: null
   }),
+  watch: {
+    selectedSample: function (newVal) {
+      if ( newVal && newVal.length > 0 ) {
+        axios.get('/api/samples/' + newVal)
+            .then( (response) => {
+                  this.tweets = JSON.parse(response.data)
+                })
+            .catch( (error) => {
+              console.error("ERROR", error);
+            })
+      }
+    }
+  },
   methods: {
     getSubString(string) {
       const substring = string.substring(0, 50);

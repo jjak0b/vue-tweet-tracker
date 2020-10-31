@@ -3,7 +3,7 @@
     <v-form>
       <v-row>
           <v-container>
-            <v-btn color="primary" class="mr-1">Submit</v-btn>
+            <v-btn color="primary" class="mr-1" @click="onSubmit">Submit</v-btn>
             <v-btn color="secondary">Clear</v-btn>
           </v-container>
       </v-row>
@@ -14,7 +14,7 @@
           <v-card-title>Name</v-card-title>
           <v-card-text>
             <v-text-field
-                v-model="filter.name"
+                v-model.trim="name"
                 :key="labels.name.key"
                 :hint="labels.name.hint"
                 :label="labels.name.label"
@@ -28,7 +28,7 @@
             <v-card-text>
               <v-combobox
                   v-for="item in labels.words"
-                  v-model="filter.words[item.key]"
+                  v-model.trim="filter.words[item.key]"
                   :key="item.label"
                   :hint="item.hint"
                   :label="item.label"
@@ -45,13 +45,15 @@
               ></v-select>
             </v-card-text>
           </v-card>
+        </v-col>
 
+        <v-col>
           <v-card class="mb-5">
             <v-card-title>Accounts</v-card-title>
             <v-card-text>
               <v-combobox
                   v-for="item in labels.accounts"
-                  v-model="filter.accounts[item.key]"
+                  v-model.trim="filter.accounts[item.key]"
                   :key="item.label"
                   :hint="item.hint"
                   :label="item.label"
@@ -62,26 +64,30 @@
               ></v-combobox>
             </v-card-text>
           </v-card>
-        </v-col>
+          <!--
+        <v-card class="mb-5">
+          <v-card-title>Filters</v-card-title>
 
-        <v-col>
-          <v-card class="mb-5">
-            <v-card-title>Filters</v-card-title>
-            <v-card-text>
-              <v-switch label="Replies" v-model="filter.filters.replies"></v-switch>
-              <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.links">
-                <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
-                <v-radio label="Only show replies" value="only-replies"></v-radio>
-              </v-radio-group>
-              <v-switch label="Links" v-model="filter.filters.links"></v-switch>
-              <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.links">
-                <v-radio label="Include Tweets with links" value="include-links"></v-radio>
-                <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
-              </v-radio-group>
-            </v-card-text>
-          </v-card>
-
-          <v-card class="mb-5">
+          <v-card-text>
+            <v-switch label="Replies" v-model="filter.filters.replies"></v-switch>
+            <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.replies">
+              <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
+              <v-radio label="Only show replies" value="only-replies"></v-radio>
+            </v-radio-group>
+            <v-switch label="Links" v-model="filter.filters.links"></v-switch>
+            <v-text-field
+                v-model.trim="filter.filters.linksValue"
+                label="Link to filter"
+            ></v-text-field>
+            <v-radio-group v-model="filter.filters.linksValue" v-if="filter.filters.links">
+              <v-radio label="Include Tweets with links" value="include-links"></v-radio>
+              <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
+            </v-radio-group>
+          </v-card-text>
+        </v-card>
+-->
+<!--
+         <v-card class="mb-5">
             <v-card-title>Engagement</v-card-title>
             <v-card-text>
               <v-text-field
@@ -94,7 +100,7 @@
               ></v-text-field>
             </v-card-text>
           </v-card>
-
+-->
           <v-card class="mb-5">
             <v-card-title>Dates</v-card-title>
             <v-card-text>
@@ -129,7 +135,7 @@
               >
                 <template v-slot:activator="{ on, attrs }">
                   <v-text-field
-                      v-model="filter.dates.to"
+                      v-model.trim="filter.dates.to"
                       label="To"
                       prepend-icon="mdi-calendar"
                       readonly
@@ -139,7 +145,7 @@
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                    v-model="filter.dates.to"
+                    v-model.trim="filter.dates.to"
                     :min="filter.dates.from"
                     @input="toMenu = false"
                 ></v-date-picker>
@@ -153,41 +159,49 @@
 </template>
 
 <script>
+import axios from "axios";
 import language from "@/assets/language.json"
 
 export default {
   name: 'FilterMenu',
+  methods: {
+    onSubmit() {
+      axios.put('/api/samples/' + this.name, this.filter)
+    }
+  },
   data: () => ({
+    name: "",
     languageArray: null,
     filter: {
-      name: "",
       words: {
-        all: "",
-        exact: "",
-        any: "",
-        none: "",
-        hashtags: "",
-        language: ""
+        all: [],
+        exact: [],
+        any: [],
+        none: [],
+        hashtags: [],
+        language: null
       },
       accounts: {
-        from: "",
-        to: "",
-        mentioning: ""
+        from: [],
+        to: [],
+        mentioning: []
       },
-      filters: {
-        replies: true,
-        repliesValue: "replies-and-tweets",
+     /* filters: {
+        //replies: true,
+        //repliesValue: "replies-and-tweets",
         links: true,
-        linksValue: "include-links"
-      },
+        linksValue: null
+      },*/
+      /*
       engagement: {
         minReplies: "",
         minLikes: "",
         minRetweets: ""
       },
+      */
       dates: {
-        from: "",
-        to: ""
+        from: null,
+        to: null
       }
     },
     toMenu: false,
@@ -242,7 +256,7 @@ export default {
           key: "mentioning"
         },
       },
-      engagement: {
+      /*engagement: {
         minReplies: {
           hint: "Example: 280 · Tweets with at least 280 replies",
           label: "Minimum replies",
@@ -258,16 +272,22 @@ export default {
           label: "Minimum Retweets",
           key: "minRetweets"
         },
-      }
+      }*/
     }
   }),
   mounted() {
       let arr = [];
+      arr.push({
+        text: "Any language",
+        value: null
+      })
       for( const lang in language ) {
-        arr.push(language[lang]);
+        arr.push({
+          text: language[lang],
+          value: lang
+        })
       }
       this.languageArray = arr;
-      this.filter.words.language = "Any language"
   }
 }
 </script>
