@@ -82,9 +82,8 @@ export default {
   },
   data() {
     return {
-      words: [],
-      wordsCount: [],
       countWordMax: 0,
+      weights: {},
       wordsWeights : [],
       loadingProgress: null,
       color: {
@@ -120,15 +119,15 @@ export default {
   },
   methods: {
     updateWordCloud( wordToFilter ) {
+      this.countWordMax = 0;
       this.computeWordsBySamples( wordToFilter );
       this.updateWordsWeight();
-      this.countWordMax = Math.max.apply( null, this.wordsCount );
       this.color.rainbow.setNumberRange(1, this.countWordMax );
     },
     computeWordsBySamples( wordToFilter ) {
       for (let i = 0; i < this.samples.length; i++) {
-        if( this.samples[ i ] && this.samples[ i ].text ) {
-          let text = this.samples[ i ].text;
+        if( this.samples[ i ] && this.samples[ i ].data.text ) {
+          let text = this.samples[ i ].data.text;
           if( !wordToFilter || text.includes( wordToFilter ) ) {
             this.computeWords( text );
           }
@@ -146,23 +145,25 @@ export default {
         /* Note:  it is necessary because a combination like "," ("," + "") is converted to ""
                   and then in [""] using split()
          */
-        if( word.length > 0 ) {
-          let index = this.words.indexOf( word );
 
-          if( index < 0 ) {
-            this.words.push( word );
-            this.wordsCount.push( 1 );
+        let wordCount = 0;
+        if( word.length > 0 ) {
+          if( !(word in this.weights) ) {
+            wordCount = this.weights[ word ] = 1;
           }
           else {
-            this.wordsCount[ index ] ++;
+            wordCount = 1 + (this.weights[ word ] ++)
           }
+          this.countWordMax = Math.max( this.countWordMax, wordCount );
         }
       });
     },
     updateWordsWeight() {
-      this.wordsWeights = new Array( this.words.length );
-      for (let i = 0; i < this.words.length; i++)
-        this.wordsWeights[ i ] = [ this.words[ i ], this.wordsCount[ i ] ];
+      let words = Object.keys( this.weights );
+      this.wordsWeights = new Array( words.length );
+
+      words
+          .forEach( (word, i ) => this.wordsWeights[ i ] = [ word, this.weights[ word ] ] );
     },
     onWordClick( event, wordAndWeight ) {
       let word = wordAndWeight[ 0 ];
