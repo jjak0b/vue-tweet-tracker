@@ -75,7 +75,7 @@ class Sample {
            fs.readFile(
                this.path,
                {encoding: "utf-8"},
-               function (err, dataBuffer) {
+               (err, dataBuffer) => {
                    if( err ) {
                        reject( err.code );
                        return;
@@ -83,7 +83,7 @@ class Sample {
 
                    if( this.count > 0 ) {
                        // remove last comma ","
-                       dataBuffer = dataBuffer.substring(0,dataBuffer.length() - 2);
+                       dataBuffer = dataBuffer.substring(0,dataBuffer.length - 2);
                    }
                    dataBuffer += "]";
                    if( shouldGetPlainText ) {
