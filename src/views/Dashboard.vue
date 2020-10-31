@@ -180,7 +180,7 @@ export default {
       if ( newVal && newVal.length > 0 ) {
         axios.get('/api/samples/' + newVal)
             .then( (response) => {
-                  this.tweets = JSON.parse(response.data)
+                  this.tweets = response.data;
                 })
             .catch( (error) => {
               console.error("ERROR", error);
