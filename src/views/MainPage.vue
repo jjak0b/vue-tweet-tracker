@@ -17,10 +17,45 @@
       <h3 class="pa-3">Samples List</h3>
       <v-divider></v-divider>
       <v-list dense nav>
-        <v-list-item link v-for="item in samplesList" :key="item">
-          <v-list-item-content>
-            <v-list-item-title>{{ item }}</v-list-item-title>
-          </v-list-item-content>
+        <v-list-item
+          v-for="item in samplesList"
+          :key="item"
+        >
+            <v-list-item-content>
+              <v-list-item-title v-text="item"></v-list-item-title>
+            </v-list-item-content>
+            <v-list-item-action>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                      icon
+                      :disabled="isSampleActive( item )"
+                      @click="pauseSample(item)"
+                      v-bind="attrs"
+                      v-on="on"
+                  >
+                    <v-icon>mdi-pause</v-icon>
+                  </v-btn>
+                </template>
+                <span>Pause</span>
+              </v-tooltip>
+            </v-list-item-action>
+            <v-list-item-action>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                      icon
+                      :disabled="!isSampleActive( item )"
+                      @click="activeSample(item)"
+                      v-bind="attrs"
+                      v-on="on"
+                  >
+                    <v-icon>mdi-play</v-icon>
+                  </v-btn>
+                </template>
+                <span>Resume</span>
+              </v-tooltip>
+            </v-list-item-action>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -34,22 +69,71 @@
 
 <script>
 import axios from "axios";
+import {StatusCodes} from "http-status-codes";
 
 export default {
   name: "MainPage",
 
   data: () => ({
     drawer: true,
-    samplesList: ["sample 1", "sample 2", "sample 3"]
+    samples: {
+      active: ["sample 1", "sample 2", ],
+      paused: [ "sample 3" ]
+    }
   }),
+  computed: {
+    samplesList() {
+      return this.samples.active.concat( this.samples.paused );
+    }
+  },
   created() {
-    axios.get("/api/samples/")
-      .then( (data) => {
-        this.samplesList = data.active;
-      })
-      .catch( (err) => {
-        console.error( err );
-      });
+    this.updateSampleList();
+  },
+  methods: {
+    updateSampleList() {
+      axios.get("/api/samples/")
+          .then( (data) => {
+            // this.samplesList = data.active;
+            this.samples.active = data.active || [];
+            this.samples.paused = data.paused || [];
+          })
+          .catch( (err) => {
+            console.error( err );
+          });
+    },
+    isSampleActive( name ) {
+      return this.samples.active.includes( name );
+    },
+    pauseSample(name) {
+      axios.post(`/api/samples/${name}/pause`)
+        .then( (data) => {
+          this.samples.active = data.active || [];
+          this.samples.paused = data.paused || [];
+        })
+        .catch( (err) => {
+          console.error( err );
+          switch( err.response.status ) {
+            case StatusCodes.METHOD_NOT_ALLOWED: {
+              break;
+            }
+          }
+        })
+        .finally( () => {
+          this.updateSampleList();
+        })
+
+    },
+    activeSample(name) {
+      axios.post(`/api/samples/${name}/resume`)
+        .then( (data) => {
+          // this.samplesList = data.active;
+          this.samples.active = data.active || [];
+          this.samples.paused = data.paused || [];
+        })
+        .catch( (err) => {
+          console.error( err );
+        });
+    }
   }
 }
 </script>
