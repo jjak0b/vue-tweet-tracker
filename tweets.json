@@ -1,0 +1,164 @@
+[
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132123181080576",
+                "text": "why does my dog look like this https://t.co/hTjAra3fS7",
+                "author_id": "3320153015",
+                "created_at": "2020-10-30T11:03:56.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2015-06-12T03:13:05.000Z",
+                    "name": "an insect🍯",
+                    "id": "3320153015",
+                    "username": "saintcaffeinate"
+                }
+            ]
+        }
+    },
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132141531156482",
+                "text": "This is my beautiful black cat Holly 😍 she’s a softy with our dog Paddy too @RuthieeL @EamonnHolmes @thismorning https://t.co/PmJEzj6a0F",
+                "author_id": "923941972737449984",
+                "created_at": "2020-10-30T11:04:01.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2017-10-27T15:58:27.000Z",
+                    "name": "Jacqueline",
+                    "id": "923941972737449984",
+                    "username": "Jacquel88221197"
+                }
+            ]
+        }
+    },
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132160086683648",
+                "text": "Man in the Czech Republic walking a stuffed dog to circumvent lockdown curfew set by the government! https://t.co/fXoLxSoTcd",
+                "author_id": "1098530783504072704",
+                "created_at": "2020-10-30T11:04:05.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2019-02-21T10:32:03.000Z",
+                    "name": "Michel 🇱🇧",
+                    "id": "1098530783504072704",
+                    "username": "RadicalLebanese"
+                }
+            ]
+        }
+    },
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132162594832386",
+                "text": "RT @daily8059: dog person // cat person https://t.co/OGwZffTa7K",
+                "author_id": "1004312903439138817",
+                "created_at": "2020-10-30T11:04:06.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2018-06-06T10:43:50.000Z",
+                    "name": "homjiaos III.",
+                    "id": "1004312903439138817",
+                    "username": "homjiaos"
+                }
+            ]
+        }
+    },
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132181515468800",
+                "text": "fatty hope ur dog dies https://t.co/pMInYT59jd",
+                "author_id": "1150842526997385217",
+                "created_at": "2020-10-30T11:04:10.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2019-07-15T19:00:14.000Z",
+                    "name": "maya ☾",
+                    "id": "1150842526997385217",
+                    "username": "starryhyo"
+                }
+            ]
+        }
+    },
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132189669138438",
+                "text": "@degree_in_dog @YaoKeith @realTrumpForce https://t.co/PcotHyELki",
+                "author_id": "167336511",
+                "created_at": "2020-10-30T11:04:12.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2010-07-16T09:33:41.000Z",
+                    "name": "mark harris",
+                    "id": "167336511",
+                    "username": "markyh05"
+                }
+            ]
+        }
+    },
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132194261790720",
+                "text": "RT @ShadowDogDesign: 5 Things I Want in Life:\n1.  A #dog\n2. Another dog\n3. A big house for my #dogs\n4.  Parks to walk my dogs\n5.  A partner…",
+                "author_id": "1032943403619631105",
+                "created_at": "2020-10-30T11:04:13.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2018-08-24T10:51:13.000Z",
+                    "name": "🇦🇺🇰🇭MobileAlterationExpress.com.au🇦🇺🇰🇭",
+                    "id": "1032943403619631105",
+                    "username": "mobilealterati1"
+                }
+            ]
+        }
+    },
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132204584079360",
+                "text": "RT @BearBertthe: My beautiful friend River Dance @tooscrufe1 commissioned our talented friend @TheWordOfErynn to make Bert, the miniature k…",
+                "author_id": "812261343839604736",
+                "created_at": "2020-10-30T11:04:16.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2016-12-23T11:39:30.000Z",
+                    "name": "elanor 🍃💚🍃",
+                    "id": "812261343839604736",
+                    "username": "elly189245978"
+                }
+            ]
+        }
+    },
+    {
+        "tweet": {
+            "data": {
+                "id": "1322132209113858048",
+                "text": "🤣😂🙃 https://t.co/grJptXGHHa",
+                "author_id": "1220580452215349248",
+                "created_at": "2020-10-30T11:04:17.000Z"
+            },
+            "users": [
+                {
+                    "created_at": "2020-01-24T05:35:00.000Z",
+                    "name": "Lemonade by Seonaid",
+                    "id": "1220580452215349248",
+                    "username": "GratefulFren"
+                }
+            ]
+        }
+    }
+]
