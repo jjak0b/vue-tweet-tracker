@@ -25,6 +25,7 @@
     "nodemailer": "^6.4.14",
     "oauth-1.0a": "^2.2.6",
     "querystring": "^0.2.0",
+    "telegraf": "^3.38.0",
     "vue": "^2.6.11",
     "vuetify": "^2.2.11"
   },
