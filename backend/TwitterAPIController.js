@@ -3,7 +3,7 @@ const fs = require('fs');
 const OAuth = require('oauth-1.0a');
 const needle = require("needle");
 const StatusCodes = require("http-status-codes").StatusCodes;
-const qs = require('querystring');
+const qs = require('query-string');
 const JSONStream = require('JSONStream');
 const Tweet = require( "./js/Tweet" );
 const Sample = require( "./js/Sample" );
@@ -17,6 +17,7 @@ class TwitterAPIController {
         SEARCH: {
             RECENT: {
                 API: "https://api.twitter.com/2/tweets/search/recent"
+                // API: "https://api.twitter.com/1.1/search/tweets.json" // 1.1
             },
             STREAM: {
                 API: "https://api.twitter.com/2/tweets/search/stream",
@@ -38,7 +39,8 @@ class TwitterAPIController {
             "lang",
             "text",
             "possibly_sensitive",
-            // "context_annotations",
+            "context_annotations",
+            "entities"
         ].join(),
         "place.fields": [
             "id",
@@ -439,11 +441,13 @@ class TwitterAPIController {
         let endPointURL = apiURL;
 
         if( params ) {
-            endPointURL += `?${qs.stringify(params)}`;
+            let paramsQuery = qs.stringify(params);
+            endPointURL += `?${paramsQuery}`;
         }
 
+        console.log( endPointURL );
         requestOptions.headers = {
-            "authorization": this.getAuthorizationHeader( endPointURL, shouldRequestAsBearer )
+            "authorization": this.getAuthorizationHeader(  endPointURL, shouldRequestAsBearer )
         };
 
         if( body ) {
