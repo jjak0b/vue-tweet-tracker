@@ -130,6 +130,7 @@
 
 <script>
 import {Tweet} from 'vue-tweet-embed'
+import json from "../../backend/repositories/Calcio.json"
 import language from "@/assets/language.json"
 import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
@@ -167,7 +168,7 @@ export default {
     }
   },
   data: () => ({
-    tweets: [],
+    tweets: json,
     centerPosition: new Position( 41.902782,12.496366 ),// Rome
     showLocation: false,
     showTweet: false,
@@ -175,7 +176,7 @@ export default {
     language: language,
     selectedTweetIndex: null
   }),
-  watch: {
+ watch: {
     selectedSample: function (newVal) {
       if ( newVal && newVal.length > 0 ) {
         axios.get('/api/samples/' + newVal)
