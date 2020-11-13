@@ -2,8 +2,8 @@ const SamplingController = require("./SamplingController");
 const ContextFilter = require("../../filters/ContextFilter");
 
 class ContextSamplingController extends SamplingController {
-    constructor( eventManager ) {
-        super( eventManager )
+    constructor( /*EventsManager*/eventManager ) {
+        super( eventManager );
     }
 
     add( tag /*String*/, filterData ) {

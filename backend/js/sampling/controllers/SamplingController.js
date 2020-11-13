@@ -1,7 +1,7 @@
 const SampleDescriptorCollection = require("../SampleDescriptorCollection");
 
 class SamplingController {
-    constructor( eventManager ) {
+    constructor( /*EventsManager*/eventManager ) {
         this.eventManager = eventManager;
         this.pausedSamples = new SampleDescriptorCollection();
         this.activeSamples = new SampleDescriptorCollection();
