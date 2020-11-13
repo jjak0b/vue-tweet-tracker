@@ -1,8 +1,15 @@
-const Event = require("./Event");
+const CustomEvent = require("custom-event");
 
-class UserConditionEvent extends Event {
+class UserConditionEvent extends CustomEvent {
     constructor( /*SampleDescriptor*/ descriptor ) {
-        super( UserConditionEvent.name, descriptor );
+        super(
+            UserConditionEvent.name,
+            {
+                detail: {
+                    descriptor
+                }
+            }
+        );
     }
 }
 

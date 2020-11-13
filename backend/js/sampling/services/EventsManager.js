@@ -3,6 +3,20 @@ const SampledEventListener = require("../eventListeners/SampledEventListener");
 const UserConditionEventListener = require("../eventListeners/UserConditionEventListener");
 
 class EventsManager extends EventEmitter{
+
+    static instance = null;
+
+    /**
+     *
+     * @returns {EventsManager}
+     */
+    static getInstance() {
+        if( !EventsManager.instance ) {
+            EventsManager.instance = new EventsManager();
+        }
+        return EventsManager.instance;
+    }
+
     static ENUM = {
         EVENTS: {
             SAMPLED: "sampled",
@@ -19,3 +33,5 @@ class EventsManager extends EventEmitter{
     }
 
 }
+
+module.exports = EventsManager;
