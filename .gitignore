@@ -1,6 +1,7 @@
 .DS_Store
 node_modules
 keys.json
+package-lock.json
 /dist
 
 # local env files
@@ -17,9 +18,9 @@ pnpm-debug.log*
 # Editor directories and files
 .idea
 .vscode
+.scannerwork
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
