@@ -31,6 +31,7 @@ class TwitterAPIController {
         expansions: [
             "author_id",
             "geo.place_id",
+            "attachments.media_keys"
         ].join(),
         "tweet.fields": [
             "geo",
@@ -38,7 +39,8 @@ class TwitterAPIController {
             "lang",
             "text",
             "possibly_sensitive",
-            // "context_annotations",
+            "context_annotations",
+            "entities"
         ].join(),
         "place.fields": [
             "id",
@@ -53,6 +55,13 @@ class TwitterAPIController {
             "name",
             "location",
             "created_at"
+        ].join(),
+        "media.fields": [
+            "type",
+            "url", // to use with photo
+            "preview_image_url", // to use with videos
+            "media_key",
+            "public_metrics"
         ].join()
     };
 
