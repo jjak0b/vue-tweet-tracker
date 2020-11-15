@@ -1,10 +1,17 @@
-const SampleDescriptorCollection = require("../SampleDescriptorCollection");
+const ItemsCollectionStorage = require("../../ItemsCollection");
+const Path = require("path");
 
 class SamplingController {
-    constructor( /*EventsManager*/eventManager ) {
+    constructor( /*EventsManager*/eventManager, path ) {
         this.eventManager = eventManager;
-        this.pausedSamples = new SampleDescriptorCollection();
-        this.activeSamples = new SampleDescriptorCollection();
+        /**
+         * @type {Map<String, Sample>}
+         */
+        this.pausedSamples = new Map();
+        /**
+         * @type {Map<String, Sample>}
+         */
+        this.activeSamples = new Map();
     }
 
     add( tag /*String*/, filter ) {
