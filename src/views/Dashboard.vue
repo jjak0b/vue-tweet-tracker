@@ -41,10 +41,15 @@
           </v-list>
         </v-card>
       </v-col>
+
       <v-col v-if="isSelected" cols="7">
         <v-card>
           <v-toolbar color="blue" dark>
             <v-toolbar-title class="font-weight-bold text-h6">Selected Tweet</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-btn icon v-if="isThereMediaPosition" dark>
+              <v-icon>mdi-pin</v-icon>
+            </v-btn>
           </v-toolbar>
           <v-expansion-panels accordion>
             <v-expansion-panel>
@@ -121,6 +126,13 @@
                 <p>{{ this.selectedTweet.places.full_name }}</p>
               </v-expansion-panel-content>
             </v-expansion-panel>
+            <v-expansion-panel v-if="selectedTweet.media">
+              <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <h4>Images</h4>
+                <v-img :src="this.selectedTweet.media.url"></v-img>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
           </v-expansion-panels>
         </v-card>
       </v-col>
@@ -130,7 +142,7 @@
 
 <script>
 import {Tweet} from 'vue-tweet-embed'
-import json from "../../backend/repositories/Calcio.json"
+import json from "../../backend/repositories/testimg.json"
 import language from "@/assets/language.json"
 import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
@@ -165,7 +177,13 @@ export default {
     },
     selectedTweet: function () {
       return this.isSelected ? this.tweets[this.selectedTweetIndex] : null
+    },
+
+    isThereMediaPosition: function(){
+      let selTweet = this.selectedTweet;
+      return selTweet.data.geo && selTweet.media && selTweet.media.type == 'photo'
     }
+
   },
   data: () => ({
     tweets: json,
