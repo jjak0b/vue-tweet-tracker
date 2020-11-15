@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 // const fs = require('fs');
 // const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
-const twitterAPIControllerInstance = require( "../js/sampling/controllers/TwitterAPIController").instance;
+const twitterAPIControllerInstance = require( "../js/sampling/controllers/ContextSamplingController").instance;
 
 router.get( "/", API_getSamples );
 /**
@@ -39,7 +39,7 @@ router.get( "/:tag", API_getSampleData );
  */
 function API_getSampleData( req, res ) {
     let tag = req.params.tag;
-    let sample = twitterAPIControllerInstance.getSample(tag);
+    let sample = twitterAPIControllerInstance.get(tag);
     if( sample ) {
         sample.getCollection( true )
             .then( (jsonCollection) => {
@@ -75,7 +75,7 @@ function API_addSample(req, res) {
     console.log( "received", sampleTag );
     let filter = req.body;
 
-    let promise = filter ? twitterAPIControllerInstance.addSample( sampleTag, filter ) : Promise.reject( StatusCodes.BAD_REQUEST );
+    let promise = filter ? twitterAPIControllerInstance.add( sampleTag, filter ) : Promise.reject( StatusCodes.BAD_REQUEST );
     promise
         .then( (statusCode) => {
             res.sendStatus( statusCode );
@@ -99,7 +99,7 @@ router.delete( "/:tag", API_deleteSample );
 function API_deleteSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    twitterAPIControllerInstance.deleteSample( sampleTag )
+    twitterAPIControllerInstance.remove( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
@@ -125,7 +125,7 @@ router.post( "/:tag/resume", API_resumeSample );
 function API_resumeSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    twitterAPIControllerInstance.resumeSample( sampleTag )
+    twitterAPIControllerInstance.resume( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
@@ -149,7 +149,7 @@ router.post( "/:tag/pause", API_pauseSample );
 function API_pauseSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    twitterAPIControllerInstance.pauseSample( sampleTag )
+    twitterAPIControllerInstance.pause( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })

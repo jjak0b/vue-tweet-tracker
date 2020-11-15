@@ -2,8 +2,8 @@ const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
-const TwitterAPIController = require( "../js/sampling/controllers/TwitterAPIController").TwitterAPIController;
-const twitterAPIControllerInstance = require( "../js/sampling/controllers/TwitterAPIController").instance;
+const TwitterAPIController = require( "../js/sampling/controllers/ContextSamplingController").TwitterAPIController;
+const twitterAPIControllerInstance = require( "../js/sampling/controllers/ContextSamplingController").instance;
 
 router.get( "/", (req, res) => {
 

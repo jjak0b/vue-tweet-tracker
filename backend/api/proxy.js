@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const qs = require("query-string");
-const twitterAPIControllerInstance = require( "../js/sampling/controllers/TwitterAPIController").instance;
+const twitterAPIControllerInstance = require( "../js/sampling/controllers/ContextSamplingController");
 
 router.all( "/:version", (req, res) => {
 

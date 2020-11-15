@@ -5,11 +5,15 @@ const needle = require("needle");
 const StatusCodes = require("http-status-codes").StatusCodes;
 const qs = require('query-string');
 const JSONStream = require('JSONStream');
-const Tweet = require( "../../Tweet" );
+const Tweet = require( "../../sampleItems/Tweet" );
 const Sample = require( "../../Sample" );
 const FilterConverter = require( "../../filterConverter");
+const SamplingController = require("./SamplingController");
+const FilterBuilder = require("../filters/FilterBuilder");
+const SampleBuilder = require("../../SampleBuilder");
+const GeocodedFilter = require("../filters/GeocodedFilter");
 
-class TwitterAPIController {
+class ContextSamplingController extends SamplingController {
     static MAX_RESULT_PER_REQUEST = 100;
     static MAX_STREAMS_COUNT = 25;
 
@@ -58,13 +62,15 @@ class TwitterAPIController {
         ].join()
     };
 
-    constructor() {
+    constructor(eventManager) {
+        super(eventManager);
+
         this.isSampling = false;
         this.activeStreams = [];
         this.pausedStreams = [];
 
-        console.log( "[TwitterAPIController", "Fetching active stream rules ...");
-        this.requestAPI("get", TwitterAPIController.ENUM.SEARCH.STREAM.RULES.API, null, null, true)
+        console.log( "[ContextSamplingController", "Fetching active stream rules ...");
+        this.requestAPI("get", ContextSamplingController.ENUM.SEARCH.STREAM.RULES.API, null, null, true)
             .then( (apiResponse) => {
                 if( apiResponse.statusCode === StatusCodes.OK ) {
                     if( Array.isArray( apiResponse.body.data ) && apiResponse.body.data.length > 0 ) {
@@ -72,19 +78,19 @@ class TwitterAPIController {
                             let sample = new Sample( rule.id,  { tag: rule.tag, value: rule.value } );
                             this.activeStreams.push( sample );
                         });
-                        console.log( "[TwitterAPIController", "Detected samples:", this.activeStreams );
-                        this.startSampling();
+                        console.log( "[ContextSamplingController", "Detected samples:", this.activeStreams );
+                        this.start();
                     }
                     else {
-                        console.log( "[TwitterAPIController", "No active samples detected" );
+                        console.log( "[ContextSamplingController", "No active samples detected" );
                     }
                 }
                 else {
-                    console.warn( "[TwitterAPIController", "Error fetching samples", "cause:", apiResponse.errors );
+                    console.warn( "[ContextSamplingController", "Error fetching samples", "cause:", apiResponse.errors );
                 }
             })
             .catch( (err) => {
-                console.error( "[TwitterAPIController", "Error fetching samples", "cause:", err );
+                console.error( "[ContextSamplingController", "Error fetching samples", "cause:", err );
             })
     }
 
@@ -119,7 +125,7 @@ class TwitterAPIController {
         return -1;
     }
 
-    getSample( tag ) {
+    get(tag ) {
         let index = this.getPausedSampleIndex( tag );
         if( index >= 0 ) {
             return this.getPausedSamples()[ index ];
@@ -133,7 +139,7 @@ class TwitterAPIController {
         return null;
     }
 
-    deleteSample( tag ) {
+    remove(tag ) {
         let self = this;
         return new Promise( (resolve, reject) => {
             function handleDeleteSample(statusCode) {
@@ -153,21 +159,25 @@ class TwitterAPIController {
                 }
             }
 
-            this.pauseSample( tag )
+            this.pause( tag )
                 .then( handleDeleteSample )
                 .catch( handleDeleteSample )
         });
     }
 
-    addSample( tag, filter ) {
-        let sample = this.getSample( tag );
+    add(tag, filter ) {
+        let sample = this.get( tag );
         if( !sample ) {
+            filter = new FilterBuilder.build( filter );
             //stringify filter into query filter
-            let queryFilter = TwitterAPIController.getQueryFromFilter( filter );
-            let sample = new Sample( null,  { tag: tag, value: queryFilter }, filter );
+            let queryFilter = ContextSamplingController.getQueryFromFilter( filter );
+            let sample = SampleBuilder.build(
+                tag,
+                new GeocodedFilter( filter )
+            );
             console.log( "Add new sample to paused streams", sample );
             this.getPausedSamples().push( sample );
-            return this.resumeSample( tag );
+            return this.resume( tag );
         }
         else {
             return Promise.reject( StatusCodes.CONFLICT )
@@ -175,13 +185,13 @@ class TwitterAPIController {
 
     }
 
-    resumeSample( tag ) {
+    resume(tag ) {
 
-        console.log( "[TwitterAPIController]", "Request of resume sample with tag ", `"${tag}"`);
+        console.log( "[ContextSamplingController]", "Request of resume sample with tag ", `"${tag}"`);
         let activeSamples = this.getActiveSamples();
         let pausedSamples = this.getPausedSamples();
 
-        if( activeSamples.length >= TwitterAPIController.MAX_STREAMS_COUNT ) {
+        if( activeSamples.length >= ContextSamplingController.MAX_STREAMS_COUNT ) {
             // should we using StatusCodes instead ?
             return Promise.reject( StatusCodes.TOO_MANY_REQUESTS );
         }
@@ -196,14 +206,14 @@ class TwitterAPIController {
 
                 this.requestAPI(
                     "post",
-                    TwitterAPIController.ENUM.SEARCH.STREAM.RULES.API,
+                    ContextSamplingController.ENUM.SEARCH.STREAM.RULES.API,
                     null,
                     {
                         "add": [sample.rule]
                     }
                 )
                     .then((apiResponse) => {
-                        console.log("resumeSample response", apiResponse.statusCode, apiResponse.body);
+                        console.log("resume response", apiResponse.statusCode, apiResponse.body);
                         // even if responds CREATED, the response content can contains errors
                         if (apiResponse.statusCode === StatusCodes.CREATED) {
                             if (apiResponse.body.meta.summary.valid) {
@@ -220,7 +230,7 @@ class TwitterAPIController {
                                 }
 
                                 if( !this.isSampling ) {
-                                    this.startSampling();
+                                    this.start();
                                 }
                             }
                             else {
@@ -238,7 +248,7 @@ class TwitterAPIController {
                         }
                     })
                     .catch((err) => {
-                        console.error("[TwitterAPIController]", "resumeSample", "error:", err);
+                        console.error("[ContextSamplingController]", "resume", "error:", err);
                         reject(StatusCodes.INTERNAL_SERVER_ERROR);
                     });
             });
@@ -254,7 +264,7 @@ class TwitterAPIController {
     }
 
 
-    startSampling() {
+    start() {
         let timeout = 0;
         let handlers = {
             // will be popolated below, justy here to reference "reconnect" function
@@ -282,9 +292,9 @@ class TwitterAPIController {
     // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
     streamConnect( handlers ) {
         //Listen to the stream
-        let params = TwitterAPIController.PARAMETERS;
+        let params = ContextSamplingController.PARAMETERS;
 
-        let endPointURL = TwitterAPIController.ENUM.SEARCH.STREAM.API;
+        let endPointURL = ContextSamplingController.ENUM.SEARCH.STREAM.API;
         if( params ) {
             endPointURL += `?${qs.stringify(params)}`;
         }
@@ -352,8 +362,8 @@ class TwitterAPIController {
         }
     }
 
-    pauseSample( tag ) {
-        console.log( "[TwitterAPIController]", "Request of pause sample with tag ", `"${tag}"`);
+    pause(tag ) {
+        console.log( "[ContextSamplingController]", "Request of pause sample with tag ", `"${tag}"`);
         let sampleIndex = this.getActiveSampleIndex( tag );
         let activeSamples = this.getActiveSamples();
         let pausedSamples = this.getPausedSamples();
@@ -362,13 +372,13 @@ class TwitterAPIController {
             let sample = activeSamples[ sampleIndex ];
             console.log("pausing", sample);
             return new Promise((resolve, reject) => {
-                this.requestAPI("post", TwitterAPIController.ENUM.SEARCH.STREAM.RULES.API, null, {
+                this.requestAPI("post", ContextSamplingController.ENUM.SEARCH.STREAM.RULES.API, null, {
                     delete: {
                         ids: [sample.id]
                     }
                 })
                     .then((apiResponse) => {
-                        console.log("pauseSample response", apiResponse.statusCode, apiResponse.body);
+                        console.log("pause response", apiResponse.statusCode, apiResponse.body);
                         if (apiResponse.statusCode === StatusCodes.OK) {
                             if (apiResponse.body.meta.summary.deleted) {
 
@@ -392,7 +402,7 @@ class TwitterAPIController {
                         }
                     })
                     .catch((err) => {
-                        console.error("[TwitterAPIController]", "pauseSample", "error:", err);
+                        console.error("[ContextSamplingController]", "pause", "error:", err);
                         reject(StatusCodes.INTERNAL_SERVER_ERROR);
                     });
             });
@@ -463,8 +473,5 @@ class TwitterAPIController {
     }
 }
 
-const twitterAPIController = new TwitterAPIController();
-module.exports = {
-    instance: twitterAPIController,
-    TwitterAPIController
-};
+const twitterAPIController = new ContextSamplingController();
+module.exports = ContextSamplingController
