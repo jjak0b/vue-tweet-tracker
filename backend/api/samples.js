@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 // const fs = require('fs');
 // const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
-const twitterAPIControllerInstance = require( "../TwitterAPIController").instance;
+const twitterAPIControllerInstance = require( "../js/sampling/controllers/TwitterAPIController").instance;
 
 router.get( "/", API_getSamples );
 /**

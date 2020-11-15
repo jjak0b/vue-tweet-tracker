@@ -5,9 +5,9 @@ const needle = require("needle");
 const StatusCodes = require("http-status-codes").StatusCodes;
 const qs = require('query-string');
 const JSONStream = require('JSONStream');
-const Tweet = require( "./js/Tweet" );
-const Sample = require( "./js/Sample" );
-const FilterConverter = require( "./js/filterConverter");
+const Tweet = require( "../../Tweet" );
+const Sample = require( "../../Sample" );
+const FilterConverter = require( "../../filterConverter");
 
 class TwitterAPIController {
     static MAX_RESULT_PER_REQUEST = 100;

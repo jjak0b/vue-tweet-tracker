@@ -1,3 +1,4 @@
+const SamplesHandler = require("./SamplesHandler");
 class GeoSamplesHandler extends SamplesHandler {
     constructor( controller /*GeoSamplingController*/ ) {
         super(controller);
