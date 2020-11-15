@@ -12,11 +12,20 @@ class SamplesHandler {
         this.nextHandler =  handler;
     }
 
+    /**
+     *
+     * @returns {SamplingController}
+     */
     getController() {
         return this.controller;
     }
 
-    handleRequest(/*SamplingRequest*/ request ) {
+    /**
+     *
+     * @param request
+     * @returns {SamplingController|null}
+     */
+    handleRequest(/*SamplingControllerRequest*/ request ) {
         if( this.canHandle( request ) ) {
             return this.getController();
         }
@@ -26,6 +35,6 @@ class SamplesHandler {
         return null;
     }
 
-    canHandle( /*SamplingRequest*/ request ) { return true };
+    canHandle( /*SamplingControllerRequest*/ request ) { return true };
 
 }

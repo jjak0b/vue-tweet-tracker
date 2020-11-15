@@ -31,7 +31,7 @@ class SamplingFacade {
         return SamplingFacade.instance;
     }
 
-    request( /*SamplingRequest*/ request) {
+    request( /*SamplingControllerRequest*/ request) {
         return this.startHandler.handleRequest( request );
     }
 }

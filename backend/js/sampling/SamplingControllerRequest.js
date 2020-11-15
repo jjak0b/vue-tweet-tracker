@@ -1,4 +1,4 @@
-class SamplingRequest {
+class SamplingControllerRequest {
     constructor( tag, body ) {
         this._tag = tag;
         this._body = body;
@@ -21,4 +21,4 @@ class SamplingRequest {
     }
 }
 
-module.exports = SamplingRequest;
+module.exports = SamplingControllerRequest;
