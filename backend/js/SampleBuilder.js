@@ -4,12 +4,12 @@ const ItemsCollectionStorage = require("./ItemsCollectionStorage");
 const FilterBuilder = require("./sampling/filters/FilterBuilder");
 class SampleBuilder {
 
-    constructor(storageLocation) {
-        this.rootPath = storageLocation;
+    constructor() {
+
     }
 
 
-    fetchSample( tag ) {
+    static fetch( tag ) {
         return new Promise( (resolve, reject) => {
             SampleBuilder.fetchDescriptor( SampleBuilder.getSampleDescriptorLocation( tag ) )
                 .then( (descriptor) => {
@@ -19,7 +19,7 @@ class SampleBuilder {
         });
     }
 
-    buildSample( /*String*/tag, /*Filter*/filter) {
+    static build( /*String*/tag, filter) {
         let descriptor = FilterBuilder.build( filter );
         let collection = new ItemsCollectionStorage( SampleBuilder.getSampleCollectionLocation( tag ) );
         return new Sample( descriptor, collection );
@@ -55,3 +55,5 @@ class SampleBuilder {
         });
     }
 }
+
+module.exports = SampleBuilder;
