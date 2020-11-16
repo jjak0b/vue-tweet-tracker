@@ -23,18 +23,26 @@ function API_getSamples( req, res ) {
     let samplingController = samplingFacade.request(
         new SamplingControllerRequest(
             null,
-            req.body
+            {
+                type: req.query.type
+            }
         )
     );
 
-    let data = {};
-    if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "active" ) ) {
-        data.active = samplingController.getActiveTags();
+    if( samplingController ) {
+        let data = {};
+        if (!statesQuery || statesQuery.length < 1 || statesQuery.includes("active")) {
+            data.active = samplingController.getActiveTags();
+        }
+        if (!statesQuery || statesQuery.length < 1 || statesQuery.includes("paused")) {
+            data.paused = samplingController.getPausedTags();
+        }
+        res.json( data );
     }
-    if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "paused" ) ) {
-        data.paused = samplingController.getPausedTags();
+    else {
+        res.sendStatus( StatusCodes.BAD_REQUEST );
     }
-   res.json( data );
+
 }
 
 router.get( "/:tag", API_getSampleData );
@@ -46,25 +54,32 @@ router.get( "/:tag", API_getSampleData );
  * @Body JSON Array of tweets for the sample tag provided
  *
  */
-function API_getSampleData( req, res ) {
+async function API_getSampleData( req, res ) {
     let tag = req.params.tag;
     let samplingController = samplingFacade.request(
         new SamplingControllerRequest(
           tag,
-          req.type
+            {
+                type: req.query.type
+            }
         )
     );
 
-    let sample = samplingController ? samplingController.get( tag ) : null;
-    if( sample ) {
-        sample.getCollection().toArray()
-            .then( (array) => {
-                res.json( array );
-            })
-            .catch( ( err ) => {
-                res.sendStatus( StatusCodes.INTERNAL_SERVER_ERROR );
-                console.error( "[GET API/samples/:tag]", err );
-            });
+    if( samplingController ) {
+        let sample = await samplingController.get( tag );
+        if( sample ) {
+            sample.getCollection().toArray()
+                .then((array) => {
+                    res.json(array);
+                })
+                .catch((err) => {
+                    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+                    console.error("[GET API/samples/:tag]", err);
+                });
+        }
+        else {
+            res.sendStatus( StatusCodes.NOT_FOUND );
+        }
     }
     else {
         res.sendStatus( StatusCodes.BAD_REQUEST );
@@ -126,7 +141,9 @@ function API_deleteSample( req, res ) {
     let samplingController = samplingFacade.request(
         new SamplingControllerRequest(
             sampleTag,
-            req.body
+            {
+                type: req.query.type
+            }
         )
     );
 
@@ -163,7 +180,9 @@ function API_resumeSample( req, res ) {
     let samplingController = samplingFacade.request(
         new SamplingControllerRequest(
             sampleTag,
-            req.body
+            {
+                type: req.query.type
+            }
         )
     );
     if( samplingController) {
@@ -198,7 +217,9 @@ function API_pauseSample( req, res ) {
     let samplingController = samplingFacade.request(
         new SamplingControllerRequest(
             sampleTag,
-            req.body
+            {
+                type: req.query.type
+            }
         )
     );
 
