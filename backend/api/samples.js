@@ -1,9 +1,13 @@
 const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
+const SamplingFacade = require("../js/SamplingFacade");
+const SamplingControllerRequest = require("../js/sampling/SamplingControllerRequest");
+
 const router = express.Router();
 // const fs = require('fs');
 // const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
-const twitterAPIControllerInstance = require( "../js/sampling/controllers/ContextSamplingController").instance;
+
+const samplingFacade = SamplingFacade.getInstance();
 
 router.get( "/", API_getSamples );
 /**
@@ -15,15 +19,20 @@ router.get( "/", API_getSamples );
  *
  */
 function API_getSamples( req, res ) {
-    // TODO: return list of samples tags
     let statesQuery = req.query.states;
+    let samplingController = samplingFacade.request(
+        new SamplingControllerRequest(
+            null,
+            req.body
+        )
+    );
 
     let data = {};
     if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "active" ) ) {
-        data.active = twitterAPIControllerInstance.getActiveSamples().map(sample => sample.rule.tag );
+        data.active = samplingController.getActiveTags();
     }
     if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "paused" ) ) {
-        data.paused = twitterAPIControllerInstance.getPausedSamples().map(sample => sample.rule.tag );
+        data.paused = samplingController.getPausedTags();
     }
    res.json( data );
 }
@@ -39,13 +48,18 @@ router.get( "/:tag", API_getSampleData );
  */
 function API_getSampleData( req, res ) {
     let tag = req.params.tag;
-    let sample = twitterAPIControllerInstance.get(tag);
+    let samplingController = samplingFacade.request(
+        new SamplingControllerRequest(
+          tag,
+          req.type
+        )
+    );
+
+    let sample = samplingController ? samplingController.get( tag ) : null;
     if( sample ) {
-        sample.getCollection( true )
-            .then( (jsonCollection) => {
-                res.setHeader('Content-Type', 'application/json');
-                res.write( jsonCollection );
-                res.end();
+        sample.getCollection().toArray()
+            .then( (array) => {
+                res.json( array );
             })
             .catch( ( err ) => {
                 res.sendStatus( StatusCodes.INTERNAL_SERVER_ERROR );
@@ -53,7 +67,7 @@ function API_getSampleData( req, res ) {
             });
     }
     else {
-        res.sendStatus( StatusCodes.NOT_FOUND );
+        res.sendStatus( StatusCodes.BAD_REQUEST );
     }
 }
 
@@ -74,15 +88,25 @@ function API_addSample(req, res) {
 
     console.log( "received", sampleTag );
     let filter = req.body;
+    let samplingController = samplingFacade.request(
+        new SamplingControllerRequest(
+            sampleTag,
+            filter
+        )
+    );
 
-    let promise = filter ? twitterAPIControllerInstance.add( sampleTag, filter ) : Promise.reject( StatusCodes.BAD_REQUEST );
-    promise
-        .then( (statusCode) => {
-            res.sendStatus( statusCode );
-        })
-        .catch( (errCode) => {
-            res.sendStatus( errCode );
-        })
+    if( samplingController) {
+        samplingController.add( sampleTag, filter )
+            .then( (statusCode) => {
+                res.sendStatus( statusCode );
+            })
+            .catch( (errCode) => {
+                res.sendStatus( errCode );
+            })
+    }
+    else {
+        res.sendStatus( StatusCodes.BAD_REQUEST );
+    }
 
 }
 
@@ -99,13 +123,25 @@ router.delete( "/:tag", API_deleteSample );
 function API_deleteSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    twitterAPIControllerInstance.remove( sampleTag )
+    let samplingController = samplingFacade.request(
+        new SamplingControllerRequest(
+            sampleTag,
+            req.body
+        )
+    );
+
+    if( samplingController) {
+        samplingController.remove( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
         .catch( (errCode) => {
             res.sendStatus( errCode );
         })
+    }
+    else {
+        res.sendStatus( StatusCodes.BAD_REQUEST );
+    }
 }
 
 router.post( "/:tag/resume", API_resumeSample );
@@ -124,14 +160,24 @@ router.post( "/:tag/resume", API_resumeSample );
  */
 function API_resumeSample( req, res ) {
     let sampleTag = req.params.tag;
-
-    twitterAPIControllerInstance.resume( sampleTag )
+    let samplingController = samplingFacade.request(
+        new SamplingControllerRequest(
+            sampleTag,
+            req.body
+        )
+    );
+    if( samplingController) {
+        samplingController.resume( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
         .catch( (errCode) => {
             res.sendStatus( errCode );
         })
+    }
+    else {
+        res.sendStatus( StatusCodes.BAD_REQUEST );
+    }
 
 }
 
@@ -149,13 +195,25 @@ router.post( "/:tag/pause", API_pauseSample );
 function API_pauseSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    twitterAPIControllerInstance.pause( sampleTag )
+    let samplingController = samplingFacade.request(
+        new SamplingControllerRequest(
+            sampleTag,
+            req.body
+        )
+    );
+
+    if( samplingController ) {
+        samplingController.pause( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
         .catch( (errCode) => {
             res.sendStatus( errCode );
         })
+    }
+    else {
+        res.sendStatus( StatusCodes.BAD_REQUEST );
+    }
 }
 
 module.exports = router;

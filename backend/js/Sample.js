@@ -30,6 +30,10 @@ class Sample {
         );
     }
 
+    /**
+     *
+     * @returns {ItemsCollection}
+     */
     getCollection( ) {
         return this.collection;
     }

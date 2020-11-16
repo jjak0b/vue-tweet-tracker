@@ -38,3 +38,5 @@ class SamplesHandler {
     canHandle( /*SamplingControllerRequest*/ request ) { return true };
 
 }
+
+module.exports = SamplesHandler;

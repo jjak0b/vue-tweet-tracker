@@ -2,8 +2,8 @@ const SamplingController = require("./SamplingController");
 const GeocodedFilter = require("../filters/GeocodedFilter");
 
 class GeoSamplingController extends SamplingController {
-    constructor( /*EventsManager*/eventManager ) {
-        super( eventManager )
+    constructor( /*EventsManager*/eventManager, /*String*/workingDirectory ) {
+        super( eventManager, workingDirectory);
     }
 
     add( tag /*String*/, filterData ) {

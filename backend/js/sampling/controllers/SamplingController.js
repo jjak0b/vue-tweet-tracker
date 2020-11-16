@@ -1,9 +1,12 @@
-const ItemsCollectionStorage = require("../../ItemsCollection");
-const Path = require("path");
+const path = require("path");
+const SampleBuilder = require("../../SampleBuilder");
+const fs = require("fs-extra");
 
 class SamplingController {
-    constructor( /*EventsManager*/eventManager, path ) {
+    constructor( /*EventsManager*/eventManager, /*String*/workingDirectory ) {
         this.eventManager = eventManager;
+        this.workingDirectory = workingDirectory;
+
         /**
          * @type {Map<String, Sample>}
          */
@@ -12,17 +15,90 @@ class SamplingController {
          * @type {Map<String, Sample>}
          */
         this.activeSamples = new Map();
+
     }
 
-    add( tag /*String*/, filter ) {
-        this.pausedSamples.set( tag, filter );
+    async fetch() {
+
+        let sampleStatesFilename = path.join( this.workingDirectory, "sampleStates.json" );
+
+        let samplesStates;
+        try {
+            samplesStates = await fs.readJson(
+                sampleStatesFilename,
+                {
+                    encoding: "utf-8"
+                }
+            );
+        }
+        catch ( e ) {
+            console.error( `[${this.constructor.name}]`, "Error reading local sampleStates.json", "reason:", e );
+        }
+        
+        if( !samplesStates ) return;
+
+        let sample;
+        for (const tag of samplesStates.paused) {
+            try {
+                sample = await SampleBuilder.fetch(tag);
+                if( sample )
+                    this.pausedSamples.set(tag, sample);
+            }
+            catch (e) {
+                console.error( `[${this.constructor.name}]`, "Error fetching local paused sample", tag, "; reason:", e );
+            }
+        }
+
+        for (const tag of samplesStates.active) {
+            try {
+                sample = await SampleBuilder.fetch( tag );
+                if( sample )
+                    this.activeSamples.set( tag, sample );
+            }
+            catch (e) {
+                console.error( `[${this.constructor.name}]`, "Error fetching local active sample", tag, "; reason:", e );
+            }
+        }
     }
 
-    remove( tag /*String*/ ) {
+    async update() {
+        let sampleStatesFilename = path.join( this.workingDirectory, "sampleStates.json" );
+
+        try {
+            await fs.outputJson(
+                sampleStatesFilename,
+                {
+                    active: this.getActiveTags(),
+                    paused: this.getPausedTags(),
+                },
+                {
+                    encoding: "utf-8"
+                }
+            );
+        }
+        catch ( e ) {
+            console.error( `[${this.constructor.name}]`, "Error reading local sampleStates.json", "reason:", e );
+        }
+    }
+
+    async start() {
+        await this.fetch();
+    }
+
+    async add( tag /*String*/, filter ) {
+        let sample = SampleBuilder.build(
+            tag,
+            filter
+        );
+        console.log( `[${this.constructor.name}]`, "Add new sample to paused streams", sample );
+        this.pausedSamples.set( tag, sample );
+    }
+
+    async remove( tag /*String*/ ) {
         this.pausedSamples.delete( tag );
     }
 
-    resume( tag /*String*/ ) {
+    async resume( tag /*String*/ ) {
         let sampleDescriptor = this.pausedSamples.get( tag );
 
         if( sampleDescriptor ) {
@@ -33,7 +109,7 @@ class SamplingController {
         return false;
     }
 
-    pause( tag /*String*/ ) {
+    async pause( tag /*String*/ ) {
         let sampleDescriptor = this.activeSamples.get( tag );
 
         if( sampleDescriptor ) {
@@ -44,12 +120,19 @@ class SamplingController {
         return false;
     }
 
+    async get( /*String*/tag ) {
+        let sample = this.activeSamples.get( tag );
+        if( !sample )
+            sample = this.pausedSamples.get( tag );
+        return sample;
+    }
+
     getPausedTags() {
-        return this.pausedSamples.entries();
+        return this.pausedSamples.keys();
     }
 
     getActiveTags() {
-        return this.activeSamples.entries();
+        return this.activeSamples.keys();
     }
 }
 

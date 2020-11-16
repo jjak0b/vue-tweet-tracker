@@ -1,3 +1,5 @@
+const SamplesHandler = require("./SamplesHandler");
+
 class ContextSamplesHandler extends SamplesHandler {
     constructor( controller /*ContextSamplingController*/ ) {
         super(controller);
