@@ -4,6 +4,7 @@ import Dashboard from "@/views/Dashboard";
 import HomePage from "@/views/HomePage";
 import MainPage from "@/views/MainPage";
 import FilterMenu from "@/views/FilterMenu";
+import Gallery from "@/views/Gallery";
 
 Vue.use(VueRouter)
 
@@ -27,6 +28,11 @@ const routes = [
         path: '/app/filter',
         name: 'New sample',
         component: FilterMenu
+      },
+      {
+        path: '/app/gallery',
+        name: 'Gallery',
+        component: Gallery
       }
     ]
   },
