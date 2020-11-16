@@ -142,7 +142,7 @@
 
 <script>
 import {Tweet} from 'vue-tweet-embed'
-import json from "../../backend/repositories/testimg.json"
+import json from "../../backend/repositories/multipleimages.json"
 import language from "@/assets/language.json"
 import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
