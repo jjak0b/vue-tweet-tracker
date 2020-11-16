@@ -4,56 +4,40 @@ const ItemsCollectionStorage = require("./ItemsCollectionStorage");
 const FilterBuilder = require("./sampling/filters/FilterBuilder");
 class SampleBuilder {
 
-    constructor() {
-
+    constructor( /*String*/workingRoot) {
+        this.workingRoot = workingRoot;
     }
 
 
-    static fetch( tag ) {
-        return new Promise( (resolve, reject) => {
-            SampleBuilder.fetchDescriptor( SampleBuilder.getSampleDescriptorLocation( tag ) )
-                .then( (descriptor) => {
-                    resolve( SampleDescriptor.clone( descriptor ) )
-                })
-                .catch( reject )
-        });
+    async fetch( tag ) {
+        let jsonDescriptor = await fs.readJson(
+            this.getSampleDescriptorLocation(tag),
+            {encoding: "utf-8"}
+        );
+        let sampleDescriptor = SampleDescriptor.clone( jsonDescriptor );
+        let sampleCollection = new ItemsCollectionStorage( this.getSampleCollectionLocation( tag ) );
+        return new Sample( sampleDescriptor, sampleCollection );
     }
 
-    static build( /*String*/tag, filter) {
-        let descriptor = FilterBuilder.build( filter );
-        let collection = new ItemsCollectionStorage( SampleBuilder.getSampleCollectionLocation( tag ) );
+    build( /*String*/tag, filter) {
+        filter = FilterBuilder.build( filter );
+        let descriptor = new SampleDescriptor( tag, filter );
+        let collection = new ItemsCollectionStorage( this.getSampleCollectionLocation( tag ) );
         return new Sample( descriptor, collection );
     }
 
-    static getSampleLocation( tag ) {
-        return path.join( global.__basedir, process.env.PATH_REPOSITORIES_SAMPLES, tag );
+    getSampleLocation( tag ) {
+        return path.join( this.workingRoot, tag );
     }
 
-    static getSampleDescriptorLocation( tag ) {
-        return path.join( SampleBuilder.getSampleLocation( tag ), "descriptor.json");
+    getSampleDescriptorLocation( tag ) {
+        return path.join( this.getSampleLocation( tag ), "descriptor.json");
     }
 
-    static getSampleCollectionLocation( tag ) {
-        return path.join( SampleBuilder.getSampleLocation( tag ), "collection.json");
+    getSampleCollectionLocation( tag ) {
+        return path.join( this.getSampleLocation( tag ), "collection.json");
     }
 
-    static fetchDescriptor( file ) {
-        return new Promise( (resolve, reject) => {
-            fs.readJson(
-                file,
-                {encoding: "utf-8"},
-                (err, obj) => {
-                    if( err ) {
-                        console.error( "[Sample]", "Error while reading sample descriptor repo at " , filePath, "cause:", err);
-                        reject( err );
-                    }
-                    else {
-                        resolve( obj );
-                    }
-                }
-            );
-        });
-    }
 }
 
 module.exports = SampleBuilder;

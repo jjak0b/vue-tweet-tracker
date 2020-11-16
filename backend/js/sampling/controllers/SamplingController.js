@@ -7,6 +7,7 @@ class SamplingController {
         this.eventManager = eventManager;
         this.workingDirectory = workingDirectory;
 
+        fs.ensureDirSync(this.workingDirectory);
         /**
          * @type {Map<String, Sample>}
          */
@@ -16,6 +17,7 @@ class SamplingController {
          */
         this.activeSamples = new Map();
 
+        this.sampleBuilder = new SampleBuilder( this.workingDirectory );
     }
 
     async fetch() {
@@ -32,7 +34,12 @@ class SamplingController {
             );
         }
         catch ( e ) {
-            console.error( `[${this.constructor.name}]`, "Error reading local sampleStates.json", "reason:", e );
+            if( e.code === "ENOENT" ) {
+                this.update();
+            }
+            else {
+                console.error(`[${this.constructor.name}]`, "Error reading local sampleStates.json", "reason:", e);
+            }
         }
         
         if( !samplesStates ) return;
@@ -40,7 +47,7 @@ class SamplingController {
         let sample;
         for (const tag of samplesStates.paused) {
             try {
-                sample = await SampleBuilder.fetch(tag);
+                sample = await this.sampleBuilder.fetch(tag);
                 if( sample )
                     this.pausedSamples.set(tag, sample);
             }
@@ -51,7 +58,7 @@ class SamplingController {
 
         for (const tag of samplesStates.active) {
             try {
-                sample = await SampleBuilder.fetch( tag );
+                sample = await this.sampleBuilder.fetch( tag );
                 if( sample )
                     this.activeSamples.set( tag, sample );
             }
@@ -65,7 +72,7 @@ class SamplingController {
         let sampleStatesFilename = path.join( this.workingDirectory, "sampleStates.json" );
 
         try {
-            await fs.outputJson(
+            await fs.writeJson(
                 sampleStatesFilename,
                 {
                     active: this.getActiveTags(),
@@ -77,7 +84,7 @@ class SamplingController {
             );
         }
         catch ( e ) {
-            console.error( `[${this.constructor.name}]`, "Error reading local sampleStates.json", "reason:", e );
+            console.error( `[${this.constructor.name}]`, "Error writing local sampleStates.json", "reason:", e );
         }
     }
 
@@ -86,7 +93,7 @@ class SamplingController {
     }
 
     async add( tag /*String*/, filter ) {
-        let sample = SampleBuilder.build(
+        let sample = this.sampleBuilder.build(
             tag,
             filter
         );
@@ -128,11 +135,11 @@ class SamplingController {
     }
 
     getPausedTags() {
-        return this.pausedSamples.keys();
+        return Array.from( this.pausedSamples.keys() );
     }
 
     getActiveTags() {
-        return this.activeSamples.keys();
+        return Array.from( this.activeSamples.keys() );
     }
 }
 
