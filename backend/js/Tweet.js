@@ -4,7 +4,14 @@ class Tweet {
         this.data = tweet.data;
         Object.keys(  tweet.includes )
             .forEach( (includeName) => {
-                this[ includeName ] = tweet.includes[ includeName ][ 0 ];
+                if( Array.isArray( tweet.includes[ includeName ] ) ) {
+                    if( includeName === "media") {
+                        this[ includeName ] = tweet.includes[ includeName ];
+                    }
+                    else {
+                        this[ includeName ] = tweet.includes[ includeName ][0];
+                    }
+                }
             });
     }
 }
