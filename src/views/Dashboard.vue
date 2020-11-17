@@ -129,8 +129,9 @@
             <v-expansion-panel v-if="selectedTweet.media">
               <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
               <v-expansion-panel-content>
-                <h4>Images</h4>
-                <v-img :src="this.selectedTweet.media.url"></v-img>
+                  <ImageWindow
+                      :selected-tweet="selectedTweet"
+                  ></ImageWindow>
               </v-expansion-panel-content>
             </v-expansion-panel>
           </v-expansion-panels>
@@ -142,11 +143,12 @@
 
 <script>
 import {Tweet} from 'vue-tweet-embed'
-import json from "../../backend/repositories/multipleimages.json"
+import json from "../../backend/repositories/testMultipleImmagini.json"
 import language from "@/assets/language.json"
 import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
 import Position from "@/js/Position";
+import ImageWindow from "@/components/charts/ImageWindow";
 import axios from "axios";
 
 export default {
@@ -156,6 +158,7 @@ export default {
     selectedSample: String
   },
   components: {
+    ImageWindow,
     WordCloud,
     Map,
     Tweet
@@ -181,7 +184,8 @@ export default {
 
     isThereMediaPosition: function(){
       let selTweet = this.selectedTweet;
-      return selTweet.data.geo && selTweet.media && selTweet.media.type == 'photo'
+      let isGeo = selTweet.data && selTweet.data.geo && selTweet.data.geo.coordinates || selTweet.places && selTweet.places.geo && selTweet.places.geo.bbox;
+      return isGeo && selTweet.media
     }
 
   },

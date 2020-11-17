@@ -6,7 +6,10 @@
 
 <script>
 export default {
-  name: "Gallery"
+  name: "Gallery",
+  props: {
+    selectedSample: String
+  }
 }
 </script>
 
