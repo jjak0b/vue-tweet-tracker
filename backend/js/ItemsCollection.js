@@ -1,44 +1,46 @@
-class ItemsCollection {
+const AbstractStorableResource = require("./AbstractStorableResource");
 
-    constructor( collection ) {
+class ItemsCollection extends AbstractStorableResource {
+    constructor( location, collection ) {
+        super( location );
+
         /**
          * @type {[]}
          */
-        this.cache = collection || [];
+        this.buffer = collection || [];
     }
 
     /**
-     * Used to be overridden and provide utility to fetch and add to this collection any items in any way
-     * @returns {Promise<*>}
+     * @return {*[]}
      */
-    fetch() {
-        return Promise.resolve()
+    async onFetch( data ) {
+        this.buffer = JSON.parse( data );
+        return this.buffer;
     }
+
+    /**
+     * @return {Promise<String>}
+     */
+    async onStore() {
+        return JSON.stringify(this.buffer);
+    }
+
 
     /**
      * @Brief Add item to collection
-     * @param data
+     * @param item
      * @returns {Promise<void>}
      */
-    add( data ) {
-        return Promise.resolve();
-    }
-
-    /**
-     * @Brief clear items buffer
-     * @returns {Promise<void>}
-     */
-    flush() {
-        this.cache.splice( 0, this.cache.length );
-        return Promise.resolve();
+    async add( item ) {
+        this.buffer.push( item );
     }
 
     /**
      *
      * @returns {Promise<[]>}
      */
-    toArray() {
-        return Promise.resolve( this.cache );
+    async toArray() {
+        return this.buffer;
     }
 }
 
