@@ -1,29 +1,33 @@
 <template>
   <v-container>
-    <v-form>
-      <v-row>
-          <v-container>
-            <v-btn color="primary" class="mr-1" @click="onSubmit">Submit</v-btn>
-            <v-btn color="secondary">Clear</v-btn>
-          </v-container>
+    <v-form
+        ref="form"
+        lazy-validation
+      ><v-row>
+        <v-container>
+          <v-btn color="primary" class="mr-1" @click="onSubmit">Submit</v-btn>
+          <v-btn color="secondary" @click="onReset">Reset</v-btn>
+        </v-container>
       </v-row>
       <v-row>
         <v-col>
 
-        <v-card class="mb-5">
-          <v-card-title>Name</v-card-title>
-          <v-card-text>
-            <v-text-field
-                v-model.trim="name"
-                :key="labels.name.key"
-                :hint="labels.name.hint"
-                :label="labels.name.label"
-                clearable
-            ></v-text-field>
-          </v-card-text>
-        </v-card>
+          <v-card class="mb-5">
+            <v-card-title>Name</v-card-title>
+            <v-card-text>
+              <v-text-field
+                  v-model.trim="name"
+                  :key="labels.name.key"
+                  :hint="labels.name.hint"
+                  :label="labels.name.label"
+                  :rules="nameRules"
+                  clearable
+                  required
+              ></v-text-field>
+            </v-card-text>
+          </v-card>
 
-        <v-card class="mb-5">
+          <v-card class="mb-5">
             <v-card-title>Words</v-card-title>
             <v-card-text>
               <v-combobox
@@ -45,62 +49,7 @@
               ></v-select>
             </v-card-text>
           </v-card>
-        </v-col>
 
-        <v-col>
-          <v-card class="mb-5">
-            <v-card-title>Accounts</v-card-title>
-            <v-card-text>
-              <v-combobox
-                  v-for="item in labels.accounts"
-                  v-model.trim="filter.accounts[item.key]"
-                  :key="item.label"
-                  :hint="item.hint"
-                  :label="item.label"
-                  clearable
-                  multiple
-                  chips
-                  deletable-chips
-              ></v-combobox>
-            </v-card-text>
-          </v-card>
-          <!--
-        <v-card class="mb-5">
-          <v-card-title>Filters</v-card-title>
-
-          <v-card-text>
-            <v-switch label="Replies" v-model="filter.filters.replies"></v-switch>
-            <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.replies">
-              <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
-              <v-radio label="Only show replies" value="only-replies"></v-radio>
-            </v-radio-group>
-            <v-switch label="Links" v-model="filter.filters.links"></v-switch>
-            <v-text-field
-                v-model.trim="filter.filters.linksValue"
-                label="Link to filter"
-            ></v-text-field>
-            <v-radio-group v-model="filter.filters.linksValue" v-if="filter.filters.links">
-              <v-radio label="Include Tweets with links" value="include-links"></v-radio>
-              <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
-            </v-radio-group>
-          </v-card-text>
-        </v-card>
--->
-<!--
-         <v-card class="mb-5">
-            <v-card-title>Engagement</v-card-title>
-            <v-card-text>
-              <v-text-field
-                  v-for="item in labels.engagement"
-                  v-model="filter.engagement[item.key]"
-                  :key="item.label"
-                  :hint="item.hint"
-                  :label="item.label"
-                  clearable
-              ></v-text-field>
-            </v-card-text>
-          </v-card>
--->
           <v-card class="mb-5">
             <v-card-title>Dates</v-card-title>
             <v-card-text>
@@ -153,12 +102,82 @@
             </v-card-text>
           </v-card>
         </v-col>
+
+        <v-col>
+          <v-card class="mb-5">
+            <v-card-title>Position</v-card-title>
+            <v-card-text>
+              <position-input
+                  :paths="filter.coordinates"
+                  @add-path="addPath"
+                  @delete-path="deletePath"
+                  @update-paths="updatePaths"
+                  @reset-paths="resetPaths"
+              >
+              </position-input>
+            </v-card-text>
+          </v-card>
+
+          <v-card class="mb-5">
+            <v-card-title>Accounts</v-card-title>
+            <v-card-text>
+              <v-combobox
+                  v-for="item in labels.accounts"
+                  v-model.trim="filter.accounts[item.key]"
+                  :key="item.label"
+                  :hint="item.hint"
+                  :label="item.label"
+                  clearable
+                  multiple
+                  chips
+                  deletable-chips
+              ></v-combobox>
+            </v-card-text>
+          </v-card>
+          <!--
+        <v-card class="mb-5">
+          <v-card-title>Filters</v-card-title>
+
+          <v-card-text>
+            <v-switch label="Replies" v-model="filter.filters.replies"></v-switch>
+            <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.replies">
+              <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
+              <v-radio label="Only show replies" value="only-replies"></v-radio>
+            </v-radio-group>
+            <v-switch label="Links" v-model="filter.filters.links"></v-switch>
+            <v-text-field
+                v-model.trim="filter.filters.linksValue"
+                label="Link to filter"
+            ></v-text-field>
+            <v-radio-group v-model="filter.filters.linksValue" v-if="filter.filters.links">
+              <v-radio label="Include Tweets with links" value="include-links"></v-radio>
+              <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
+            </v-radio-group>
+          </v-card-text>
+        </v-card>
+-->
+          <!--
+                   <v-card class="mb-5">
+                      <v-card-title>Engagement</v-card-title>
+                      <v-card-text>
+                        <v-text-field
+                            v-for="item in labels.engagement"
+                            v-model="filter.engagement[item.key]"
+                            :key="item.label"
+                            :hint="item.hint"
+                            :label="item.label"
+                            clearable
+                        ></v-text-field>
+                      </v-card-text>
+                    </v-card>
+          -->
+        </v-col>
       </v-row>
     </v-form>
     <v-snackbar
         v-model="snackbar"
     >
-      The filter already exists or the name of the filter is already being used.
+      {{ snackbarText }}
       <template v-slot:action="{ attrs }">
         <v-btn
             color="red"
@@ -177,25 +196,70 @@
 import axios from "axios";
 import language from "@/assets/language.json"
 import StatusCodes from 'http-status-codes'
+import positionInput from "@/components/charts/positionInput";
 
 export default {
   name: 'FilterMenu',
+  components: {
+    positionInput
+  },
   methods: {
     onSubmit() {
+      if (!this.$refs.form.validate()) {
+        console.log("Ok")
+        return
+      }
       axios.put('/api/samples/' + this.name, this.filter)
           .catch((error) => {
             if (error.response.status === StatusCodes.CONFLICT) {
+              this.snackbarText = "The filter already exists or the name of the filter is already being used."
+              this.snackbar = true;
+            }
+            else if (error.response.status === StatusCodes.INTERNAL_SERVER_ERROR) {
+              this.snackbarText = "Add more filters."
               this.snackbar = true;
             }
           });
       this.$emit('update-samples');
+    },
+    onReset() {
+      this.$refs.form.resetValidation();
+      this.$refs.form.reset();
+      this.filter.coordinates = [];
+    },
+    updatePaths(mvcArray) {
+      let path = [];
+      for (let i = 0; i < mvcArray.getLength(); i++) {
+        for (let j = 0; j < mvcArray.getAt(i).getLength(); j++) {
+          let point = mvcArray.getAt(i).getAt(j);
+          path.push({lat: point.lat(), lng: point.lng()});
+        }
+      }
+      this.filter.coordinates = path;
+    },
+    resetPaths() {
+      this.filter.coordinates = [];
+    },
+    addPath(event) {
+      if (this.filter.coordinates.length < 3)
+        this.filter.coordinates.push(event.latLng);
+    },
+    deletePath(event) {
+      if (event.vertex >= 0) {
+        this.filter.coordinates.splice(event.vertex, 1);
+      }
     }
   },
   data: () => ({
     snackbar: false,
+    snackbarText: "",
     name: "",
+    nameRules: [
+      v => !!v || 'Name is required'
+    ],
     languageArray: null,
     filter: {
+      coordinates: [],
       words: {
         all: [],
         exact: [],
@@ -209,12 +273,12 @@ export default {
         to: [],
         mentioning: []
       },
-     /* filters: {
-        //replies: true,
-        //repliesValue: "replies-and-tweets",
-        links: true,
-        linksValue: null
-      },*/
+      /* filters: {
+         //replies: true,
+         //repliesValue: "replies-and-tweets",
+         links: true,
+         linksValue: null
+       },*/
       /*
       engagement: {
         minReplies: "",
@@ -299,18 +363,18 @@ export default {
     }
   }),
   mounted() {
-      let arr = [];
+    let arr = [];
+    arr.push({
+      text: "Any language",
+      value: null
+    })
+    for (const lang in language) {
       arr.push({
-        text: "Any language",
-        value: null
+        text: language[lang],
+        value: lang
       })
-      for( const lang in language ) {
-        arr.push({
-          text: language[lang],
-          value: lang
-        })
-      }
-      this.languageArray = arr;
+    }
+    this.languageArray = arr;
   }
 }
 </script>
