@@ -155,21 +155,44 @@
         </v-col>
       </v-row>
     </v-form>
+    <v-snackbar
+        v-model="snackbar"
+    >
+      The filter already exists or the name of the filter is already being used.
+      <template v-slot:action="{ attrs }">
+        <v-btn
+            color="red"
+            text
+            v-bind="attrs"
+            @click="snackbar = false"
+        >
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
 <script>
 import axios from "axios";
 import language from "@/assets/language.json"
+import StatusCodes from 'http-status-codes'
 
 export default {
   name: 'FilterMenu',
   methods: {
     onSubmit() {
       axios.put('/api/samples/' + this.name, this.filter)
+          .catch((error) => {
+            if (error.response.status === StatusCodes.CONFLICT) {
+              this.snackbar = true;
+            }
+          });
+      this.$emit('update-samples');
     }
   },
   data: () => ({
+    snackbar: false,
     name: "",
     languageArray: null,
     filter: {

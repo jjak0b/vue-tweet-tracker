@@ -62,7 +62,10 @@
     </v-navigation-drawer>
     <v-main class="grey lighten-3">
       <v-container fluid>
-        <router-view :selectedSample="selectedSample"></router-view>
+        <router-view
+            :selectedSample="selectedSample"
+            @update-samples="updateSampleList()"
+        ></router-view>
       </v-container>
     </v-main>
   </v-app>
@@ -79,8 +82,8 @@ export default {
     selectedSample: null,
     drawer: true,
     samples: {
-      active: ["sample 1", "sample 2", ],
-      paused: [ "sample 3" ]
+      active: [],
+      paused: []
     }
   }),
   computed: {
