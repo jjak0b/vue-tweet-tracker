@@ -2,7 +2,7 @@ const StandardFilter = require("./StandardFilter");
 
 class ContextFilter extends StandardFilter {
     constructor(rawData) {
-        super("context",rawData);
+        super("context", rawData);
 
         this.keywords.none = [];
 
@@ -16,7 +16,7 @@ class ContextFilter extends StandardFilter {
             until: null
         };
 
-        this.keywords.none = this.keywords.none.concat( rawData.keywords.none);
+        this.keywords.none = this.keywords.none.concat( rawData.keywords ? rawData.keywords.none : [] );
         this.context = Object.assign( this.context, rawData.context );
         this.dates = Object.assign(this.dates, rawData.dates );
     }

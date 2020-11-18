@@ -1,6 +1,6 @@
-const Filter = require("../../Filter");
+const SamplingFilter = require("../SamplingFilter");
 
-class StandardFilter extends Filter {
+class StandardFilter extends SamplingFilter {
     constructor(type, rawData) {
         super(type);
 
@@ -18,7 +18,7 @@ class StandardFilter extends Filter {
         };
 
         this.keywords = Object.assign( this.keywords, rawData.keywords );
-        this.keywords = Object.assign( this.accounts, rawData.accounts );
+        this.accounts = Object.assign( this.accounts, rawData.accounts );
 
     }
 }
