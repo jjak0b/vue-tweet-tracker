@@ -6,6 +6,7 @@ const SamplingController = require("./SamplingController");
 const EventsManager = require("../services/EventsManager");
 const ContextSampleBuilder = require("../building/builders/ContextSampleBuilder");
 const FSResourceStorage = require("../../FSResourceStorage");
+const SampledEvent = require("../events/SampledEvent");
 
 const userContextClient = new Twitter( {
     consumer_key: process.env.TWITTER_API_CONSUMER_KEY,
@@ -329,14 +330,16 @@ class ContextSamplingController extends SamplingController {
         for (let i = 0; i < destinationRules.length; i++) {
             let tweet = new Tweet( dataToAssign );
             let tag = destinationRules[ i ].tag;
-            console.log( "Received data matching with", tag );
             let sample = await this.get( tag );
             if( sample ) {
                 sample.add( tweet )
                     .catch( (e) => {
                         console.error( "[ContextSamplingController:routesDataToSamples]", `Unable to add item to "${tag}" sample`, "reason:", e );
                     });
-                // this.eventManager.emit( EventsManager.ENUM.EVENTS.SAMPLED, sample.descriptor );
+                let descriptor = sample.getDescriptor();
+                descriptor.incCount();
+                let event = new SampledEvent( descriptor, tweet );
+                this.eventManager.emit( EventsManager.ENUM.EVENTS.SAMPLED, event );
             }
             else {
                 // ley us know if something doesn't behave like it should
