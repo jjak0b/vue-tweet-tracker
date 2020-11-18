@@ -58,12 +58,7 @@ class JSONBufferedItemsCollection extends ItemsCollection {
         // try to store if we reach max count
         let cache = await super.toArray();
         if( cache.length >= this.size ) {
-            try {
-                await this.store();
-            }
-            catch (err) {
-                console.error(`${this.constructor.name}`, "Unable to store buffer", "reason:", err );
-            }
+            return this.store();
         }
     }
 

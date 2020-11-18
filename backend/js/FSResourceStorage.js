@@ -17,7 +17,7 @@ class FSResourceStorage extends IResourceStorage  {
         return this.instance;
     }
 
-    async fetch(/*AbstractResource*/resource) {
+    async fetch(/*AbstractStorableResource*/resource) {
         let data = await fs.readFile(
             resource.getLocation(),
             { encoding: "utf-8" },
@@ -25,17 +25,21 @@ class FSResourceStorage extends IResourceStorage  {
         return resource.onFetch( data );
     }
 
-    async store(/*AbstractResource*/resource) {
+    async store(/*AbstractStorableResource*/resource) {
         let data = await resource.onStore();
 
-        return fs.outputFile(
-            resource.getLocation(),
-            data,
-            {
-                flag: "+",
-                encoding: "utf-8"
-            },
-        );
+        if( data ) {
+            return fs.outputFile(
+                resource.getLocation(),
+                data,
+                {
+                    encoding: "utf-8"
+                }
+            );
+        }
+        else {
+            return Promise.reject(null);
+        }
     }
 }
 
