@@ -1,9 +1,11 @@
 const SamplingController = require("./SamplingController");
-const GeocodedFilter = require("../filters/GeocodedFilter");
+const GeocodedFilter = require("../building/parts/filters/GeocodedFilter");
+const FSResourceStorage = require("../../FSResourceStorage");
 
 class GeoSamplingController extends SamplingController {
     constructor( /*EventsManager*/eventManager, /*String*/workingDirectory ) {
         super( eventManager, workingDirectory);
+        this.samplesStates.setStorage( FSResourceStorage.getInstance() );
     }
 
     add( tag /*String*/, filterData ) {
