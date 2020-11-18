@@ -193,7 +193,9 @@ class ContextSamplingController extends SamplingController {
 
         if( sample ) {
 
-            let filter = sample.getDescriptor().filter;
+            let descriptor = sample.getDescriptor()
+            let rule = descriptor.getRule();
+            let filter = rule.filter;
             //stringify filter into query filter
             let queryFilter = ContextSamplingController.getQueryFromFilter( filter );
 
@@ -203,7 +205,7 @@ class ContextSamplingController extends SamplingController {
                 json = await appContextClient.post(
                     "tweets/search/stream/rules",
                     {
-                        add: [{tag:tag, value:queryFilter}]
+                        add: [{tag:rule.tag, value:queryFilter}]
                     }
                 );
             }
@@ -218,8 +220,7 @@ class ContextSamplingController extends SamplingController {
                 if (json.meta.summary.created) {
 
                     /** @type {ContextFilteringRule}*/
-                    let contextRule = sample.getRule();
-                    contextRule.id = json.data[0].id;
+                    rule.id = json.data[0].id;
                     await super.resume( tag );
 
                     // start sampling if needed
@@ -272,7 +273,7 @@ class ContextSamplingController extends SamplingController {
 
         handlers.timeout = timeoutHandler;
         handlers.error = console.error;
-        handlers.data = this.onStreamDataReceived.bind( self );
+        handlers.response = this.onStreamDataReceived.bind( self );
         let reason = await this.streamConnect( handlers );
         console.warn( "[ContextSamplingController]", "stream stopped, reason", reason );
 
@@ -296,17 +297,17 @@ class ContextSamplingController extends SamplingController {
 
         try{
             console.log("Listening for stream ...");
-            for await (const { data } of this.stream) {
-                let errors = data.errors;
+            for await (const response of this.stream) {
+                let errors = response.errors;
 
                 if( errors ) {
                     if ("error" in handlers)
                         handlers["error"](errors);
                 }
 
-                if( data && data.id ) {
-                    if( "data" in handlers )
-                        handlers[ "data" ]( data );
+                if( response.data && response.data.id ) {
+                    if( "response" in handlers )
+                        handlers[ "response" ]( response );
                 }
             }
             return null;
@@ -318,25 +319,24 @@ class ContextSamplingController extends SamplingController {
         }
     }
 
-    onStreamDataReceived( data ) {
-        console.log( data.matching_rules );
-        let destinations = data.matching_rules;
-        data.matching_rules = null;
-        this.routesDataToSamples(data, destinations );
+    onStreamDataReceived( response ) {
+        let destinations = response.matching_rules;
+        response.matching_rules = null;
+        this.routesDataToSamples(response, destinations );
     }
 
-    routesDataToSamples( dataToAssign, destinationRules) {
+    async routesDataToSamples( dataToAssign, destinationRules) {
         for (let i = 0; i < destinationRules.length; i++) {
             let tweet = new Tweet( dataToAssign );
             let tag = destinationRules[ i ].tag;
-            // console.log( "Received data" , tweet, "for", tag );
-            let sample = this.get( tag );
+            console.log( "Received data matching with", tag );
+            let sample = await this.get( tag );
             if( sample ) {
                 sample.add( tweet )
                     .catch( (e) => {
                         console.error( "[ContextSamplingController:routesDataToSamples]", `Unable to add item to "${tag}" sample`, "reason:", e );
                     });
-                this.eventManager.emit( EventsManager.ENUM.EVENTS.SAMPLED, sample.descriptor );
+                // this.eventManager.emit( EventsManager.ENUM.EVENTS.SAMPLED, sample.descriptor );
             }
             else {
                 // ley us know if something doesn't behave like it should
@@ -361,15 +361,17 @@ class ContextSamplingController extends SamplingController {
         let sample = this.activeSamples.get( tag );
         if( sample ) {
             console.log("pausing", sample);
+
+            let descriptor = sample.getDescriptor()
             /** @type {ContextFilteringRule}*/
-            let contextRule = sample.getRule();
+            let rule = descriptor.getRule();
             let json;
             try {
                 json = await appContextClient.post(
                     "tweets/search/stream/rules",
                     {
                         delete: {
-                            ids: [contextRule.id]
+                            ids: [rule.id]
                         }
                     }
                 );
