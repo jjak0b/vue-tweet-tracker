@@ -255,28 +255,47 @@ class ContextSamplingController extends SamplingController {
     async start() {
         if( this.stream ) return;
 
-        let timeout = 0;
         let handlers = {
             // will be popolated below, justy here to reference "reconnect" function
         };
-
-
         let self = this;
-        function timeoutHandler() {
-            // Reconnect on error
-            console.warn('A connection error occurred. Reconnecting…');
-            setTimeout(
-                () => { timeout++; self.streamConnect( handlers ); },
-                2 ** timeout
-            );
-            self.streamConnect( handlers );
+
+        let attempts = 0;
+        async function waitTimeout() {
+            let waitTime = 2 ** attempts;
+            return new Promise( (resolve) => {
+                setTimeout( () => { attempts++; resolve( 2 * waitTime ) }, waitTime );
+            });
         }
 
-        handlers.timeout = timeoutHandler;
-        handlers.error = console.error;
+        handlers.timeout = waitTimeout;
+        handlers.error = (e) => console.warn( `[${this.constructor.name}]`, "catched error", e );
         handlers.response = this.onStreamDataReceived.bind( self );
-        let reason = await this.streamConnect( handlers );
-        console.warn( "[ContextSamplingController]", "stream stopped, reason", reason );
+        let retry;
+        let predictWaitTime = 1;
+        do {
+            retry = false;
+            try {
+                await this.streamConnect( handlers );
+            }
+            catch (reason) {
+                if( reason && reason.details ) {
+                    if( reason.details === 'https://api.twitter.com/2/problems/streaming-connection' ) {
+                        console.warn(`[${this.constructor.name}]`, 'A connection error occurred. Reconnecting in', predictWaitTime, "ms");
+                        predictWaitTime = await handlers.timeout( attempts );
+                        retry = true;
+                    }
+                    else {
+                        console.warn( `[${this.constructor.name}]`, "stream stopped, reason", reason );
+                        handlers.error( reason );
+                    }
+                }
+                else {
+                    console.warn( `[${this.constructor.name}]`, "stream stopped", reason.message, reason );
+                    retry = true;
+                }
+            }
+        }while( retry );
 
         return reason;
     }
@@ -288,16 +307,15 @@ class ContextSamplingController extends SamplingController {
 
 
         try {
-            console.log("Connecting stream ...");
+            console.log(`[${this.constructor.name}]`, "Connecting stream ...");
             this.stream = appContextClient.stream('tweets/search/stream', params );
         }
         catch (e) {
-            console.log("Unable to establish connection stream ..." );
-            return e;
+            console.error(`[${this.constructor.name}]`, "Unable to establish connection stream ..." );
+            return Promise.reject( e );
         }
 
-        try{
-            console.log("Listening for stream ...");
+            console.log(`[${this.constructor.name}]`, "Listening for stream ...");
             for await (const response of this.stream) {
                 let errors = response.errors;
 
@@ -312,12 +330,6 @@ class ContextSamplingController extends SamplingController {
                 }
             }
             return null;
-        }
-        catch (e) {
-            if ("error" in handlers)
-                handlers["error"](e);
-            return e;
-        }
     }
 
     onStreamDataReceived( response ) {
