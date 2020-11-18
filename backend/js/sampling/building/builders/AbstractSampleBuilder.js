@@ -1,3 +1,5 @@
+const Sample = require("../Sample");
+
 class AbstractSampleBuilder {
 
     constructor() {
