@@ -237,4 +237,32 @@ function API_pauseSample( req, res ) {
     }
 }
 
+
+function exitHandler (exitCode) {
+    samplingFacade.flush()
+        .finally(() => {
+            if (exitCode || exitCode === 0)
+                console.log(exitCode);
+            process.exit();
+        });
+}
+
+// flush data when app is closing
+[
+    "uncaughtException", //catches uncaught exceptions
+    // "exit",// when process.exit has been called
+    'SIGUSR1', // catches "kill pid" (for example: nodemon restart)
+    'SIGUSR2',
+    // 'SIGHUP',
+    'SIGINT',//catches ctrl+c event
+    // 'SIGQUIT',
+    // 'SIGILL',
+    // 'SIGTRAP',
+    // 'SIGABRT',
+    // 'SIGBUS',
+    // 'SIGFPE',
+    // 'SIGSEGV',
+    // 'SIGTERM'
+].forEach( (sig) => process.on(sig, exitHandler ) );
+
 module.exports = router;
