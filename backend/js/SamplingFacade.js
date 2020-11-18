@@ -25,44 +25,6 @@ class SamplingFacade {
 
         this.startHandler = this.contextHandler;
 
-
-        const onCleanup = async () => {
-            let controllers = [
-                this.contextHandler.getController(),
-                this.geoHandler.getController(),
-            ];
-            for (const controller of controllers) {
-                console.log( "flushing", controller.constructor.name );
-                for (const activeTag of controller.getActiveTags()) {
-                    let sample = await controller.get( activeTag );
-                    if( sample ) {
-                        console.log( "flushing sample", sample.tag );
-                        await sample.getCollection().flush();
-                    }
-                }
-            }
-        };
-
-        const exitHandler = async (options, exitCode) => {
-            if (options.cleanup){
-                await onCleanup();
-            }
-            if (exitCode || exitCode === 0) console.log(exitCode);
-            if (options.exit) process.exit();
-        }
-
-        //do something when app is closing
-        process.on('exit', exitHandler.bind(this,{cleanup:true}));
-
-        //catches ctrl+c event
-        process.on('SIGINT', exitHandler.bind(this, {exit:true}));
-
-        // catches "kill pid" (for example: nodemon restart)
-        process.on('SIGUSR1', exitHandler.bind(this, {exit:true}));
-        process.on('SIGUSR2', exitHandler.bind(this, {exit:true}));
-
-        //catches uncaught exceptions
-        process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
     }
 
 
@@ -85,6 +47,23 @@ class SamplingFacade {
      */
     request( /*SamplingControllerRequest*/ request) {
         return this.startHandler.handleRequest( request );
+    }
+
+    async flush() {
+        let controllers = [
+            this.contextHandler.getController(),
+            this.geoHandler.getController(),
+        ];
+        for (const controller of controllers) {
+            controller.stop().catch( (e)=>{ if(e) console.warn( e ) } );
+            console.log( "flushing", controller.constructor.name );
+            try {
+                await controller.store();
+            }
+            catch (e) {
+                console.error("Error while storing", controller.constructor.name, "reason:", e );
+            }
+        }
     }
 }
 
