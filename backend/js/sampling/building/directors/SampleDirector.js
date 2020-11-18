@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs-extra");
 
 class SampleDirector {
     constructor( workingLocation ) {
@@ -23,7 +24,7 @@ class SampleDirector {
     // TODO: Does this should be here ?
     async deconstructSample( /*Sample*/sample ) {
         let location = sample.getLocation();
-        await fs.rmdir( location, { recursive: true } );
+        await fs.remove( location );
     }
 
     /**

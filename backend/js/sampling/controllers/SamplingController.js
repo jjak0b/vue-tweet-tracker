@@ -57,7 +57,7 @@ class SamplingController extends AbstractStorableResource{
 
         for (const tag of this.samplesStates.active) {
             // this sample is a placeholder to be fetched with real one
-            this.sampleDirector.constructSample( tag, null );
+            this.sampleDirector.constructSample( tag, {} );
             sample = this.sampleDirector.getSample();
             try {
                 // let sample to fetch
