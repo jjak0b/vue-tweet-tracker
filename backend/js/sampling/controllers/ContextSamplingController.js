@@ -279,25 +279,23 @@ class ContextSamplingController extends SamplingController {
                 await this.streamConnect( handlers );
             }
             catch (reason) {
-                if( reason && reason.details ) {
-                    if( reason.details === 'https://api.twitter.com/2/problems/streaming-connection' ) {
-                        console.warn(`[${this.constructor.name}]`, 'A connection error occurred. Reconnecting in', predictWaitTime, "ms");
-                        predictWaitTime = await handlers.timeout( attempts );
+                if( reason ) {
+                    console.error(`[${this.constructor.name}]`, 'A connection error occurred', JSON.stringify( reason ) );
+                    if (
+                        reason.message === "Rate limit exceeded"
+                        || reason.details === 'https://api.twitter.com/2/problems/streaming-connection'
+                        || reason.code === 'ENOTFOUND'
+                    ) {
+                        console.warn(`[${this.constructor.name}]`, 'try reconnecting in', predictWaitTime, "ms", reason.message );
+                        predictWaitTime = await handlers.timeout(attempts);
                         retry = true;
                     }
                     else {
-                        console.warn( `[${this.constructor.name}]`, "stream stopped, reason", reason );
-                        handlers.error( reason );
+                        console.error(`[${this.constructor.name}]`, "stream stopped: ",`\n[msg]>"${reason.message}"`,"\n[err]>", reason );
                     }
-                }
-                else {
-                    console.warn( `[${this.constructor.name}]`, "stream stopped", reason.message, reason );
-                    retry = true;
                 }
             }
         }while( retry );
-
-        return reason;
     }
 
     // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
