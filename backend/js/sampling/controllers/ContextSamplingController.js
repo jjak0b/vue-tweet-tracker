@@ -292,6 +292,8 @@ class ContextSamplingController extends SamplingController {
                     }
                     else {
                         console.error(`[${this.constructor.name}]`, "stream stopped: ",`\n[msg]>"${reason.message}"`,"\n[err]>", reason );
+                        this.stream.close();
+                        this.stream = null;
                     }
                 }
             }
