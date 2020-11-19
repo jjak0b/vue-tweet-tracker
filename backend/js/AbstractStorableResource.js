@@ -33,6 +33,10 @@ class AbstractStorableResource {
         return value;
     }
 
+    async erase() {
+        return this.storage.erase( this );
+    }
+
     /**
      * @return *
      */
