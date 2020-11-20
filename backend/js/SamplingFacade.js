@@ -1,28 +1,36 @@
 const path = require("path");
 const GeoSamplesHandler = require("./sampling/samplesHandlers/GeoSamplesHandler");
-const GeoSamplingController = require("./sampling/controllers/GeoSamplingController");
-const ContextSamplesHandler = require("./sampling/samplesHandlers/ContextSamplesHandler");
-const ContextSamplingController = require("./sampling/controllers/ContextSamplingController");
-const EventsManager = require("./sampling/services/EventsManager");
 
-class SamplingFacade {
+const ContextSamplesHandler = require("./sampling/samplesHandlers/ContextSamplesHandler");
+const ContextSamplingStrategy = require("./sampling/strategies/ContextSamplingStrategy");
+const SamplingController = require("./sampling/controllers/SamplingController");
+const EventsManager = require("./sampling/services/EventsManager");
+const Sampler =require("./sampling/Sampler");
+const ISampler = require("./sampling/ISampler");
+
+
+class SamplingFacade extends ISampler {
     constructor() {
+        super();
         this.eventManager = EventsManager.getInstance();
 
-        this.contextController = new ContextSamplingController(
-            this.eventManager,
-            path.join(global.__basedir, process.env.PATH_REPOSITORIES_SAMPLES, "context")
+        const contextSamplingStrategy = new ContextSamplingStrategy(
+            new SamplingController( path.join( process.env.PATH_REPOSITORIES_SAMPLES, "context" ) )
         );
-        this.contextHandler = new ContextSamplesHandler( this.contextController );
+        // const geoSamplingStrategy = new GeoSamplingStrategy(
+        //     new SamplingController( path.join( process.env.PATH_REPOSITORIES_SAMPLES, "geo" ) )
+        // );
 
-        this.geoController = new GeoSamplingController(
-            this.eventManager,
-            path.join(global.__basedir, process.env.PATH_REPOSITORIES_SAMPLES, "geo")
-        );
-        this.geoHandler = new GeoSamplesHandler( this.geoController );
+        this.sampler = new Sampler( this.eventManager );
 
-        this.contextHandler.setNextHandler( this.geoHandler );
+        this.contextHandler = new ContextSamplesHandler( this.sampler, contextSamplingStrategy );
+        // this.geoHandler = new GeoSamplesHandler( this.sampler, geoSamplingController );
+        // this.contextHandler.setNextHandler( this.geoHandler );
 
+        /**
+         *
+         * @type {SamplesHandler}
+         */
         this.startHandler = this.contextHandler;
 
     }
@@ -40,30 +48,58 @@ class SamplingFacade {
         return SamplingFacade.instance;
     }
 
-    /**
-     *
-     * @param request
-     * @returns {SamplingController|null}
-     */
-    request( /*SamplingControllerRequest*/ request) {
-        return this.startHandler.handleRequest( request );
-    }
-
     async flush() {
         let controllers = [
-            this.contextHandler.getController(),
-            this.geoHandler.getController(),
+            this.contextHandler.getSampler(),
+            // this.geoHandler.getController(),
         ];
         for (const controller of controllers) {
             controller.stop().catch( (e)=>{ if(e) console.warn( e ) } );
             console.log( "flushing", controller.constructor.name );
             try {
-                await controller.store();
+                await controller.store()
             }
             catch (e) {
                 console.error("Error while storing", controller.constructor.name, "reason:", e );
             }
         }
+    }
+
+
+    getSamplesStates() {
+        return this.startHandler.getSamplesStates();
+    }
+
+    getSample(tag) {
+        return this.startHandler.getSample( tag );
+    }
+
+    async getSampleItems(tag) {
+        return this.startHandler.getSampleItems( tag );
+    }
+
+    async addSample(tag, filter) {
+        return this.startHandler.addSample( tag, filter );
+    }
+
+    async deleteSample(tag) {
+        return this.startHandler.deleteSample( tag );
+    }
+
+    async resumeSample(tag) {
+        return this.startHandler.resumeSample( tag );
+    }
+
+    async pauseSample(tag) {
+        return this.startHandler.pauseSample( tag );
+    }
+
+    async fetchSamples() {
+        return this.startHandler.fetchSamples();
+    }
+
+    async storeSamples() {
+        return this.startHandler.storeSamples();
     }
 }
 
