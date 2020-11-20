@@ -83,6 +83,7 @@ class SamplesHandler extends ISampler {
     }
 
     IsSampleHandledByAny( tag ) {
+        this.sampler.setStrategy( this.strategy );
         let hasSample = !!this.sampler.getSample(tag);
         if( this.nextHandler ) {
             hasSample = hasSample || this.nextHandler.IsSampleHandledByAny( tag );
@@ -97,22 +98,19 @@ class SamplesHandler extends ISampler {
         else if( this.nextHandler ) {
             return this.nextHandler.getSampleItems( tag );
         }
-        return StatusCodes.NOT_FOUND;
+        return Promise.reject( StatusCodes.NOT_FOUND );
     }
 
     async addSample( tag, filter ) {
-
+        this.sampler.setStrategy( this.strategy );
         // Force unique tag samples for all handler
         let isHandledByAny = false;
         if ( this.canHandleByFilter(filter) ) {
-            isHandledByAny = !this.IsSampleHandledByAny( tag )
-            this.sampler.setStrategy( this.strategy );
-
+            isHandledByAny = this.IsSampleHandledByAny( tag )
             if( !isHandledByAny ) {
-                return this.sampler.addSample(tag, filter);
+                return await this.sampler.addSample(tag, filter);
             }
         }
-
         if (!isHandledByAny && this.nextHandler) {
             return this.nextHandler.addSample(tag, filter);
         }
