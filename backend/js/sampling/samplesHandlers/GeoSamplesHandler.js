@@ -1,17 +1,17 @@
 const SamplesHandler = require("./SamplesHandler");
 class GeoSamplesHandler extends SamplesHandler {
-    constructor( controller /*GeoSamplingController*/ ) {
-        super(controller);
+
+    /**
+     *
+     * @param sampler {Sampler}
+     * @param strategy {AbstractSamplingStrategy}
+     */
+    constructor(sampler, strategy) {
+        super(sampler, strategy);
     }
 
-    canHandle(request) {
-        let canHandle = false;
-
-        if( request && request.body && request.body.type === "geo" ) {
-            canHandle = true;
-        }
-
-        return canHandle;
+    canHandleByFilter(filter) {
+        return filter.locations && filter.locations.length > 0;
     }
 }
 

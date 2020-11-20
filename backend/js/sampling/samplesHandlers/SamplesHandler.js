@@ -67,7 +67,14 @@ class SamplesHandler extends ISampler {
     }
 
     getSample(tag) {
-        if( this.nextHandler ) {
+        this.sampler.setStrategy( this.strategy );
+
+        let sample = this.sampler.getSample( tag );
+
+        if( sample ) {
+            return sample;
+        }
+        else if( this.nextHandler ) {
             return this.nextHandler.getSample(tag);
         }
     }
@@ -147,13 +154,13 @@ class SamplesHandler extends ISampler {
 
     async fetchSamples() {
         this.sampler.setStrategy( this.strategy );
-
+        this.sampler.fetch();
         return this.startHandler.fetchSamples();
     }
 
     async storeSamples() {
         this.sampler.setStrategy( this.strategy );
-
+        this.sampler.store();
         return this.startHandler.storeSamples();
     }
 

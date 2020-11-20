@@ -21,31 +21,6 @@ class Sampler extends ISampler {
 
     }
 
-
-    getSamplesStates() {
-        super.getSamplesStates();
-    }
-
-    getSample(tag) {
-        super.getSample(tag);
-    }
-
-    async addSample(tag, filter) {
-        super.addSample(tag, filter);
-    }
-
-    async deleteSample(tag) {
-        super.deleteSample(tag);
-    }
-
-    async resumeSample(tag) {
-        super.resumeSample(tag);
-    }
-
-    async pauseSample(tag) {
-        super.pauseSample(tag);
-    }
-
     setController( controller ) {
         this.strategy.setController( controller );
     }
@@ -95,6 +70,9 @@ class Sampler extends ISampler {
         }
     }
 
+    getSamplesStates() {
+        return;
+    }
 
     async getSampleItems( tag ) {
         let sample = await this.controller.get( tag );
@@ -102,7 +80,7 @@ class Sampler extends ISampler {
         return items;
     }
 
-    async add( tag, rawFilter ) {
+    async addSample( tag, rawFilter ) {
         let sample = await this.controller.get( tag );
         if( !sample ) {
             sample = await this.strategy.create( tag, rawFilter );
@@ -127,11 +105,11 @@ class Sampler extends ISampler {
         }
     }
 
-    async get( tag ) {
+    getSample( tag ) {
         return this.controller.get( tag );
     }
 
-    async resume( tag ) {
+    async resumeSample( tag ) {
         let sample = this.controller.pausedSamples.get( tag );
         if( sample ) {
             console.log( `[${this.strategy.constructor.name}]`, "Request to resume sample", `"${tag}"` );
@@ -156,7 +134,7 @@ class Sampler extends ISampler {
         return StatusCodes.NOT_FOUND;
     }
 
-    async pause( tag ) {
+    async pauseSample( tag ) {
         let sample = this.controller.activeSamples.get( tag );
         if( sample ) {
             console.log( `[${this.strategy.constructor.name}]`, "Request to pause sample", `"${tag}"` );
@@ -176,7 +154,7 @@ class Sampler extends ISampler {
         return StatusCodes.NOT_FOUND;
     }
 
-    async delete( tag ) {
+    async deleteSample( tag ) {
         console.log( `[${this.constructor.name}]`, "erasing sample", tag );
         try {
             let sample = await this.get( tag );

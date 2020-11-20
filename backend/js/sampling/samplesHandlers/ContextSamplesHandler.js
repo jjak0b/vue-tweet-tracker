@@ -1,18 +1,18 @@
 const SamplesHandler = require("./SamplesHandler");
 
 class ContextSamplesHandler extends SamplesHandler {
-    constructor( controller /*ContextSamplingController*/ ) {
-        super(controller);
+
+    /**
+     *
+     * @param sampler {Sampler}
+     * @param strategy {AbstractSamplingStrategy}
+     */
+    constructor(sampler, strategy) {
+        super(sampler, strategy);
     }
 
-    canHandle(request) {
-        let canHandle = false;
-
-        if( request && request.body && request.body.type === "context" ) {
-            canHandle = true;
-        }
-
-        return canHandle;
+    canHandleByFilter(filter) {
+        return filter.context && filter.locations && filter.locations.length > 0;
     }
 }
 
