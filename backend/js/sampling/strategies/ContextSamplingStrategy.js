@@ -161,7 +161,6 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
                     return Promise.reject(StatusCodes.CONFLICT);
                 }
                 else {
-                    console.error( )
                     return Promise.reject(StatusCodes.NOT_ACCEPTABLE);
                 }
             }
@@ -201,7 +200,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
      */
     async resume( sample ) {
 
-        console.log( "[ContextSamplingStrategy]", "Request of resume sample with tag ", `"${sample.tag}"`);
+        console.log( `[${this.constructor.name}]`, "Request of resume sample with tag ", `"${sample.tag}"`);
 
             let descriptor = sample.getDescriptor()
             /**
@@ -212,7 +211,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
             //stringify filter into query filter
             let queryFilter = ContextSamplingStrategy.getQueryFromFilter( filter );
 
-            console.log("resuming", sample, "active query:", filter, "; result:", queryFilter );
+            console.log(`[${this.constructor.name}]`, "resuming", rule.tag, "active query:", queryFilter );
             let json;
             try {
                 json = await appContextClient.post(
@@ -223,16 +222,15 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
                 );
             }
             catch(err) {
-                console.error("[ContextSamplingStrategy]", "resume", "error:", err);
+                console.error(`[${this.constructor.name}]`, "resume", "error:", err);
                 return StatusCodes.INTERNAL_SERVER_ERROR;
             }
 
-            console.log("resume response", json);
 
             if (json.meta.summary.created) {
 
                 rule.id = json.data[0].id;
-
+                this.start();
                 return StatusCodes.OK;
             }
             else if (json.meta.summary.not_created) {
@@ -240,6 +238,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
                     return StatusCodes.CONFLICT;
                 }
                 else {
+                    console.error(`[${this.constructor.name}]`,"received resume response", json );
                     // should be set StatusCodes.TOO_MANY_REQUESTS here ?
                     return StatusCodes.BAD_GATEWAY;
                 }
@@ -286,8 +285,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
                     }
                     else {
                         console.error(`[${this.constructor.name}]`, "stream stopped: ",`\n[msg]>"${reason.message}"`,"\n[err]>", reason );
-                        this.stream.close();
-                        this.stream = null;
+                        this.stop();
                     }
                 }
             }
@@ -354,6 +352,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
 
     async stop() {
         if( this.stream ) {
+            console.log(`[${this.constructor.name}]`, "stopping stream");
             this.stream.close();
             this.stream = null;
             return await super.stop()
