@@ -1,38 +1,160 @@
-class SamplesHandler {
-    constructor( controller /*SamplingController*/) {
+const StatusCodes = require("http-status-codes").StatusCodes;
+
+const ISampler = require("../ISampler");
+
+class SamplesHandler extends ISampler {
+    /**
+     *
+     * @param sampler {Sampler}
+     * @param strategy {AbstractSamplingStrategy}
+     */
+    constructor( sampler, strategy) {
+        super();
         /**
          * @type {SamplesHandler}
          */
         this.nextHandler = null;
 
-        this.controller = controller
+        /**
+         *
+         * @type {AbstractSamplingStrategy}
+         */
+        this.strategy = strategy;
+
+        /**
+         * @type {Sampler}
+         */
+        this.sampler = sampler;
+
     }
 
-    setNextHandler( handler /*SamplesHandler*/) {
+    setNextHandler( handler ) {
         this.nextHandler =  handler;
     }
 
-    /**
-     *
-     * @returns {SamplingController}
-     */
-    getController() {
-        return this.controller;
+    getStrategy() {
+        return this.strategy;
     }
 
-    /**
-     *
-     * @param request
-     * @returns {SamplingController|null}
-     */
-    handleRequest(/*SamplingControllerRequest*/ request ) {
-        if( this.canHandle( request ) ) {
-            return this.getController();
+    getSampler() {
+        return this.sampler;
+    }
+
+    canHandleByTag( tag ) {
+        this.sampler.setStrategy( this.strategy );
+
+        return !!this.sampler.getSample(tag);
+    }
+
+    canHandleByFilter( filter ) {
+        this.sampler.setStrategy( this.strategy );
+
+        return false;
+    }
+
+    getSamplesStates() {
+        this.sampler.setStrategy( this.strategy );
+
+        let maps = [
+            this.sampler.getSamplesStates(),
+        ];
+
+        if( this.nextHandler ) {
+            maps[ 1 ] = this.nextHandler.getSamplesStates();
+        }
+
+        return new Map( maps );
+    }
+
+    getSample(tag) {
+        if( this.nextHandler ) {
+            return this.nextHandler.getSample(tag);
+        }
+    }
+
+    IsSampleHandledByAny( tag ) {
+        let hasSample = !!this.sampler.getSample(tag);
+        if( this.nextHandler ) {
+            hasSample = hasSample || this.nextHandler.IsSampleHandledByAny( tag );
+        }
+        return hasSample;
+    }
+
+    async getSampleItems( tag ) {
+        if( this.canHandleByTag( tag ) ) {
+            return this.sampler.getSampleItems( tag );
         }
         else if( this.nextHandler ) {
-            return this.nextHandler.handleRequest( request );
+            return this.nextHandler.getSampleItems( tag );
         }
-        return null;
+        return StatusCodes.NOT_FOUND;
+    }
+
+    async addSample( tag, filter ) {
+
+        // Force unique tag samples for all handler
+        let isHandledByAny = false;
+        if ( this.canHandleByFilter(filter) ) {
+            isHandledByAny = !this.IsSampleHandledByAny( tag )
+            this.sampler.setStrategy( this.strategy );
+
+            if( !isHandledByAny ) {
+                return this.sampler.addSample(tag, filter);
+            }
+        }
+
+        if (!isHandledByAny && this.nextHandler) {
+            return this.nextHandler.addSample(tag, filter);
+        }
+        return StatusCodes.CONFLICT;
+    }
+
+    async deleteSample( tag ) {
+        this.sampler.setStrategy( this.strategy );
+
+        if( this.canHandleByTag( tag ) ) {
+            return this.sampler.deleteSample( tag );
+        }
+        else if( this.nextHandler ) {
+            return this.nextHandler.deleteSample( tag );
+        }
+        return StatusCodes.NOT_FOUND;
+    }
+
+    async resumeSample( tag ) {
+        this.sampler.setStrategy( this.strategy );
+
+        if( this.canHandleByTag( tag ) ) {
+            return this.sampler.resumeSample( tag );
+        }
+        else if( this.nextHandler ) {
+            return this.nextHandler.resumeSample( tag );
+        }
+        return StatusCodes.NOT_FOUND;
+    }
+
+    async pauseSample( tag ) {
+        this.sampler.setStrategy( this.strategy );
+
+        if( this.canHandleByTag( tag ) ) {
+            return this.sampler.pauseSample( tag );
+        }
+        else if( this.nextHandler ) {
+            return this.nextHandler.pauseSample( tag );
+        }
+        return StatusCodes.NOT_FOUND;
+    }
+
+    async fetchSamples() {
+        this.sampler.setStrategy( this.strategy );
+
+        return this.startHandler.fetchSamples();
+    }
+
+    async storeSamples() {
+        this.sampler.setStrategy( this.strategy );
+
+        return this.startHandler.storeSamples();
     }
 
     canHandle( /*SamplingControllerRequest*/ request ) { return true };
