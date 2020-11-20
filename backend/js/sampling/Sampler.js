@@ -23,7 +23,7 @@ class Sampler extends ISampler {
          */
         this.controller = null;
 
-        eventManager.on( EventsManager.ENUM.EVENTS.SAMPLED, this.onSampled );
+        this.eventManager = eventManager;
     }
 
     setStrategy( strategy ) {
@@ -34,6 +34,8 @@ class Sampler extends ISampler {
     async fetch() {
         let sampleStates = await this.controller.fetch();
         let sample;
+
+        console.log(`[${this.constructor.name}] fetching local samples` );
         for (const tag of sampleStates.paused ) {
             // this sample is a placeholder to be fetched with real one
             sample = this.strategy.create( tag, {});
@@ -67,7 +69,7 @@ class Sampler extends ISampler {
 
     async store() {
         await this.controller.store();
-        return this.strategy.store();
+        return await this.strategy.store();
     }
 
     async start() {

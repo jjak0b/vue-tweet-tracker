@@ -15,10 +15,12 @@ class SamplingFacade extends ISampler {
         this.eventManager = EventsManager.getInstance();
 
         const contextSamplingStrategy = new ContextSamplingStrategy(
-            new SamplingController( path.join( process.env.PATH_REPOSITORIES_SAMPLES, "context" ) )
+            new SamplingController( path.join( process.env.PATH_REPOSITORIES_SAMPLES, "context" ) ),
+            this.eventManager
         );
         // const geoSamplingStrategy = new GeoSamplingStrategy(
-        //     new SamplingController( path.join( process.env.PATH_REPOSITORIES_SAMPLES, "geo" ) )
+        //     new SamplingController( path.join( process.env.PATH_REPOSITORIES_SAMPLES, "geo" ) ),
+        //     this.eventManager
         // );
 
         this.sampler = new Sampler( this.eventManager );
@@ -33,6 +35,7 @@ class SamplingFacade extends ISampler {
          */
         this.startHandler = this.contextHandler;
 
+        this.startHandler.fetchSamples();
     }
 
 
@@ -47,24 +50,6 @@ class SamplingFacade extends ISampler {
         }
         return SamplingFacade.instance;
     }
-
-    async flush() {
-        let controllers = [
-            this.contextHandler.getSampler(),
-            // this.geoHandler.getController(),
-        ];
-        for (const controller of controllers) {
-            controller.stop().catch( (e)=>{ if(e) console.warn( e ) } );
-            console.log( "flushing", controller.constructor.name );
-            try {
-                await controller.store()
-            }
-            catch (e) {
-                console.error("Error while storing", controller.constructor.name, "reason:", e );
-            }
-        }
-    }
-
 
     getSamplesStates() {
         return this.startHandler.getSamplesStates();

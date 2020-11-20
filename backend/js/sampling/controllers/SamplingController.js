@@ -24,18 +24,17 @@ class SamplingController extends AbstractStorableResource {
      * @return {Promise<SamplesStates>}
      */
     async fetch() {
-        let fetchSuccess = true;
         try {
-            return this.samplesStates.fetch();
+            console.log(`[${this.constructor.name}] fetching`, this.samplesStates.getLocation() );
+            return await this.samplesStates.fetch();
         }
         catch ( e ) {
-            fetchSuccess = false;
             if( e.code === "ENOENT" ) {
                 console.log(`[${this.constructor.name}]`, "Init samples states" );
                 await this.store();
             }
             else {
-                console.error(`[${this.constructor.name}]`, "Error reading local sampleStates.json", "reason:", e);
+                console.error(`[${this.constructor.name}]`, `Error reading local ${this.samplesStates.getLocation()}, "reason:`, e);
             }
         }
         return this.samplesStates;
@@ -46,17 +45,20 @@ class SamplingController extends AbstractStorableResource {
         this.samplesStates.paused = this.getPausedTags();
 
         try {
+            console.log(`[${this.constructor.name}]`, "Storing", this.samplesStates.getLocation() );
             await this.samplesStates.store();
         }
         catch ( e ) {
-            console.error( `[${this.constructor.name}]`, "Error writing local sampleStates", "reason:", e );
+            console.error( `[${this.constructor.name}]`, "Error writing local", this.samplesStates.getLocation(), "reason:", e );
         }
 
         for( const samples of [ this.activeSamples, this.pausedSamples ] ) {
             for (const [tag, sample] of samples) {
+                console.log(`[${this.constructor.name}]`, "Storing sample", tag );
                 try {
                     await sample.store();
-                } catch (e) {
+                }
+                catch (e) {
                     console.error(`[${this.constructor.name}]`, `Unable to store sample "${tag}"`, "\nreason:", e, "\ndata:", JSON.stringify(sample, null, 4));
                 }
             }

@@ -154,17 +154,17 @@ class SamplesHandler extends ISampler {
 
     async fetchSamples() {
         this.sampler.setStrategy( this.strategy );
-        this.sampler.fetch();
-        return this.startHandler.fetchSamples();
+        await this.sampler.fetch();
+        if( this.nextHandler)
+            await this.nextHandler.fetchSamples();
     }
 
     async storeSamples() {
         this.sampler.setStrategy( this.strategy );
-        this.sampler.store();
-        return this.startHandler.storeSamples();
+        await this.sampler.store();
+        if( this.nextHandler)
+            await this.nextHandler.storeSamples();
     }
-
-    canHandle( /*SamplingControllerRequest*/ request ) { return true };
 
 }
 

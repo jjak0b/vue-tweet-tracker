@@ -239,7 +239,7 @@ function API_pauseSample( req, res ) {
 
 
 function exitHandler (exitCode) {
-    samplingFacade.flush()
+    samplingFacade.storeSamples()
         .finally(() => {
             if (exitCode || exitCode === 0)
                 console.log(exitCode);
