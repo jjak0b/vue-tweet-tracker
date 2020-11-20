@@ -2,42 +2,21 @@ const Twitter = require("twitter-v2");
 const StatusCodes = require("http-status-codes").StatusCodes;
 const Tweet = require( "../../sampleItems/Tweet" );
 const FilterConverter = require( "../../filterConverter");
-const SamplingController = require("./SamplingController");
+const SamplingController = require("../controllers/SamplingController");
 const EventsManager = require("../services/EventsManager");
 const ContextSampleBuilder = require("../building/builders/ContextSampleBuilder");
 const FSResourceStorage = require("../../FSResourceStorage");
 const SampledEvent = require("../events/SampledEvent");
-
-const userContextClient = new Twitter( {
-    consumer_key: process.env.TWITTER_API_CONSUMER_KEY,
-    consumer_secret: process.env.TWITTER_API_CONSUMER_SECRET,
-    access_token_key: process.env.TWITTER_API_ACCESS_TOKEN,
-    access_token_secret: process.env.TWITTER_API_ACCESS_TOKEN_SECRET,
-});
+const AbstractSamplingStrategy = require("./AbstractSamplingStrategy");
 
 const appContextClient = new Twitter( {
     consumer_key: process.env.TWITTER_API_CONSUMER_KEY,
     consumer_secret: process.env.TWITTER_API_CONSUMER_SECRET
 });
 
-class ContextSamplingController extends SamplingController {
+class ContextSamplingStrategy extends AbstractSamplingStrategy {
     static MAX_RESULT_PER_REQUEST = 100;
     static MAX_STREAMS_COUNT = 25;
-
-    static ENUM = {
-        SEARCH: {
-            RECENT: {
-                API: "https://api.twitter.com/2/tweets/search/recent"
-                // API: "https://api.twitter.com/1.1/search/tweets.json" // 1.1
-            },
-            STREAM: {
-                API: "https://api.twitter.com/2/tweets/search/stream",
-                RULES: {
-                    API: "https://api.twitter.com/2/tweets/search/stream/rules"
-                }
-            }
-        }
-    };
 
     static PARAMETERS = {
         expansions: [
@@ -69,9 +48,12 @@ class ContextSamplingController extends SamplingController {
         ].join()
     };
 
-    constructor(eventManager, workingDirectory) {
-        super(eventManager, workingDirectory);
-        this.samplesStates.setStorage( FSResourceStorage.getInstance() );
+    /**
+     *
+     * @param controller {SamplingController}
+     */
+    constructor(controller) {
+        super(controller);
 
         /**
          *
@@ -79,45 +61,40 @@ class ContextSamplingController extends SamplingController {
          */
        this.stream = null;
 
-       const builder = new ContextSampleBuilder( workingDirectory );
+       const builder = new ContextSampleBuilder();
        this.sampleDirector.setBuilder( builder );
 
-        this.fetch()
-            .finally( () => {
-                if( this.getActiveTags().length > 0 )
-                    this.start();
-            });
     }
 
-    async fetch() {
-        // fetch local first
-        await super.fetch();
+    async fetch( controller ) {
+
+        let sample = await this.create(tag, {} );
 
         // fetch remote after
-        console.log("[ContextSamplingController", "Fetching active stream rules ...");
+        console.log(`[${this.constructor.name}]`, "Fetching active stream rules ...");
         // this.requestAPI("get", "tweets/search/stream/rules", null, null, true)
         let json;
         try {
             json = await appContextClient.get("tweets/search/stream/rules");
         }
         catch (err) {
-            console.error("[ContextSamplingController", "Error fetching remote samples", "cause:", err);
+            console.error(`[${this.constructor.name}]`, "Error fetching remote samples", "cause:", err);
         }
 
         if( !json ) return;
 
         if (Array.isArray(json.data) && json.data.length > 0) {
-            console.log("[ContextSamplingController", "Detected remote samples:", json.data);
+            console.log(`[${this.constructor.name}]`, "Detected remote samples:", json.data);
             let unhandledRules = [];
             for (const rule of json.data) {
-                let sample = await this.get( rule.tag );
+                let sample = await controller.get( rule.tag );
                 if( !sample ) {
                     // this may happen if someone else is using the same key ... so just delete on remote
                     unhandledRules.push( rule );
-                    console.error("[ContextSamplingController", "ERROR ! sample mismatch", rule.tag, "Active sample found on remote but not on local ... removing", unhandledRules );
+                    console.error(`[${this.constructor.name}]`, "ERROR ! sample mismatch", rule.tag, "Active sample found on remote but not on local ... removing", unhandledRules );
                 }
                 else {
-                    super.resume( rule.tag );
+                    this.start();
                 }
             }
 
@@ -130,12 +107,12 @@ class ContextSamplingController extends SamplingController {
                         }
                     }
                 )
-                    .catch(e => console.error("[ContextSamplingController", "Error deleting mismatching rules", e));
+                    .catch(e => console.error(`[${this.constructor.name}]`, "Error deleting mismatching rules", e));
             }
 
         }
         else {
-            console.log("[ContextSamplingController", "No active samples detected");
+            console.log(`[${this.constructor.name}]`, "No active samples detected");
         }
     }
 
@@ -143,62 +120,89 @@ class ContextSamplingController extends SamplingController {
         return FilterConverter.convertfilter( filter );
     }
 
-    async remove(tag ) {
-        const handleDeleteSample = (statusCode) => {
+    /**
+     *
+     * @param sample
+     * @return {Promise<StatusCodes.OK | StatusCodes.CONFLICT | StatusCodes.NOT_ACCEPTABLE | StatusCodes.INTERNAL_SERVER_ERROR>}
+     */
+    async add( sample ) {
+        let descriptor = sample.getDescriptor()
+        /**
+         * @type {ContextFilteringRule}
+         */
+        let rule = descriptor.getRule();
+        let filter = rule.filter;
+        //stringify filter into query filter
+        let queryFilter = ContextSamplingStrategy.getQueryFromFilter( filter );
+
+        try {
+            let response = await appContextClient.post(
+                "tweets/search/stream/rules",
+                {
+                    add: [{tag:sample.tag, value:queryFilter}]
+                },
+                {
+                    dry_run: true // test rule validity
+                }
+            );
+
+            if( response.meta.summary.valid ) {
+                return Promise.resolve( StatusCodes.OK );
+            }
+            else {
+                if (response.errors[0].title === "DuplicateRule") {
+                    return Promise.reject(StatusCodes.CONFLICT);
+                }
+                else {
+                    return Promise.reject(StatusCodes.NOT_ACCEPTABLE);
+                }
+            }
+        }
+        catch(err) {
+            console.error(`[${this.constructor.name}]`, "verify addition ->", "error:", err);
+            return Promise.reject( StatusCodes.INTERNAL_SERVER_ERROR );
+        }
+    }
+
+    /**
+     *
+     * @param sample
+     * @return {Promise<Promise<StatusCodes.OK | number> | Promise<never>>}
+     */
+    async delete( sample ) {
+        const handleDeleteSample = async (statusCode) => {
             switch( statusCode ) {
                 case StatusCodes.OK:
                 case StatusCodes.METHOD_NOT_ALLOWED: {
-                    super.remove( tag );
-                    super.store();
-                    return Promise.resolve(StatusCodes.OK);
+                    super.delete( sample );
+                    return StatusCodes.OK;
                 }
                 default:
-                    return Promise.reject( statusCode );
+                    return statusCode;
             }
         }
 
-        try {
-            return handleDeleteSample( await this.pause(tag) );
-        }
-        catch (e) {
-            return handleDeleteSample( e );
-        }
+        return handleDeleteSample( await this.pause( sample ) );
     }
 
-    async add(tag, filter ) {
-        let sample = await this.get( tag );
-        if( !sample ) {
-            try {
-                await super.add( tag, filter );
-                return Promise.resolve( StatusCodes.CREATED );
-            }
-            catch (e) {
-                return Promise.reject( StatusCodes.INTERNAL_SERVER_ERROR );
-            }
 
-        }
-        else {
-            return Promise.reject( StatusCodes.CONFLICT )
-        }
-    }
+    /**
+     *
+     * @param sample {Sample}
+     * @return {Promise<StatusCodes.OK>}
+     */
+    async resume( sample ) {
 
-    async resume(tag ) {
-
-        console.log( "[ContextSamplingController]", "Request of resume sample with tag ", `"${tag}"`);
-
-        if( this.activeSamples.size >= ContextSamplingController.MAX_STREAMS_COUNT ) {
-            return Promise.reject( StatusCodes.TOO_MANY_REQUESTS );
-        }
-
-        let sample = this.pausedSamples.get( tag );
-
-        if( sample ) {
+        console.log( "[ContextSamplingStrategy]", "Request of resume sample with tag ", `"${tag}"`);
 
             let descriptor = sample.getDescriptor()
+            /**
+             * @type {ContextFilteringRule}
+             */
             let rule = descriptor.getRule();
             let filter = rule.filter;
             //stringify filter into query filter
-            let queryFilter = ContextSamplingController.getQueryFromFilter( filter );
+            let queryFilter = ContextSamplingStrategy.getQueryFromFilter( filter );
 
             console.log("resuming", sample, "active query:", filter, "; result:", queryFilter );
             let json;
@@ -211,45 +215,22 @@ class ContextSamplingController extends SamplingController {
                 );
             }
             catch(err) {
-                console.error("[ContextSamplingController]", "resume", "error:", err);
-                return Promise.reject( StatusCodes.INTERNAL_SERVER_ERROR );
+                console.error("[ContextSamplingStrategy]", "resume", "error:", err);
+                return StatusCodes.INTERNAL_SERVER_ERROR;
             }
 
             console.log("resume response", json);
-            // even if responds CREATED, the response content can contains errors
-            if (json.meta.summary.valid) {
-                if (json.meta.summary.created) {
 
-                    /** @type {ContextFilteringRule}*/
-                    rule.id = json.data[0].id;
-                    await super.resume( tag );
+            if (json.meta.summary.created) {
 
-                    // start sampling if needed
-                    this.start();
+                rule.id = json.data[0].id;
 
-                    return StatusCodes.OK;
-                }
-                else if (json.meta.summary.not_created) {
-                    return Promise.reject( StatusCodes.BAD_GATEWAY );
-                }
+                return StatusCodes.OK;
             }
-            else {
-                this.pausedSamples.delete( tag );
-                super.store();
-
-                if (json.errors[0].title === "DuplicateRule") {
-                    return Promise.reject(StatusCodes.CONFLICT);
-                }
-                else {
-                    return Promise.reject(StatusCodes.NOT_ACCEPTABLE);
-                }
+            else if (json.meta.summary.not_created) {
+                // should be set StatusCodes.TOO_MANY_REQUESTS here ?
+                return StatusCodes.BAD_GATEWAY;
             }
-        }
-        else if( this.activeSamples.has( tag ) ) {
-            return Promise.reject( StatusCodes.METHOD_NOT_ALLOWED );
-        }
-
-        return Promise.reject( StatusCodes.NOT_FOUND );
     }
 
     async start() {
@@ -303,7 +284,7 @@ class ContextSamplingController extends SamplingController {
     // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
     async streamConnect( handlers ) {
         //Listen to the stream
-        let params = ContextSamplingController.PARAMETERS;
+        let params = ContextSamplingStrategy.PARAMETERS;
 
 
         try {
@@ -342,20 +323,19 @@ class ContextSamplingController extends SamplingController {
         for (let i = 0; i < destinationRules.length; i++) {
             let tweet = new Tweet( dataToAssign );
             let tag = destinationRules[ i ].tag;
-            let sample = await this.get( tag );
+            let sample = await this.getController().get( tag );
             if( sample ) {
                 sample.add( tweet )
                     .catch( (e) => {
-                        console.error( "[ContextSamplingController:routesDataToSamples]", `Unable to add item to "${tag}" sample`, "reason:", e );
+                        console.error( "[ContextSamplingStrategy:routesDataToSamples]", `Unable to add item to "${tag}" sample`, "reason:", e );
                     });
+
                 let descriptor = sample.getDescriptor();
                 descriptor.incCount();
-                let event = new SampledEvent( descriptor, tweet );
-                this.eventManager.emit( EventsManager.ENUM.EVENTS.SAMPLED, event );
             }
             else {
                 // ley us know if something doesn't behave like it should
-                console.error( "[ContextSamplingController:routesDataToSamples]", `Unable to find route for "${tag}" sample in active samples`, "So the data has been ignores");
+                console.error( "[ContextSamplingStrategy:routesDataToSamples]", `Unable to find route for "${tag}" sample in active samples`, "So the data has been ignores");
             }
         }
     }
@@ -371,18 +351,13 @@ class ContextSamplingController extends SamplingController {
         }
     }
 
-    async pause(tag ) {
-        console.log( "[ContextSamplingController]", "Request of pause sample with tag ", `"${tag}"`);
-        let sample = this.activeSamples.get( tag );
-        if( sample ) {
-            console.log("pausing", sample);
-
+    async pause( sample ) {
             let descriptor = sample.getDescriptor()
             /** @type {ContextFilteringRule}*/
             let rule = descriptor.getRule();
-            let json;
+            let response;
             try {
-                json = await appContextClient.post(
+                response = await appContextClient.post(
                     "tweets/search/stream/rules",
                     {
                         delete: {
@@ -392,20 +367,13 @@ class ContextSamplingController extends SamplingController {
                 );
             }
             catch(err) {
-                console.error("[ContextSamplingController]", "pause", "error:", err);
-                return Promise.reject(StatusCodes.INTERNAL_SERVER_ERROR);
+                console.error("[ContextSamplingStrategy]", "pause", "error:", err);
+                return StatusCodes.INTERNAL_SERVER_ERROR;
             }
 
-            console.log("pause response", json);
-            if (json.meta.summary.deleted) {
-                sample.id = null;
-                super.pause( tag );
-
-                if( this.getActiveTags().length < 1 ) {
-                    this.stop();
-                }
-
-                return Promise.resolve(StatusCodes.OK);
+            if (response.meta.summary.deleted) {
+                rule.id = null;
+                return StatusCodes.OK;
             }
             else {
                 /*
@@ -416,15 +384,9 @@ class ContextSamplingController extends SamplingController {
                     but if we are here is because the sample was already been delete from API
                     or the sample id doesn't match with remote API ID
                  */
-                return Promise.reject(StatusCodes.INTERNAL_SERVER_ERROR);
+                return StatusCodes.INTERNAL_SERVER_ERROR;
             }
-        }
-        else if( this.pausedSamples.has( tag ) ) {
-            return Promise.reject( StatusCodes.METHOD_NOT_ALLOWED );
-        }
-
-        return Promise.reject( StatusCodes.NOT_FOUND );
     }
 }
 
-module.exports = ContextSamplingController
+module.exports = ContextSamplingStrategy
