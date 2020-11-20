@@ -2,6 +2,7 @@ const { Telegraf } = require('telegraf');
 const fs = require('fs');
 const path = require("path");
 const Markup = require('telegraf/markup');
+const sampling = require('./SamplingFacade');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 let filepath = path.join( global.__basedir, "..", "telegram.json" );
@@ -33,7 +34,7 @@ bot.help(ctx => {
 
 bot.command('add', ctx => {
 
-    let tags = ['terremoto', 'incendio', 'proteste']    //esempio per test, poi si farà una request per ottenere i tag dal server
+    let tags = sampling.getInstance().request(null);
     let users = JSON.parse(fs.readFileSync(filepath))
     let followed = []
     for(let i = 0; i < users.length; i++){
@@ -88,6 +89,12 @@ bot.command('stop', ctx =>{
         }
     }
 });
+
+function alertEvent(contacts, message){
+    for(let i = 0; i < contacts.length; i ++){
+        bot.telegram.sendMessage(contacts[i], message);
+    }
+}
 
 bot.launch();
 
