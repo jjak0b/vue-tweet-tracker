@@ -134,7 +134,7 @@ class Sampler extends ISampler {
     async resumeSample( tag ) {
         let sample = this.controller.getPaused( tag );
         if( sample ) {
-            console.log( `[${this.strategy.constructor.name}]`, "Request to resume sample", `"${tag}"` );
+            console.log( `[${this.constructor.name}]`, "Request to resume sample", `"${tag}"` );
             let result = await this.strategy.resume( sample );
             switch( result ) {
                 case StatusCodes.OK:
