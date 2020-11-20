@@ -1,12 +1,9 @@
-const StatusCodes = require("http-status-codes").StatusCodes;
+// const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const qs = require("query-string");
-const twitterAPIControllerInstance = require( "../js/sampling/controllers/ContextSamplingController");
 
 router.all( "/:version", (req, res) => {
-
+/*
     let query = req.query;
     let url = `https://api.twitter.com/${req.params.version}/${query.api}`;
 
@@ -50,6 +47,8 @@ router.all( "/:version", (req, res) => {
             console.error(err);
             res.status( StatusCodes.INTERNAL_SERVER_ERROR );
         });
+
+ */
 });
 
 module.exports = router;
