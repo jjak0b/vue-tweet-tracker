@@ -3,10 +3,7 @@ const StatusCodes = require("http-status-codes").StatusCodes;
 const Tweet = require( "../../sampleItems/Tweet" );
 const FilterConverter = require( "../../filterConverter");
 const SamplingController = require("../controllers/SamplingController");
-const EventsManager = require("../services/EventsManager");
 const ContextSampleBuilder = require("../building/builders/ContextSampleBuilder");
-const FSResourceStorage = require("../../FSResourceStorage");
-const SampledEvent = require("../events/SampledEvent");
 const AbstractSamplingStrategy = require("./AbstractSamplingStrategy");
 
 const appContextClient = new Twitter( {
@@ -51,9 +48,10 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
     /**
      *
      * @param controller {SamplingController}
+     * @param eventsManager {EventsManager}
      */
-    constructor(controller) {
-        super(controller);
+    constructor(controller, eventsManager) {
+        super(controller, eventsManager);
 
         /**
          *
@@ -63,12 +61,9 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
 
        const builder = new ContextSampleBuilder();
        this.sampleDirector.setBuilder( builder );
-
     }
 
-    async fetch( controller ) {
-
-        let sample = await this.create(tag, {} );
+    async fetch() {
 
         // fetch remote after
         console.log(`[${this.constructor.name}]`, "Fetching active stream rules ...");
@@ -87,7 +82,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
             console.log(`[${this.constructor.name}]`, "Detected remote samples:", json.data);
             let unhandledRules = [];
             for (const rule of json.data) {
-                let sample = await controller.get( rule.tag );
+                let sample = await this.controller.get( rule.tag );
                 if( !sample ) {
                     // this may happen if someone else is using the same key ... so just delete on remote
                     unhandledRules.push( rule );
@@ -323,19 +318,18 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
         for (let i = 0; i < destinationRules.length; i++) {
             let tweet = new Tweet( dataToAssign );
             let tag = destinationRules[ i ].tag;
-            let sample = await this.getController().get( tag );
-            if( sample ) {
-                sample.add( tweet )
-                    .catch( (e) => {
-                        console.error( "[ContextSamplingStrategy:routesDataToSamples]", `Unable to add item to "${tag}" sample`, "reason:", e );
-                    });
-
-                let descriptor = sample.getDescriptor();
-                descriptor.incCount();
+            let sample = this.getController().get(tag);
+            if (sample) {
+                try {
+                    await this.addItem(sample, tweet);
+                }
+                catch (e) {
+                    console.error(`[${this.constructor.name}:routesDataToSamples]`, `Unable to add Item to "${tag}" sample collection`, "reason", e);
+                }
             }
             else {
                 // ley us know if something doesn't behave like it should
-                console.error( "[ContextSamplingStrategy:routesDataToSamples]", `Unable to find route for "${tag}" sample in active samples`, "So the data has been ignores");
+                console.warn(`[${this.constructor.name}:routesDataToSamples]`, `Unable to find route for "${tag}" sample`, "So the data has been ignores");
             }
         }
     }

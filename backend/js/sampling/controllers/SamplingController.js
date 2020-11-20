@@ -74,10 +74,20 @@ class SamplingController extends AbstractStorableResource {
         this.pausedSamples.set( sample.tag, sample );
     }
 
-    async remove( /*String*/tag ) {
+    /**
+     *
+     * @param tag
+     * @return {Promise<void>}
+     */
+    remove( /*String*/tag ) {
         this.pausedSamples.delete( tag );
     }
 
+    /**
+     *
+     * @param tag
+     * @return {Sample}
+     */
     get( /*String*/tag ) {
         let sample = this.activeSamples.get( tag );
         if( !sample )
@@ -85,6 +95,11 @@ class SamplingController extends AbstractStorableResource {
         return sample;
     }
 
+    /**
+     *
+     * @param tag
+     * @return {Sample}
+     */
     getPaused( tag ) {
         return this.pausedSamples.get( tag );
     }
@@ -94,6 +109,11 @@ class SamplingController extends AbstractStorableResource {
         this.activeSamples.delete( tag );
     }
 
+    /**
+     *
+     * @param tag
+     * @return {Sample}
+     */
     getActive( tag ) {
         return this.pausedSamples.get( tag );
     }
@@ -103,10 +123,18 @@ class SamplingController extends AbstractStorableResource {
         this.pausedSamples.delete( tag );
     }
 
+    /**
+     *
+     * @return {String[]}
+     */
     getPausedTags() {
         return Array.from( this.pausedSamples.keys() );
     }
 
+    /**
+     *
+     * @return {String[]}
+     */
     getActiveTags() {
         return Array.from( this.activeSamples.keys() );
     }

@@ -1,12 +1,16 @@
 const StatusCodes = require("http-status-codes").StatusCodes;
-const SampledEvent = require("./events/SampledEvent");
-const EventsManager = require( "./services/EventsManager");
 const ISampler = require( "./ISampler" );
+const EventsManager = require("./services/EventsManager");
 
 class Sampler extends ISampler {
 
-    constructor(/*EventsManager*/ eventManager) {
+    /**
+     *
+     * @param eventManager {EventsManager}
+     */
+    constructor(eventManager) {
         super();
+
         /**
          *
          * @type {AbstractSamplingStrategy}
@@ -18,12 +22,8 @@ class Sampler extends ISampler {
          * @type {SamplingController}
          */
         this.controller = null;
-        /**
-         *
-         * @type {EventsManager}
-         */
-        this.eventManager = eventManager;
 
+        eventManager.on( EventsManager.ENUM.EVENTS.SAMPLED, this.onSampled );
     }
 
     setStrategy( strategy ) {
@@ -72,30 +72,6 @@ class Sampler extends ISampler {
 
     async start() {
         this.strategy.start();
-    }
-
-    /**
-     *
-     * @param tag {String}
-     * @param item {SampleItem}
-     */
-    async addSampleItem( tag, item ) {
-
-        /**
-         * @type {Sample}
-         */
-        let sample = await this.controller.get( tag );
-        if( sample ) {
-
-            let event = new SampledEvent( sample.getDescriptor(), item );
-            this.eventManager.emit( EventsManager.ENUM.EVENTS.SAMPLED, event );
-
-            await sample.add( item );
-            return StatusCodes.CREATED;
-        }
-        else {
-            return StatusCodes.NOT_FOUND;
-        }
     }
 
     getSamplesStates() {

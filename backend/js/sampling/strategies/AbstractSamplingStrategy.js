@@ -1,19 +1,22 @@
 const SampleDirector = require("../building/directors/SampleDirector");
+const SampledEvent = require("../events/SampledEvent");
 
 class AbstractSamplingStrategy {
     /**
      *
      * @param controller {SamplingController}
+     * @param eventsManager {EventsManager}
      */
-    constructor( controller ) {
+    constructor( controller, eventsManager ) {
 
         this.controller = controller;
         /**
          *
          * @type {SampleDirector}
          */
-
         this.sampleDirector = new SampleDirector();
+
+        this.eventsManager = eventsManager;
     }
 
 
@@ -87,6 +90,17 @@ class AbstractSamplingStrategy {
      */
     async pause( sample ) {}
 
+
+    /**
+     *
+     * @param sample {Sample}
+     * @param item {SampleItem}
+     */
+    async addItem( sample, item ) {
+        await sample.add( item );
+        let event = new SampledEvent( sample.getDescriptor(), item );
+        this.eventManager.emit( this.eventsManager.constructor.ENUM.EVENTS.SAMPLED, event );
+    }
 }
 
 module.exports = AbstractSamplingStrategy;
