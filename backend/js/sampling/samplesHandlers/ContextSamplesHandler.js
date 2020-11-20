@@ -1,5 +1,5 @@
 const SamplesHandler = require("./SamplesHandler");
-
+const ContextSamplingStrategy = require("../strategies/ContextSamplingStrategy");
 class ContextSamplesHandler extends SamplesHandler {
 
     /**
@@ -12,7 +12,9 @@ class ContextSamplesHandler extends SamplesHandler {
     }
 
     canHandleByFilter(filter) {
-        return filter.context && filter.locations && filter.locations.length > 0;
+        let query = ContextSamplingStrategy.getQueryFromFilter( filter );
+
+        return query.trim().length > 0;
     }
 }
 
