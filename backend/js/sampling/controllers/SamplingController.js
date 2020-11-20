@@ -79,10 +79,10 @@ class SamplingController extends AbstractStorableResource {
     /**
      *
      * @param tag
-     * @return {Promise<void>}
      */
     remove( /*String*/tag ) {
         this.pausedSamples.delete( tag );
+        this.activeSamples.delete( tag );
     }
 
     /**
@@ -117,7 +117,7 @@ class SamplingController extends AbstractStorableResource {
      * @return {Sample}
      */
     getActive( tag ) {
-        return this.pausedSamples.get( tag );
+        return this.activeSamples.get( tag );
     }
 
     setActive( tag, sample ) {

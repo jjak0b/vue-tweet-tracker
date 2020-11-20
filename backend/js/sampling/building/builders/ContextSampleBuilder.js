@@ -6,8 +6,15 @@ const JSONBufferedItemsCollection = require("../../../JSONBufferedItemsCollectio
 const FSResourceStorage = require("../../../FSResourceStorage");
 
 class ContextSampleBuilder extends AbstractSampleBuilder {
-    constructor(path) {
-        super(path);
+    constructor() {
+        super();
+    }
+
+
+    createNewSample(tag, location) {
+        super.createNewSample(tag, location);
+        let sample = this.getSample();
+        sample.setStorage( FSResourceStorage.getInstance() );
     }
 
     buildDescriptor( rawFilter, location ) {

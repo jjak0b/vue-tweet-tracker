@@ -3,7 +3,6 @@ const GeoSamplesHandler = require("./sampling/samplesHandlers/GeoSamplesHandler"
 
 const ContextSamplesHandler = require("./sampling/samplesHandlers/ContextSamplesHandler");
 const ContextSamplingStrategy = require("./sampling/strategies/ContextSamplingStrategy");
-const SamplingController = require("./sampling/controllers/SamplingController");
 const EventsManager = require("./sampling/services/EventsManager");
 const Sampler =require("./sampling/Sampler");
 const ISampler = require("./sampling/ISampler");
@@ -15,7 +14,7 @@ class SamplingFacade extends ISampler {
         this.eventManager = EventsManager.getInstance();
 
         const contextSamplingStrategy = new ContextSamplingStrategy(
-            new SamplingController( path.join( process.env.PATH_REPOSITORIES_SAMPLES, "context" ) ),
+            path.join( process.env.PATH_REPOSITORIES_SAMPLES, "context" ),
             this.eventManager
         );
         // const geoSamplingStrategy = new GeoSamplingStrategy(
@@ -42,7 +41,7 @@ class SamplingFacade extends ISampler {
     static instance = null;
     /**
      *
-     * @type {SamplingFacade}
+     * @return {SamplingFacade}
      */
     static getInstance() {
         if( !SamplingFacade.instance ) {

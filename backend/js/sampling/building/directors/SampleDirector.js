@@ -1,5 +1,4 @@
 const path = require("path");
-const fs = require("fs-extra");
 
 class SampleDirector {
     constructor( workingLocation ) {
@@ -12,6 +11,10 @@ class SampleDirector {
 
     setBuilder( /*AbstractSampleBuilder*/ builder) {
         this.builder = builder;
+    }
+
+    setLocation( location ) {
+        this.location = location;
     }
 
     constructSample( /*String*/tag, filter ) {
