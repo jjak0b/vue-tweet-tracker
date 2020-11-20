@@ -99,7 +99,7 @@ class AbstractSamplingStrategy {
     async addItem( sample, item ) {
         await sample.add( item );
         let event = new SampledEvent( sample.getDescriptor(), item );
-        this.eventManager.emit( this.eventsManager.constructor.ENUM.EVENTS.SAMPLED, event );
+        this.eventsManager.emit( this.eventsManager.constructor.ENUM.EVENTS.SAMPLED, event );
     }
 }
 
