@@ -15,23 +15,20 @@ class Sampler extends ISampler {
 
         /**
          *
+         * @type {SamplingController}
+         */
+        this.controller = null;
+        /**
+         *
          * @type {EventsManager}
          */
         this.eventManager = eventManager;
 
     }
 
-    setController( controller ) {
-        this.strategy.setController( controller );
-    }
-
-    getController() {
-        return this.strategy.getController();
-    }
-
     setStrategy( strategy ) {
         this.strategy = strategy;
-        this.strategy.setController( this.controller );
+        this.controller = this.strategy.getController();
     }
 
     async fetch() {
@@ -71,7 +68,17 @@ class Sampler extends ISampler {
     }
 
     getSamplesStates() {
-        return;
+        return new Map([
+                [
+                    "active",
+                    this.controller.getActiveTags()
+                ],
+                [
+                    "paused",
+                    this.controller.getPausedTags()
+                ]
+            ]
+        );
     }
 
     async getSampleItems( tag ) {
@@ -110,15 +117,13 @@ class Sampler extends ISampler {
     }
 
     async resumeSample( tag ) {
-        let sample = this.controller.pausedSamples.get( tag );
+        let sample = this.controller.getPaused( tag );
         if( sample ) {
             console.log( `[${this.strategy.constructor.name}]`, "Request to resume sample", `"${tag}"` );
             let result = await this.strategy.resume( sample );
             switch( result ) {
                 case StatusCodes.OK:
-
-                    this.controller.activeSamples.set( tag, sample );
-                    this.controller.pausedSamples.delete( tag );
+                    this.controller.setActive( tag, sample );
                     break;
                 case StatusCodes.CONFLICT:
                 case StatusCodes.NOT_ACCEPTABLE:
@@ -135,13 +140,12 @@ class Sampler extends ISampler {
     }
 
     async pauseSample( tag ) {
-        let sample = this.controller.activeSamples.get( tag );
+        let sample = this.controller.getActive( tag );
         if( sample ) {
             console.log( `[${this.strategy.constructor.name}]`, "Request to pause sample", `"${tag}"` );
             let result = await this.strategy.pause( sample );
             if( result === StatusCodes.OK) {
-                this.controller.pausedSamples.set(tag, sample);
-                this.controller.activeSamples.delete(tag);
+                this.controller.setPaused(tag, sample);
                 sample.store()
                     .catch((e) => console.error(`[${this.constructor.name}]`, "Error while storing sample", `"${tag}"`, e))
             }
@@ -156,8 +160,8 @@ class Sampler extends ISampler {
 
     async deleteSample( tag ) {
         console.log( `[${this.constructor.name}]`, "erasing sample", tag );
+        let sample = await this.get( tag );
         try {
-            let sample = await this.get( tag );
             if( sample ) {
                 let result = await this.strategy.delete(sample);
                 if( result === StatusCodes.OK ) {
