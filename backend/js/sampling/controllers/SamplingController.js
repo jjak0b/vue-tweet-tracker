@@ -1,13 +1,11 @@
 const path = require("path");
-const SampleDirector = require("../building/directors/SampleDirector");
 const AbstractStorableResource = require("../../AbstractStorableResource");
 const SamplesStates = require("../SamplesStates");
+const FSResourceStorage = require("../../FSResourceStorage");
 
-class SamplingController extends AbstractStorableResource{
-    constructor( /*EventsManager*/eventManager, /*String*/workingLocation ) {
+class SamplingController extends AbstractStorableResource {
+    constructor(/*String*/workingLocation ) {
         super(workingLocation);
-        this.eventManager = eventManager;
-
         /**
          * @type {Map<String, Sample>}
          */
@@ -17,8 +15,9 @@ class SamplingController extends AbstractStorableResource{
          */
         this.activeSamples = new Map();
 
-        this.sampleDirector = new SampleDirector( this.getLocation() );
+
         this.samplesStates = new SamplesStates( path.join( this.getLocation(), "sampleStates.json" ) );
+        this.samplesStates.setStorage( FSResourceStorage.getInstance() );
     }
 
     async fetch() {
@@ -93,76 +92,44 @@ class SamplingController extends AbstractStorableResource{
         }
     }
 
-    async start() {
-        await this.fetch();
-    }
-
-    async stop() {
-        return Promise.resolve();
-    }
-
-    async add( tag /*String*/, filter ) {
-        this.sampleDirector.constructSample( tag, filter );
-        let sample = this.sampleDirector.getSample();
-        await sample.store();
+    /**
+     *
+     * @param sample {Sample}
+     * @return {Promise<void>}
+     */
+    async add( sample ) {
         console.log( `[${this.constructor.name}]`, "Add new sample -> to paused streams", sample );
-        this.pausedSamples.set( tag, sample );
+        await sample.store();
+        this.pausedSamples.set( sample.tag, sample );
     }
 
-    async remove( tag /*String*/ ) {
-        let sample = await this.get( tag );
-
-        console.log( `[${this.constructor.name}]`, "erasing sample", tag );
-        try {
-            await this.sampleDirector.deconstructSample( sample );
-            console.log( `[${this.constructor.name}]`, "Remove sample to paused streams", tag );
-            this.pausedSamples.delete( tag );
-        }
-
-        catch ( e ) {
-            if( e.code === "ENOENT" ) {
-                console.warn(`[${this.constructor.name}]`, "Attempting to remove a not concrete sample", `"${tag}"\n`, "\ndetails:", sample, "\nreason:", e );
-            }
-            else {
-                console.error(`[${this.constructor.name}]`, "Error erasing local sample\n", sample, "\nreason:", e);
-            }
-        }
+    async remove( /*String*/tag ) {
+        this.pausedSamples.delete( tag );
     }
 
-    async resume( tag /*String*/ ) {
-        let sample = this.pausedSamples.get( tag );
-
-        if( sample ) {
-            this.activeSamples.set( tag, sample );
-
-            return this.pausedSamples.delete( tag );
-        }
-        return false;
-    }
-
-    async pause( tag /*String*/ ) {
-        let sample = this.activeSamples.get( tag );
-
-        if( sample ) {
-            this.pausedSamples.set( tag, sample );
-            this.activeSamples.delete( tag );
-
-            try {
-                await sample.store();
-                return true;
-            }
-            catch (e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    async get( /*String*/tag ) {
+    get( /*String*/tag ) {
         let sample = this.activeSamples.get( tag );
         if( !sample )
             sample = this.pausedSamples.get( tag );
         return sample;
+    }
+
+    getPaused( tag ) {
+        return this.pausedSamples.get( tag );
+    }
+
+    setPaused( tag, sample ) {
+        this.pausedSamples.set( tag, sample );
+        this.activeSamples.delete( tag );
+    }
+
+    getActive( tag ) {
+        return this.pausedSamples.get( tag );
+    }
+
+    setActive( tag, sample ) {
+        this.activeSamples.set( tag, sample );
+        this.pausedSamples.delete( tag );
     }
 
     getPausedTags() {
