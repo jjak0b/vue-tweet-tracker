@@ -92,6 +92,7 @@ class SamplesHandler extends ISampler {
     }
 
     async getSampleItems( tag ) {
+        this.sampler.setStrategy( this.strategy );
         if( this.canHandleByTag( tag ) ) {
             return this.sampler.getSampleItems( tag );
         }
@@ -107,6 +108,7 @@ class SamplesHandler extends ISampler {
         let isHandledByAny = false;
         if ( this.canHandleByFilter(filter) ) {
             isHandledByAny = this.IsSampleHandledByAny( tag )
+            this.sampler.setStrategy( this.strategy );
             if( !isHandledByAny ) {
                 return await this.sampler.addSample(tag, filter);
             }
@@ -114,7 +116,10 @@ class SamplesHandler extends ISampler {
         if (!isHandledByAny && this.nextHandler) {
             return this.nextHandler.addSample(tag, filter);
         }
-        return StatusCodes.CONFLICT;
+        else if( isHandledByAny ) {
+            return StatusCodes.CONFLICT;
+        }
+        return StatusCodes.NOT_IMPLEMENTED;
     }
 
     async deleteSample( tag ) {
