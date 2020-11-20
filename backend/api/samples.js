@@ -19,30 +19,9 @@ router.get( "/", API_getSamples );
  *
  */
 function API_getSamples( req, res ) {
-    let statesQuery = req.query.states;
-    let samplingController = samplingFacade.request(
-        new SamplingControllerRequest(
-            null,
-            {
-                type: req.query.type
-            }
-        )
-    );
 
-    if( samplingController ) {
-        let data = {};
-        if (!statesQuery || statesQuery.length < 1 || statesQuery.includes("active")) {
-            data.active = samplingController.getActiveTags();
-        }
-        if (!statesQuery || statesQuery.length < 1 || statesQuery.includes("paused")) {
-            data.paused = samplingController.getPausedTags();
-        }
-        res.json( data );
-    }
-    else {
-        res.sendStatus( StatusCodes.BAD_REQUEST );
-    }
-
+    let data = samplingFacade.getSamplesStates();
+    res.json( Object.fromEntries( data ) );
 }
 
 router.get( "/:tag", API_getSampleData );

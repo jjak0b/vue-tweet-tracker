@@ -55,15 +55,18 @@ class SamplesHandler extends ISampler {
     getSamplesStates() {
         this.sampler.setStrategy( this.strategy );
 
-        let maps = [
-            this.sampler.getSamplesStates(),
-        ];
+        let states = this.sampler.getSamplesStates();
 
         if( this.nextHandler ) {
-            maps[ 1 ] = this.nextHandler.getSamplesStates();
+            let nextStates = this.nextHandler.getSamplesStates();
+
+            states.forEach(
+                (tags, state, arrayStates) =>
+                    arrayStates.set( state, tags.concat( nextStates.get( state ) ) )
+            );
         }
 
-        return new Map( maps );
+        return states;
     }
 
     getSample(tag) {

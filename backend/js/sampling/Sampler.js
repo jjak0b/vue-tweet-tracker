@@ -76,6 +76,10 @@ class Sampler extends ISampler {
         this.strategy.start();
     }
 
+    /**
+     *
+     * @return {Map<string, String[]>}
+     */
     getSamplesStates() {
         return new Map([
                 [
