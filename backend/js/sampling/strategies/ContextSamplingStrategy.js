@@ -47,20 +47,23 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
 
     /**
      *
-     * @param controller {SamplingController}
+     * @param location
      * @param eventsManager {EventsManager}
      */
-    constructor(controller, eventsManager) {
-        super(controller, eventsManager);
+    constructor(location, eventsManager) {
+        super(
+            new SamplingController( location ),
+            eventsManager
+        );
 
         /**
          *
          * @type {TwitterStream}
          */
        this.stream = null;
-
        const builder = new ContextSampleBuilder();
        this.sampleDirector.setBuilder( builder );
+       this.sampleDirector.setLocation( location );
     }
 
     async fetch() {
@@ -77,18 +80,19 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
         }
 
         if( !json ) return;
-
+        let validRules = [];
         if (Array.isArray(json.data) && json.data.length > 0) {
             console.log(`[${this.constructor.name}]`, "Detected remote samples:", json.data);
             let unhandledRules = [];
             for (const rule of json.data) {
-                let sample = await this.controller.get( rule.tag );
+                let sample = await this.controller.getActive( rule.tag );
                 if( !sample ) {
                     // this may happen if someone else is using the same key ... so just delete on remote
                     unhandledRules.push( rule );
-                    console.error(`[${this.constructor.name}]`, "ERROR ! sample mismatch", rule.tag, "Active sample found on remote but not on local ... removing", unhandledRules );
+                    console.error(`[${this.constructor.name}]`, "ERROR ! sample mismatch", rule.tag, "Active sample found on remote but not on local ... removing from remote", rule );
                 }
                 else {
+                    validRules.push( rule );
                     this.start();
                 }
             }
@@ -107,7 +111,15 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
 
         }
         else {
-            console.log(`[${this.constructor.name}]`, "No active samples detected");
+            console.log(`[${this.constructor.name}]`, "No remote active samples detected");
+            for (const activeTag of this.getController().getActiveTags() ) {
+                if( !validRules.some( (rule) => rule.tag === activeTag ) ) {
+                    let sample = this.getController().getActive( activeTag );
+                    console.error(`[${this.constructor.name}]`, "ERROR ! sample mismatch", activeTag, "Active sample found on local but not on remote ... pausing" );
+                    this.getController().setPaused( activeTag, sample );
+                }
+            }
+
         }
     }
 
@@ -145,16 +157,17 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
                 return Promise.resolve( StatusCodes.OK );
             }
             else {
-                if (response.errors[0].title === "DuplicateRule") {
+                if (response.errors[0].type === 'https://api.twitter.com/2/problems/duplicate-rules' ) {
                     return Promise.reject(StatusCodes.CONFLICT);
                 }
                 else {
+                    console.error( )
                     return Promise.reject(StatusCodes.NOT_ACCEPTABLE);
                 }
             }
         }
         catch(err) {
-            console.error(`[${this.constructor.name}]`, "verify addition ->", "error:", err);
+            console.error(`[${this.constructor.name}]`, "verify addition ->", "error:", JSON.stringify( err) );
             return Promise.reject( StatusCodes.INTERNAL_SERVER_ERROR );
         }
     }
@@ -188,7 +201,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
      */
     async resume( sample ) {
 
-        console.log( "[ContextSamplingStrategy]", "Request of resume sample with tag ", `"${tag}"`);
+        console.log( "[ContextSamplingStrategy]", "Request of resume sample with tag ", `"${sample.tag}"`);
 
             let descriptor = sample.getDescriptor()
             /**
@@ -223,8 +236,13 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
                 return StatusCodes.OK;
             }
             else if (json.meta.summary.not_created) {
-                // should be set StatusCodes.TOO_MANY_REQUESTS here ?
-                return StatusCodes.BAD_GATEWAY;
+                if( json.errors[0].type === 'https://api.twitter.com/2/problems/duplicate-rules' ) {
+                    return StatusCodes.CONFLICT;
+                }
+                else {
+                    // should be set StatusCodes.TOO_MANY_REQUESTS here ?
+                    return StatusCodes.BAD_GATEWAY;
+                }
             }
     }
 
@@ -349,6 +367,9 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
             let descriptor = sample.getDescriptor()
             /** @type {ContextFilteringRule}*/
             let rule = descriptor.getRule();
+            if( !rule.id ) {
+                return StatusCodes.METHOD_NOT_ALLOWED;
+            }
             let response;
             try {
                 response = await appContextClient.post(
@@ -362,6 +383,9 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
             }
             catch(err) {
                 console.error("[ContextSamplingStrategy]", "pause", "error:", err);
+                if( err.details === 'https://api.twitter.com/2/problems/invalid-request') {
+                    return StatusCodes.BAD_GATEWAY;
+                }
                 return StatusCodes.INTERNAL_SERVER_ERROR;
             }
 
