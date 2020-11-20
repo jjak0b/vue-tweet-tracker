@@ -3,7 +3,8 @@
     <v-form
         ref="form"
         lazy-validation
-      ><v-row>
+    >
+      <v-row>
         <v-container>
           <v-btn color="primary" class="mr-1" @click="onSubmit">Submit</v-btn>
           <v-btn color="secondary" @click="onReset">Reset</v-btn>
@@ -108,11 +109,11 @@
             <v-card-title>Position</v-card-title>
             <v-card-text>
               <position-input
-                  :paths="filter.coordinates"
-                  @add-path="addPath"
-                  @delete-path="deletePath"
-                  @update-paths="updatePaths"
-                  @reset-paths="resetPaths"
+                  :rectangles="rectangles"
+                  @add-rectangle="addRectangle"
+                  @delete-rectangle="deleteRectangle"
+                  @update-rectangle="updateRectangle"
+                  @reset-rectangles="resetRectangles"
               >
               </position-input>
             </v-card-text>
@@ -206,7 +207,6 @@ export default {
   methods: {
     onSubmit() {
       if (!this.$refs.form.validate()) {
-        console.log("Ok")
         return
       }
       axios.put('/api/samples/' + this.name, this.filter)
@@ -214,8 +214,7 @@ export default {
             if (error.response.status === StatusCodes.CONFLICT) {
               this.snackbarText = "The filter already exists or the name of the filter is already being used."
               this.snackbar = true;
-            }
-            else if (error.response.status === StatusCodes.INTERNAL_SERVER_ERROR) {
+            } else if (error.response.status === StatusCodes.INTERNAL_SERVER_ERROR) {
               this.snackbarText = "Add more filters."
               this.snackbar = true;
             }
@@ -227,30 +226,37 @@ export default {
       this.$refs.form.reset();
       this.filter.coordinates = [];
     },
-    updatePaths(mvcArray) {
-      let path = [];
-      for (let i = 0; i < mvcArray.getLength(); i++) {
-        for (let j = 0; j < mvcArray.getAt(i).getLength(); j++) {
-          let point = mvcArray.getAt(i).getAt(j);
-          path.push({lat: point.lat(), lng: point.lng()});
-        }
+    updateRectangle(event, index) {
+      this.$set(this.rectangles, index, event);
+      let value = {
+        north: event.Wa.j,
+        south: event.Wa.i,
+        east: event.Sa.j,
+        west: event.Sa.i
       }
-      this.filter.coordinates = path;
+      this.$set(this.filter.coordinates, index, value);
     },
-    resetPaths() {
+    resetRectangles() {
+      this.rectangles = [];
       this.filter.coordinates = [];
     },
-    addPath(event) {
-      if (this.filter.coordinates.length < 3)
-        this.filter.coordinates.push(event.latLng);
-    },
-    deletePath(event) {
-      if (event.vertex >= 0) {
-        this.filter.coordinates.splice(event.vertex, 1);
+    addRectangle(event) {
+      let value = {
+        north: event.lat(),
+        south: event.lat(),
+        east: event.lng(),
+        west: event.lng()
       }
+      this.rectangles.unshift(value);
+      this.filter.coordinates.unshift(value);
+    },
+    deleteRectangle(event, index) {
+      this.rectangles.splice(index, 1);
+      this.filter.coordinates.splice(index, 1);
     }
   },
   data: () => ({
+    rectangles: [],
     snackbar: false,
     snackbarText: "",
     name: "",

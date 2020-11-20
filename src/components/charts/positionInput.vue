@@ -14,14 +14,17 @@
             :center="computedCenter"
             :zoom="7"
             style="width: 100%; height: 300px"
-            @click="$emit('add-path', $event)">
-          <gmap-polygon v-if="paths.length > 0"
-                        :paths="paths"
+            @click="$emit('add-rectangle', $event.latLng)">
+          <gmap-rectangle
+                        v-for="(rectangle, index) in rectangles"
+                        :key="index"
+                        :bounds="rectangle"
                         :editable="true"
-                        @paths_changed="$emit('update-paths', $event)"
-                        @rightclick="$emit('delete-path', $event)"
-                        ref="polygon">
-          </gmap-polygon>
+                        :draggable="true"
+                        @bounds_changed="$emit('update-rectangle', $event, index)"
+                        @rightclick="$emit('delete-rectangle', $event, index)"
+                        @click="$emit('add-rectangle', $event.latLng)">>
+          </gmap-rectangle>
         </GmapMap>
       </v-col>
     </v-row>
@@ -31,7 +34,7 @@
             text
             color="error"
             class="float-right"
-            @click="$emit('reset-paths', $event)"
+            @click="$emit('reset-rectangles')"
         >
           Reset
         </v-btn>
@@ -64,7 +67,7 @@ export default {
     Places
   },
   props: {
-    paths: Array
+    rectangles: Array
   },
   computed: {
     computedCenter: function () { return this.center ? this.center : {lat: 41.9028, lng: 12.4964} }
@@ -76,8 +79,7 @@ export default {
   },
   methods: {
     onChange( location ) {
-      console.log(location.latlng)
-      this.center = location.latlng
+      this.center = location.latlng;
     }
   }
 }
