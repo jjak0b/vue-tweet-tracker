@@ -96,8 +96,10 @@ class Sampler extends ISampler {
 
     async getSampleItems( tag ) {
         let sample = await this.controller.get( tag );
-        let items = sample.getCollection().toArray();
-        return items;
+        if( sample ) {
+            return sample.getCollection().toArray();
+        }
+        return Promise.reject( StatusCodes.NOT_FOUND );
     }
 
     async addSample( tag, rawFilter ) {
@@ -111,17 +113,17 @@ class Sampler extends ISampler {
                    await this.controller.add( sample );
                }
                catch (e) {
-                   return StatusCodes.INTERNAL_SERVER_ERROR;
+                   return Promise.reject( e );
                }
 
-               return StatusCodes.CREATED;
+               return Promise.resolve( StatusCodes.CREATED );
             }
             catch (result) {
-                return result;
+                return Promise.reject( result );
             }
         }
         else {
-            return StatusCodes.CONFLICT;
+            return Promise.reject( StatusCodes.CONFLICT );
         }
     }
 
@@ -164,7 +166,7 @@ class Sampler extends ISampler {
             }
             return result;
         }
-        else if( this.controller.pausedSamples.has( tag ) ) {
+        else if( this.controller.getPaused( tag ) ) {
             return StatusCodes.METHOD_NOT_ALLOWED;
         }
 
@@ -173,25 +175,28 @@ class Sampler extends ISampler {
 
     async deleteSample( tag ) {
         console.log( `[${this.constructor.name}]`, "erasing sample", tag );
-        let sample = await this.get( tag );
-        try {
+        let sample = await this.getSample( tag );
             if( sample ) {
+                console.log( `[${this.constructor.name}]`, "Remove sample to paused streams", tag, sample.getDescriptor().getRule() );
                 let result = await this.strategy.delete(sample);
-                if( result === StatusCodes.OK ) {
+                try {
+                    this.controller.remove( tag );
                     await sample.erase();
+                    return result;
+                }
+                catch ( e ) {
+                    if( e.code === "ENOENT" ) {
+                        console.warn(`[${this.constructor.name}]`, "Attempting to remove a not concrete sample", `"${tag}"\n`, "\ndetails:", sample, "\nreason:", e );
+                    }
+                    else {
+                        console.error(`[${this.constructor.name}]`, "Error erasing local sample\n", sample, "\nreason:", e);
+                    }
+                    return StatusCodes.INTERNAL_SERVER_ERROR;
                 }
             }
-
-            console.log( `[${this.constructor.name}]`, "Remove sample to paused streams", tag );
-        }
-        catch ( e ) {
-            if( e.code === "ENOENT" ) {
-                console.warn(`[${this.constructor.name}]`, "Attempting to remove a not concrete sample", `"${tag}"\n`, "\ndetails:", sample, "\nreason:", e );
-            }
             else {
-                console.error(`[${this.constructor.name}]`, "Error erasing local sample\n", sample, "\nreason:", e);
+                return StatusCodes.NOT_FOUND;
             }
-        }
     }
 
 
