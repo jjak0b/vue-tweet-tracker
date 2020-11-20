@@ -21,10 +21,8 @@ class SampleDirector {
         this.builder.buildCollection( null, path.join( sampleLocation, "collection.json") );
     }
 
-    // TODO: Does this should be here ?
-    async deconstructSample( /*Sample*/sample ) {
-        let location = sample.getLocation();
-        await fs.remove( location );
+    deconstructSample( /*Sample*/sample ) {
+        // used to deconstruct parts if necessary
     }
 
     /**
