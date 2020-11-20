@@ -32,10 +32,41 @@ class Sampler extends ISampler {
     }
 
     async fetch() {
+        let sampleStates = await this.controller.fetch();
+        let sample;
+        for (const tag of sampleStates.paused ) {
+            // this sample is a placeholder to be fetched with real one
+            sample = this.strategy.create( tag, {});
+
+            try {
+                // let sample to fetch
+                await sample.fetch();
+            }
+            catch (e) {
+                console.error( `[${this.constructor.name}]`, "Error fetching local paused sample", tag, "; reason:", e );
+            }
+            this.controller.setPaused(tag, sample);
+        }
+
+        for (const tag of sampleStates.active) {
+            // this sample is a placeholder to be fetched with real one
+            sample = this.strategy.create( tag, {});
+            try {
+                // let sample to fetch
+                await sample.fetch();
+                this.controller.setActive( tag, sample );
+            }
+            catch (e) {
+                console.error( `[${this.constructor.name}]`, "Error fetching local active sample", tag, "; reason:", e );
+                this.controller.setPaused( tag, sample );
+            }
+        }
+
         return this.strategy.fetch();
     }
 
     async store() {
+        await this.controller.store();
         return this.strategy.store();
     }
 

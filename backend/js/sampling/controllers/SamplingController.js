@@ -15,15 +15,18 @@ class SamplingController extends AbstractStorableResource {
          */
         this.activeSamples = new Map();
 
-
         this.samplesStates = new SamplesStates( path.join( this.getLocation(), "sampleStates.json" ) );
         this.samplesStates.setStorage( FSResourceStorage.getInstance() );
     }
 
+    /**
+     *
+     * @return {Promise<SamplesStates>}
+     */
     async fetch() {
         let fetchSuccess = true;
         try {
-            await this.samplesStates.fetch();
+            return this.samplesStates.fetch();
         }
         catch ( e ) {
             fetchSuccess = false;
@@ -35,39 +38,7 @@ class SamplingController extends AbstractStorableResource {
                 console.error(`[${this.constructor.name}]`, "Error reading local sampleStates.json", "reason:", e);
             }
         }
-        
-        if( !fetchSuccess ) return;
-
-        let sample;
-        for (const tag of this.samplesStates.paused ) {
-            // this sample is a placeholder to be fetched with real one
-            this.sampleDirector.constructSample( tag, {} );
-            sample = this.sampleDirector.getSample();
-
-            try {
-                // let sample to fetch
-                await sample.fetch();
-            }
-            catch (e) {
-                console.error( `[${this.constructor.name}]`, "Error fetching local paused sample", tag, "; reason:", e );
-            }
-            this.pausedSamples.set(tag, sample);
-        }
-
-        for (const tag of this.samplesStates.active) {
-            // this sample is a placeholder to be fetched with real one
-            this.sampleDirector.constructSample( tag, {} );
-            sample = this.sampleDirector.getSample();
-            try {
-                // let sample to fetch
-                await sample.fetch();
-                this.activeSamples.set( tag, sample );
-            }
-            catch (e) {
-                console.error( `[${this.constructor.name}]`, "Error fetching local active sample", tag, "; reason:", e );
-                this.pausedSamples.set( tag, sample );
-            }
-        }
+        return this.samplesStates;
     }
 
     async store() {
