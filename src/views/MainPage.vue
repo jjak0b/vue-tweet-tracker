@@ -4,7 +4,7 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title class="white--text">Twitter tracker</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn text class="white--text mr-2" to="/app">
+      <v-btn text class="white--text mr-2" to="/app/dashboard">
         <v-icon left>mdi-view-dashboard</v-icon>
         Dashboard
       </v-btn>
@@ -20,7 +20,7 @@
         <v-list-item
           v-for="item in samplesList"
           :key="item"
-          @click="selectedSample = item"
+          @click="selectSample(item)"
         >
             <v-list-item-content>
               <v-list-item-title v-text="item"></v-list-item-title>
@@ -95,11 +95,19 @@ export default {
     this.updateSampleList();
   },
   methods: {
+    selectSample(item) {
+      axios.get('/api/samples/' + item)
+          .then( (response) => {
+            this.selectedSample = response.data;
+          })
+          .catch( (error) => {
+            console.error("ERROR", error);
+          })
+    },
     updateSampleList() {
       axios.get("/api/samples/")
           .then( (response) => {
             let data = response.data;
-            // this.samplesList = data.active;
             this.samples.active = data.active || [];
             this.samples.paused = data.paused || [];
           })
@@ -132,7 +140,6 @@ export default {
     activeSample(name) {
       axios.post(`/api/samples/${name}/resume`)
         .then( (data) => {
-          // this.samplesList = data.active;
           this.samples.active = data.active || [];
           this.samples.paused = data.paused || [];
         })

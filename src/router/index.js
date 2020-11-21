@@ -19,7 +19,7 @@ const routes = [
     component: MainPage,
     children: [
       {
-        path: '/app',
+        path: '/app/dashboard',
         name: 'Dashboard',
         component: Dashboard
       },

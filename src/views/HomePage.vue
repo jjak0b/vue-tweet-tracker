@@ -53,7 +53,7 @@
             dark
             large
             color="indigo"
-            to="/app"
+            to="/app/dashboard"
         >
           <v-icon left>
             mdi-format-list-bulleted-square
