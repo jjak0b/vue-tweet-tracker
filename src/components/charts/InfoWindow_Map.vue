@@ -18,6 +18,7 @@
             :src="item.url"
             reverse-transition="fade-transition"
             transition="fade-transition"
+
         >
           <v-btn
               fab
@@ -39,7 +40,7 @@
       </v-carousel>
     </div>
     <div v-if="imageMarked">
-      <v-img :src="markedImageUrl"></v-img>
+      <v-img :src="markedImageUrl" max-width="125" max-height="125"></v-img>
     </div>
     <v-footer absolute>
       <v-btn
@@ -52,13 +53,13 @@
           small
              @click="footerBtnFunction"
       >
-        <v-icon dark small v-if="!imageMarked && selectedWindow === 1">
+        <v-icon dark small v-if="!markedImageUrl && selectedWindow === 1">
           mdi-arrow-right-thick
         </v-icon>
-        <v-icon dark small v-if="!imageMarked && selectedWindow === 2">
+        <v-icon dark small v-if="!markedImageUrl && selectedWindow === 2">
           mdi-arrow-left-thick
         </v-icon>
-        <v-icon dark small v-if="imageMarked">
+        <v-icon dark small v-if="markedImageUrl">
           mdi-pin-off
         </v-icon>
       </v-btn>
@@ -69,11 +70,11 @@
 <script>
 import {Tweet} from 'vue-tweet-embed';
 
-
 export default {
   name: "InfoWindow_Map",
   props: {
     selectedInfoTweet: Array,
+    //ImageMarked: Boolean
   },
 
   components: {
@@ -82,9 +83,9 @@ export default {
 
   data(){
     return{
-      imageMarked: false,
+      markedImageUrl: null,
       selectedWindow: 1,
-      markedImageUrl: ""
+      imageMarked: false
     }
   },
 

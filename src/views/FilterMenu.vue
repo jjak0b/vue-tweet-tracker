@@ -184,11 +184,6 @@ export default {
      this.notify_me = !this.notify_me;
 
      if(this.notify_me){
-       /*this.filter = Object.assign({}, this.filter, { event: {
-           countRequired: null
-         }
-       })
-     */
        this.$set(this.filter,"event", {countRequired: null})
      }
      else if(this.filter.event){

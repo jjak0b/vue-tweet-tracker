@@ -28,11 +28,13 @@
             :key="m.reference.data.id"
             v-if="selectedMarker === m"
         >
-            <InfoWindow_Map
-               :selected-info-tweet="m.reference"
-            >
-            </InfoWindow_Map>
+            <InfoWindow_Map :selected-info-tweet="m.reference"></InfoWindow_Map>
+            <v-btn @click="m.imageMarked = true"> MARK</v-btn>
+
         </GmapInfoWindow>
+        <gmap-info-window :opened="m.imageMarked" @closeclick="m.imageMarked = false">
+          <p>SEMPRE APERTO</p>
+        </gmap-info-window>
       </GmapMarker>
     </GmapMap>
   </v-card>
@@ -87,12 +89,13 @@ class Marker extends MapPosition {
       /*double*/ latitude,
       /*double*/ longitude,
       /*String*/ type,
-      /*Object*/ reference
+      /*Object*/ reference,
+      /*Boolean*/ imageMarked
   ) {
     super( latitude, longitude );
-
     this.type = type;
     this.reference = reference;
+    this.imageMarked = imageMarked;
   }
 
   get icon() {
@@ -103,11 +106,10 @@ class Marker extends MapPosition {
 
 export default {
   name: "Map",
-  components: {InfoWindow_Map},
-  /*components: {
-    ImageWindow,
-    Tweet
-  }, */
+  //components: {InfoWindow_Map},
+  components: {
+    InfoWindow_Map
+  },
   props: {
     samples: Array,
     centerPosition: Position
@@ -163,7 +165,8 @@ export default {
               geo.coordinates.coordinates[ 1 ],
               geo.coordinates.coordinates[ 0 ],
               geo.coordinates.type,
-              sample
+              sample,
+              false,
           );
         }
         else if( isGeoInPlaces ){
@@ -172,7 +175,8 @@ export default {
               (geo.bbox[ 1 ] + geo.bbox[ 3 ]) / 2.0,
               (geo.bbox[ 0 ] + geo.bbox[ 2 ]) / 2.0,
               geo.type,
-              sample
+              sample,
+              false,
           );
         }
 
@@ -181,6 +185,21 @@ export default {
       });
       return markers;
     }
+
+    /*footerBtnFunction(){
+      if(!this.imageMarked){
+        if(this.selectedWindow === 1){
+          this.selectedWindow = 2;
+        }
+        else if(this.selectedWindow === 2){
+          this.selectedWindow = 1;
+        }
+      }
+      else{
+        this.imageMarked = !this.imageMarked;
+      }
+    }, */
+
   }
 }
 
