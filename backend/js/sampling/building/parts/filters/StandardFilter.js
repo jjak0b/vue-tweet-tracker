@@ -17,8 +17,15 @@ class StandardFilter extends SamplingFilter {
             replied: []
         };
 
-        this.keywords = Object.assign( this.keywords, rawData.keywords );
-        this.accounts = Object.assign( this.accounts, rawData.accounts );
+        if( rawData.words ) {
+            this.keywords = Object.assign(this.keywords, rawData.words);
+        }
+
+        if( rawData.accounts ) {
+            this.accounts.authors = Object.assign(this.accounts.authors, rawData.accounts.from);
+            this.accounts.mentioned = Object.assign(this.accounts.mentioned, rawData.accounts.mentioning);
+            this.accounts.replied = Object.assign(this.accounts.replied, rawData.accounts.to);
+        }
 
     }
 }
