@@ -25,6 +25,10 @@ class ContextSampleBuilder extends AbstractSampleBuilder {
         let rule = new ContextFilteringRule( tag, null, filter);
 
         let descriptor = new SampleDescriptor( tag, rule, location );
+        if( rawFilter.event ) {
+            descriptor.setEvent( rawFilter.event );
+        }
+
         descriptor.setStorage( FSResourceStorage.getInstance() );
 
         this.getSample().setDescriptor(descriptor);

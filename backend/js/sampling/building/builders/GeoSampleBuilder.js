@@ -25,6 +25,9 @@ class GeoSampleBuilder extends AbstractSampleBuilder {
 
         let descriptor = new SampleDescriptor( tag, rule, location );
         descriptor.setStorage( FSResourceStorage.getInstance() );
+        if( rawFilter.event ) {
+            descriptor.setEvent( rawFilter.event );
+        }
 
         this.getSample().setDescriptor(descriptor);
     }
