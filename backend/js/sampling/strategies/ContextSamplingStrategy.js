@@ -5,6 +5,7 @@ const FilterConverter = require( "../../filterConverter");
 const SamplingController = require("../controllers/SamplingController");
 const ContextSampleBuilder = require("../building/builders/ContextSampleBuilder");
 const AbstractSamplingStrategy = require("./AbstractSamplingStrategy");
+const BoundingBox = require("boundingbox");
 
 const appContextClient = new Twitter( {
     consumer_key: process.env.TWITTER_API_CONSUMER_KEY,
@@ -331,16 +332,18 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
     }
 
     async routesDataToSamples( dataToAssign, destinationRules) {
+        let tweet = new Tweet( dataToAssign );
         for (let i = 0; i < destinationRules.length; i++) {
-            let tweet = new Tweet( dataToAssign );
             let tag = destinationRules[ i ].tag;
             let sample = this.getController().get(tag);
             if (sample) {
-                try {
-                    await this.addItem(sample, tweet);
-                }
-                catch (e) {
-                    console.error(`[${this.constructor.name}:routesDataToSamples]`, `Unable to add Item to "${tag}" sample collection`, "reason", e);
+                if( this.checkPostGeoFilter(sample, tweet ) ) {
+                    try {
+                        await this.addItem(sample, tweet);
+                    }
+                    catch (e) {
+                        console.error(`[${this.constructor.name}:routesDataToSamples]`, `Unable to add Item to "${tag}" sample collection`, "reason", e);
+                    }
                 }
             }
             else {
@@ -348,6 +351,58 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
                 console.warn(`[${this.constructor.name}:routesDataToSamples]`, `Unable to find route for "${tag}" sample`, "So the data has been ignores");
             }
         }
+    }
+
+    /**
+     *
+     * @param sample {Sample}
+     * @param item {Tweet}
+     */
+    checkPostGeoFilter(sample, item ) {
+        let descriptor = sample.getDescriptor();
+        let rule = descriptor.getRule();
+        let filter = rule.getFilter();
+
+        function getBBoxFromRectangle( rectangle ) {
+            return new BoundingBox({
+                minlon: Math.min( rectangle[0][0], rectangle[1][0] ),
+                maxlon: Math.max( rectangle[0][0], rectangle[1][0] ),
+                minlat: Math.min( rectangle[0][1], rectangle[1][1] ),
+                maxlat: Math.max( rectangle[0][1], rectangle[1][1] )
+            });
+        }
+        /**
+         * @type BoundingBox[]
+         */
+        let bBoxes = filter.locations.map( (rectangle) => getBBoxFromRectangle( rectangle ) );
+
+        let isMatching = true;
+        if( bBoxes.length > 0 ) {
+            if( item.data.geo && item.data.geo.coordinates ) {
+                let itemBbox = new BoundingBox( {
+                    lon: item.data.geo.coordinates[0],
+                    lat: item.data.geo.coordinates[1]
+                });
+
+                isMatching = bBoxes.some( (bBox) => itemBbox.within( bBox ) );
+            }
+            else if( item.places && item.places.geo && item.places.geo ) {
+                if( item.places.geo.type === "Feature" ) {
+                    let rectangle = item.places.geo.bbox;
+                    let itemBBox = getBBoxFromRectangle( rectangle );
+                    isMatching = bBoxes.some( (bBox) => itemBBox.intersects( bBox ) || itemBBox.within( bBox ) );
+                }
+                else {
+                    isMatching = false;
+                    console.error(`[${this.constructor.name}]`, `IMPORTANT Found unsupported geo type "${item.places.geo.type}" in sample "${descriptor.tag}:\n`, item );
+                }
+            }
+            else {
+                isMatching = false;
+            }
+        }
+
+        return isMatching;
     }
 
     async stop() {

@@ -18,13 +18,14 @@ class SampledEventListener extends EventListener {
          */
         let self = this;
         let descriptor = sampledEvent.getDescriptor();
-        // example
-        // if( descriptor.count >= descriptor.size ) {
+        let event = descriptor.getEvent();
+        if( event.countRequired > 0 && descriptor.count >= event.countRequired && !event.submitted ) {
+            event.submitted = true;
             self.emit(
                 self.constructor.ENUM.EVENTS.USER_CONDITION,
                 new UserConditionEvent( descriptor )
             );
-        // }
+        }
     }
 }
 

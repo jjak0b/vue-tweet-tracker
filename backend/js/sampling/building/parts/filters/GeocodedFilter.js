@@ -6,7 +6,7 @@ class GeocodedFilter extends StandardFilter {
 
         this.locations = [];
 
-        this.locations = this.locations.concat( rawData.locations );
+        this.locations = this.locations.concat( rawData.coordinates );
     }
 }
 

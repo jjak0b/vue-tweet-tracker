@@ -11,7 +11,7 @@ class GeoSamplesHandler extends SamplesHandler {
     }
 
     canHandleByFilter(filter) {
-        return filter.locations && filter.locations.length > 0;
+        return filter.coordinates && filter.coordinates.length > 0;
     }
 }
 
