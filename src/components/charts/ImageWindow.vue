@@ -6,7 +6,12 @@
           :src="item.url"
           reverse-transition="fade-transition"
           transition="fade-transition"
-      ></v-carousel-item>
+      >
+      </v-carousel-item>
+      <v-skeleton-loader
+          width="10rem"
+          type="card"
+      ></v-skeleton-loader>
     </v-carousel>
 </template>
 
@@ -17,7 +22,7 @@ export default {
 
   props: {
     selectedTweet: Array,
-  },
+  }
 }
 </script>
 

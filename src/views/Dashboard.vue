@@ -47,9 +47,6 @@
           <v-toolbar color="blue" dark>
             <v-toolbar-title class="font-weight-bold text-h6">Selected Tweet</v-toolbar-title>
             <v-spacer></v-spacer>
-            <v-btn icon v-if="isThereMediaPosition" dark>
-              <v-icon>mdi-pin</v-icon>
-            </v-btn>
           </v-toolbar>
           <v-expansion-panels accordion>
             <v-expansion-panel>

@@ -17,6 +17,24 @@
         new sample
       </v-btn>
     </v-app-bar>
+    <v-footer absolute>
+      <v-btn
+          rounded
+          color="primary"
+          dark
+          fixed
+          bottom
+          right
+      >
+        <v-icon
+            dark
+            left
+        >
+          mdi-telegram
+        </v-icon>
+        BOT TELEGRAM
+      </v-btn>
+    </v-footer>
     <v-navigation-drawer app v-model="drawer" bottom>
       <h3 class="pa-3">Samples List</h3>
       <v-divider></v-divider>

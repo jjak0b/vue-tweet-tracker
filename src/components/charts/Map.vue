@@ -22,21 +22,16 @@
           @click="selectedMarker=center=m"
 
       >
+
         <GmapInfoWindow
 
             :key="m.reference.data.id"
             v-if="selectedMarker === m"
         >
-          <Tweet
-            class="mb-7"
-            :id="m.reference.data.id"
-            :key="m.reference.data.id"
-          >
-            <v-skeleton-loader
-                width="10rem"
-                type="card"
-            ></v-skeleton-loader>
-        </Tweet>
+            <InfoWindow_Map
+               :selected-info-tweet="m.reference"
+            >
+            </InfoWindow_Map>
         </GmapInfoWindow>
       </GmapMarker>
     </GmapMap>
@@ -47,7 +42,9 @@
 import Position from "@/js/Position";
 import Vue from 'vue'
 import * as VueGoogleMaps from 'vue2-google-maps'
-import {Tweet} from 'vue-tweet-embed';
+import InfoWindow_Map from "@/components/charts/InfoWindow_Map";
+//import ImageWindow from "@/components/charts/ImageWindow";
+//import {Tweet} from 'vue-tweet-embed';
 
 Vue.use(VueGoogleMaps, {
   load: {
@@ -106,9 +103,11 @@ class Marker extends MapPosition {
 
 export default {
   name: "Map",
-  components: {
-    Tweet,
-  },
+  components: {InfoWindow_Map},
+  /*components: {
+    ImageWindow,
+    Tweet
+  }, */
   props: {
     samples: Array,
     centerPosition: Position

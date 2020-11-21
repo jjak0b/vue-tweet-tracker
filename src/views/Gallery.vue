@@ -1,15 +1,39 @@
 <template>
   <v-container>
-    <v-row v-for="item in places" v-bind:key="item.id">
+  <v-row v-for="item in places" v-bind:key="item.id" >
+    <v-row>
+      <v-col>
       <p>{{item.id}}</p>
-      <v-img v-for="(media,i) in item.media"
-             :key="i"
-             :src="media.url"
-             max-height="200px"
-             max-width="200px"
-      >
-      </v-img>
+        <v-row>
+          <v-col
+              v-for="(media,i) in item.media"
+              :key="i"
+              class="d-flex child-flex"
+              cols="4"
+          >
+            <v-img
+                :src="media.url"
+                aspect-ratio="1"
+                class="grey lighten-2"
+            >
+              <template v-slot:placeholder>
+                <v-row
+                    class="fill-height ma-0"
+                    align="center"
+                    justify="center"
+                >
+                  <v-progress-circular
+                      indeterminate
+                      color="grey lighten-5"
+                  ></v-progress-circular>
+                </v-row>
+              </template>
+            </v-img>
+          </v-col>
+        </v-row>
+      </v-col>
     </v-row>
+  </v-row>
   </v-container>
 </template>
 
@@ -44,17 +68,18 @@ export default {
   },
 
   created() {
-    this.setPlaces();
+    this.places = this.setPlaces();
   },
 
   methods: {
     setPlaces:function(){
+      let located_tweet=[];
       let alreadyAdded = false;
 
       for (let tweet of this.tweets){
         if(tweet.media){
           if(tweet.places.full_name){
-            for(let place of this.places){
+            for(let place of located_tweet){
               if(tweet.places.full_name == place.id){
                 for(let media of tweet.media){
                   place.media.push(media);
@@ -63,7 +88,7 @@ export default {
               }
             }
             if(!alreadyAdded){
-             this.places.push(
+             located_tweet.push(
                   {
                     id: tweet.places.full_name,
                     media: tweet.media
@@ -72,14 +97,14 @@ export default {
             }
           }
           else if(tweet.users.location){
-            for(let place of this.places){
+            for(let place of located_tweet){
               if(tweet.users.location == place.id){
                 place.media.push(tweet.media);
                 alreadyAdded = !alreadyAdded;
               }
             }
             if(!alreadyAdded){
-              this.places.push(
+              located_tweet.push(
                   {
                     id: tweet.users.location,
                     media: tweet.media
@@ -89,6 +114,7 @@ export default {
           }
         }
       }
+      return located_tweet;
     }
   }
 }

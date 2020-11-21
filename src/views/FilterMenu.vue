@@ -2,10 +2,20 @@
   <v-container>
     <v-form>
       <v-row>
-          <v-container>
+          <v-col>
             <v-btn color="primary" class="mr-1" @click="onSubmit">Submit</v-btn>
             <v-btn color="secondary">Clear</v-btn>
-          </v-container>
+          </v-col>
+          <v-col class="align-end">
+            <v-row>
+              <v-col>
+                <v-checkbox v-model="checkbox" label="Notify me" color="secondary" @click="associateEvent"> </v-checkbox>
+              </v-col>
+              <v-col>
+                <v-text-field v-if="notify_me" :rules="onlyNumbers" label="Number of required tweet"></v-text-field>
+              </v-col>
+            </v-row>
+          </v-col>
       </v-row>
       <v-row>
         <v-col>
@@ -48,6 +58,7 @@
         </v-col>
 
         <v-col>
+
           <v-card class="mb-5">
             <v-card-title>Accounts</v-card-title>
             <v-card-text>
@@ -167,11 +178,16 @@ export default {
   methods: {
     onSubmit() {
       axios.put('/api/samples/' + this.name, this.filter)
+    },
+
+    associateEvent(){
+     this.notify_me = !this.notify_me;
     }
   },
   data: () => ({
     name: "",
     languageArray: null,
+    notify_me: false,
     filter: {
       words: {
         all: [],
@@ -273,7 +289,14 @@ export default {
           key: "minRetweets"
         },
       }*/
-    }
+    },
+
+    onlyNumbers: [
+      value => !!value || 'Required.',
+      value => (value <= 12000) || 'At most 12000',
+      value => (value >= 1) || 'At least 1',
+    ]
+
   }),
   mounted() {
       let arr = [];
