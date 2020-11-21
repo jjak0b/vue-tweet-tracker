@@ -221,6 +221,9 @@ export default {
             } else if (error.response.status === StatusCodes.INTERNAL_SERVER_ERROR) {
               this.snackbarText = "Add more filters."
               this.snackbar = true;
+            } else if (error.response.status === StatusCodes.TOO_MANY_REQUESTS) {
+              this.snackbarText = "Maximum number of active samples reached. Deactivate a sample before submitting a new one."
+              this.snackbar = true;
             }
           });
       this.$emit('update-samples');
