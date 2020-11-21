@@ -1,5 +1,4 @@
 const path = require("path");
-const fs = require("fs-extra");
 
 class SampleDirector {
     constructor( workingLocation ) {
@@ -14,6 +13,10 @@ class SampleDirector {
         this.builder = builder;
     }
 
+    setLocation( location ) {
+        this.location = location;
+    }
+
     constructSample( /*String*/tag, filter ) {
         let sampleLocation = path.join( this.location, tag )
         this.builder.createNewSample( tag, sampleLocation );
@@ -21,10 +24,8 @@ class SampleDirector {
         this.builder.buildCollection( null, path.join( sampleLocation, "collection.json") );
     }
 
-    // TODO: Does this should be here ?
-    async deconstructSample( /*Sample*/sample ) {
-        let location = sample.getLocation();
-        await fs.remove( location );
+    deconstructSample( /*Sample*/sample ) {
+        // used to deconstruct parts if necessary
     }
 
     /**

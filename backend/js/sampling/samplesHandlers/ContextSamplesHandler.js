@@ -1,18 +1,20 @@
 const SamplesHandler = require("./SamplesHandler");
-
+const ContextSamplingStrategy = require("../strategies/ContextSamplingStrategy");
 class ContextSamplesHandler extends SamplesHandler {
-    constructor( controller /*ContextSamplingController*/ ) {
-        super(controller);
+
+    /**
+     *
+     * @param sampler {Sampler}
+     * @param strategy {AbstractSamplingStrategy}
+     */
+    constructor(sampler, strategy) {
+        super(sampler, strategy);
     }
 
-    canHandle(request) {
-        let canHandle = false;
+    canHandleByFilter(filter) {
+        let query = ContextSamplingStrategy.getQueryFromFilter( filter );
 
-        if( request && request.body && request.body.type === "context" ) {
-            canHandle = true;
-        }
-
-        return canHandle;
+        return query.trim().length > 0;
     }
 }
 

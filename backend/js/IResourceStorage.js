@@ -5,17 +5,24 @@ class IResourceStorage {
 
     /**
      *
-     * @param resource
+     * @param resource {AbstractStorableResource}
      * @return {Promise<void>}
      */
-    async fetch( /*AbstractStorableResource*/ resource ){};
+    async fetch( resource ){}
 
     /**
      *
-     * @param resource
+     * @param resource {AbstractStorableResource}
      * @return {Promise<void>}
      */
-    async store( /*AbstractStorableResource*/ resource ){}
+    async store( resource ){}
+
+    /**
+     *
+     * @param resource {AbstractStorableResource}
+     * @return {Promise<void>}
+     */
+    async erase( resource ){}
 }
 
 module.exports = IResourceStorage;

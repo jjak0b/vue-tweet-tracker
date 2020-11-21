@@ -41,6 +41,10 @@ class FSResourceStorage extends IResourceStorage  {
             return Promise.reject(null);
         }
     }
+
+    async erase(resource) {
+        await fs.remove( resource.getLocation() );
+    }
 }
 
 module.exports = FSResourceStorage;

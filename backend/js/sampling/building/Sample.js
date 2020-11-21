@@ -42,7 +42,8 @@ class Sample extends AbstractStorableResource {
     }
 
     async add( /*SampleItem*/ sampleItem ) {
-        return this.collection.add( sampleItem );
+        await this.collection.add( sampleItem );
+        this.descriptor.incCount();
     }
 
     /**

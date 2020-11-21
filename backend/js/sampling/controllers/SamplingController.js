@@ -1,13 +1,11 @@
 const path = require("path");
-const SampleDirector = require("../building/directors/SampleDirector");
 const AbstractStorableResource = require("../../AbstractStorableResource");
 const SamplesStates = require("../SamplesStates");
+const FSResourceStorage = require("../../FSResourceStorage");
 
-class SamplingController extends AbstractStorableResource{
-    constructor( /*EventsManager*/eventManager, /*String*/workingLocation ) {
+class SamplingController extends AbstractStorableResource {
+    constructor(/*String*/workingLocation ) {
         super(workingLocation);
-        this.eventManager = eventManager;
-
         /**
          * @type {Map<String, Sample>}
          */
@@ -17,58 +15,29 @@ class SamplingController extends AbstractStorableResource{
          */
         this.activeSamples = new Map();
 
-        this.sampleDirector = new SampleDirector( this.getLocation() );
         this.samplesStates = new SamplesStates( path.join( this.getLocation(), "sampleStates.json" ) );
+        this.samplesStates.setStorage( FSResourceStorage.getInstance() );
     }
 
+    /**
+     *
+     * @return {Promise<SamplesStates>}
+     */
     async fetch() {
-        let fetchSuccess = true;
         try {
-            await this.samplesStates.fetch();
+            console.log(`[${this.constructor.name}] fetching`, this.samplesStates.getLocation() );
+            return await this.samplesStates.fetch();
         }
         catch ( e ) {
-            fetchSuccess = false;
             if( e.code === "ENOENT" ) {
                 console.log(`[${this.constructor.name}]`, "Init samples states" );
                 await this.store();
             }
             else {
-                console.error(`[${this.constructor.name}]`, "Error reading local sampleStates.json", "reason:", e);
+                console.error(`[${this.constructor.name}]`, `Error reading local ${this.samplesStates.getLocation()}, "reason:`, e);
             }
         }
-        
-        if( !fetchSuccess ) return;
-
-        let sample;
-        for (const tag of this.samplesStates.paused ) {
-            // this sample is a placeholder to be fetched with real one
-            this.sampleDirector.constructSample( tag, {} );
-            sample = this.sampleDirector.getSample();
-
-            try {
-                // let sample to fetch
-                await sample.fetch();
-            }
-            catch (e) {
-                console.error( `[${this.constructor.name}]`, "Error fetching local paused sample", tag, "; reason:", e );
-            }
-            this.pausedSamples.set(tag, sample);
-        }
-
-        for (const tag of this.samplesStates.active) {
-            // this sample is a placeholder to be fetched with real one
-            this.sampleDirector.constructSample( tag, {} );
-            sample = this.sampleDirector.getSample();
-            try {
-                // let sample to fetch
-                await sample.fetch();
-                this.activeSamples.set( tag, sample );
-            }
-            catch (e) {
-                console.error( `[${this.constructor.name}]`, "Error fetching local active sample", tag, "; reason:", e );
-                this.pausedSamples.set( tag, sample );
-            }
-        }
+        return this.samplesStates;
     }
 
     async store() {
@@ -76,99 +45,98 @@ class SamplingController extends AbstractStorableResource{
         this.samplesStates.paused = this.getPausedTags();
 
         try {
+            console.log(`[${this.constructor.name}]`, "Storing", this.samplesStates.getLocation() );
             await this.samplesStates.store();
         }
         catch ( e ) {
-            console.error( `[${this.constructor.name}]`, "Error writing local sampleStates", "reason:", e );
+            console.error( `[${this.constructor.name}]`, "Error writing local", this.samplesStates.getLocation(), "reason:", e );
         }
 
         for( const samples of [ this.activeSamples, this.pausedSamples ] ) {
             for (const [tag, sample] of samples) {
+                console.log(`[${this.constructor.name}]`, "Storing sample", tag );
                 try {
                     await sample.store();
-                } catch (e) {
+                }
+                catch (e) {
                     console.error(`[${this.constructor.name}]`, `Unable to store sample "${tag}"`, "\nreason:", e, "\ndata:", JSON.stringify(sample, null, 4));
                 }
             }
         }
     }
 
-    async start() {
-        await this.fetch();
-    }
-
-    async stop() {
-        return Promise.resolve();
-    }
-
-    async add( tag /*String*/, filter ) {
-        this.sampleDirector.constructSample( tag, filter );
-        let sample = this.sampleDirector.getSample();
-        await sample.store();
+    /**
+     *
+     * @param sample {Sample}
+     * @return {Promise<void>}
+     */
+    async add( sample ) {
         console.log( `[${this.constructor.name}]`, "Add new sample -> to paused streams", sample );
-        this.pausedSamples.set( tag, sample );
+        await sample.store();
+        this.pausedSamples.set( sample.tag, sample );
     }
 
-    async remove( tag /*String*/ ) {
-        let sample = await this.get( tag );
-
-        console.log( `[${this.constructor.name}]`, "erasing sample", tag );
-        try {
-            await this.sampleDirector.deconstructSample( sample );
-            console.log( `[${this.constructor.name}]`, "Remove sample to paused streams", tag );
-            this.pausedSamples.delete( tag );
-        }
-
-        catch ( e ) {
-            if( e.code === "ENOENT" ) {
-                console.warn(`[${this.constructor.name}]`, "Attempting to remove a not concrete sample", `"${tag}"\n`, "\ndetails:", sample, "\nreason:", e );
-            }
-            else {
-                console.error(`[${this.constructor.name}]`, "Error erasing local sample\n", sample, "\nreason:", e);
-            }
-        }
+    /**
+     *
+     * @param tag
+     */
+    remove( /*String*/tag ) {
+        this.pausedSamples.delete( tag );
+        this.activeSamples.delete( tag );
     }
 
-    async resume( tag /*String*/ ) {
-        let sample = this.pausedSamples.get( tag );
-
-        if( sample ) {
-            this.activeSamples.set( tag, sample );
-
-            return this.pausedSamples.delete( tag );
-        }
-        return false;
-    }
-
-    async pause( tag /*String*/ ) {
-        let sample = this.activeSamples.get( tag );
-
-        if( sample ) {
-            this.pausedSamples.set( tag, sample );
-            this.activeSamples.delete( tag );
-
-            try {
-                await sample.store();
-                return true;
-            }
-            catch (e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    async get( /*String*/tag ) {
+    /**
+     *
+     * @param tag
+     * @return {Sample}
+     */
+    get( /*String*/tag ) {
         let sample = this.activeSamples.get( tag );
         if( !sample )
             sample = this.pausedSamples.get( tag );
         return sample;
     }
 
+    /**
+     *
+     * @param tag
+     * @return {Sample}
+     */
+    getPaused( tag ) {
+        return this.pausedSamples.get( tag );
+    }
+
+    setPaused( tag, sample ) {
+        this.pausedSamples.set( tag, sample );
+        this.activeSamples.delete( tag );
+    }
+
+    /**
+     *
+     * @param tag
+     * @return {Sample}
+     */
+    getActive( tag ) {
+        return this.activeSamples.get( tag );
+    }
+
+    setActive( tag, sample ) {
+        this.activeSamples.set( tag, sample );
+        this.pausedSamples.delete( tag );
+    }
+
+    /**
+     *
+     * @return {String[]}
+     */
     getPausedTags() {
         return Array.from( this.pausedSamples.keys() );
     }
 
+    /**
+     *
+     * @return {String[]}
+     */
     getActiveTags() {
         return Array.from( this.activeSamples.keys() );
     }

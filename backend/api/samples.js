@@ -1,7 +1,5 @@
-const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
 const SamplingFacade = require("../js/SamplingFacade");
-const SamplingControllerRequest = require("../js/sampling/SamplingControllerRequest");
 
 const router = express.Router();
 // const fs = require('fs');
@@ -13,36 +11,14 @@ router.get( "/", API_getSamples );
 /**
  * Get samples list in some states
  * @API GET /samples/
- * @query states: "active" , "paused" or a string that contains both; will consider both if not specified
  * @StatusCodes: StatusCodes.OK
- * @Body : (in function of "states" parameter ) { active: array of sample tag, paused: array of sample tag }
+ * @Body : { active: array of sample tag, paused: array of sample tag }
  *
  */
 function API_getSamples( req, res ) {
-    let statesQuery = req.query.states;
-    let samplingController = samplingFacade.request(
-        new SamplingControllerRequest(
-            null,
-            {
-                type: req.query.type
-            }
-        )
-    );
 
-    if( samplingController ) {
-        let data = {};
-        if (!statesQuery || statesQuery.length < 1 || statesQuery.includes("active")) {
-            data.active = samplingController.getActiveTags();
-        }
-        if (!statesQuery || statesQuery.length < 1 || statesQuery.includes("paused")) {
-            data.paused = samplingController.getPausedTags();
-        }
-        res.json( data );
-    }
-    else {
-        res.sendStatus( StatusCodes.BAD_REQUEST );
-    }
-
+    let data = samplingFacade.getSamplesStates();
+    res.json( Object.fromEntries( data ) );
 }
 
 router.get( "/:tag", API_getSampleData );
@@ -56,34 +32,16 @@ router.get( "/:tag", API_getSampleData );
  */
 async function API_getSampleData( req, res ) {
     let tag = req.params.tag;
-    let samplingController = samplingFacade.request(
-        new SamplingControllerRequest(
-          tag,
-            {
-                type: req.query.type
-            }
-        )
-    );
 
-    if( samplingController ) {
-        let sample = await samplingController.get( tag );
-        if( sample ) {
-            sample.getCollection().toArray()
-                .then((array) => {
-                    res.json(array);
-                })
-                .catch((err) => {
-                    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-                    console.error("[GET API/samples/:tag]", err);
-                });
-        }
-        else {
-            res.sendStatus( StatusCodes.NOT_FOUND );
-        }
-    }
-    else {
-        res.sendStatus( StatusCodes.BAD_REQUEST );
-    }
+
+
+            try {
+                let items = await samplingFacade.getSampleItems(tag);
+                res.json( items );
+            }
+            catch(err) {
+                res.sendStatus(err);
+            }
 }
 
 router.put( "/:tag", API_addSample );
@@ -100,28 +58,15 @@ router.put( "/:tag", API_addSample );
  */
 function API_addSample(req, res) {
     let sampleTag = req.params.tag;
-
-    console.log( "received", sampleTag );
     let filter = req.body;
-    let samplingController = samplingFacade.request(
-        new SamplingControllerRequest(
-            sampleTag,
-            filter
-        )
-    );
 
-    if( samplingController) {
-        samplingController.add( sampleTag, filter )
+        samplingFacade.addSample( sampleTag, filter )
             .then( (statusCode) => {
                 res.sendStatus( statusCode );
             })
             .catch( (errCode) => {
                 res.sendStatus( errCode );
             })
-    }
-    else {
-        res.sendStatus( StatusCodes.BAD_REQUEST );
-    }
 
 }
 
@@ -138,27 +83,15 @@ router.delete( "/:tag", API_deleteSample );
 function API_deleteSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    let samplingController = samplingFacade.request(
-        new SamplingControllerRequest(
-            sampleTag,
-            {
-                type: req.query.type
-            }
-        )
-    );
 
-    if( samplingController) {
-        samplingController.remove( sampleTag )
+
+        samplingFacade.deleteSample( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
         .catch( (errCode) => {
             res.sendStatus( errCode );
         })
-    }
-    else {
-        res.sendStatus( StatusCodes.BAD_REQUEST );
-    }
 }
 
 router.post( "/:tag/resume", API_resumeSample );
@@ -177,26 +110,14 @@ router.post( "/:tag/resume", API_resumeSample );
  */
 function API_resumeSample( req, res ) {
     let sampleTag = req.params.tag;
-    let samplingController = samplingFacade.request(
-        new SamplingControllerRequest(
-            sampleTag,
-            {
-                type: req.query.type
-            }
-        )
-    );
-    if( samplingController) {
-        samplingController.resume( sampleTag )
+
+        samplingFacade.resumeSample( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
         .catch( (errCode) => {
             res.sendStatus( errCode );
         })
-    }
-    else {
-        res.sendStatus( StatusCodes.BAD_REQUEST );
-    }
 
 }
 
@@ -214,32 +135,18 @@ router.post( "/:tag/pause", API_pauseSample );
 function API_pauseSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    let samplingController = samplingFacade.request(
-        new SamplingControllerRequest(
-            sampleTag,
-            {
-                type: req.query.type
-            }
-        )
-    );
-
-    if( samplingController ) {
-        samplingController.pause( sampleTag )
+        samplingFacade.pauseSample( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
         .catch( (errCode) => {
             res.sendStatus( errCode );
         })
-    }
-    else {
-        res.sendStatus( StatusCodes.BAD_REQUEST );
-    }
 }
 
 
 function exitHandler (exitCode) {
-    samplingFacade.flush()
+    samplingFacade.storeSamples()
         .finally(() => {
             if (exitCode || exitCode === 0)
                 console.log(exitCode);

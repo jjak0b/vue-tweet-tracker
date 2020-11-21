@@ -6,6 +6,19 @@ class SampleDescriptor extends AbstractStorableResource{
         this.count = 0;
         this.tag = tag;
         this.rule = rule;
+
+        this.event = {
+            countRequired : -1,
+            submitted: false
+        }
+    }
+
+    getEvent() {
+        return this.event;
+    }
+
+    setEvent(eventData) {
+        this.event.countRequired = eventData.countRequired || this.event.countRequired;
     }
 
     /**
@@ -45,7 +58,8 @@ class SampleDescriptor extends AbstractStorableResource{
         return {
             count: this.count,
             tag : this.tag,
-            rule: this.rule
+            rule: this.rule,
+            event: this.event,
         }
     }
 
@@ -54,6 +68,7 @@ class SampleDescriptor extends AbstractStorableResource{
         this.count = data.count;
         this.tag = data.tag;
         this.rule = Object.assign( this.rule, data.rule );
+        this.event = Object.assign( this.event. data.event );
         return this;
     }
 

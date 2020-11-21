@@ -1,12 +1,10 @@
-const StatusCodes = require("http-status-codes").StatusCodes;
+// const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const TwitterAPIController = require( "../js/sampling/controllers/ContextSamplingController").TwitterAPIController;
-const twitterAPIControllerInstance = require( "../js/sampling/controllers/ContextSamplingController").instance;
+// const fs = require('fs');
 
 router.get( "/", (req, res) => {
-
+/*
     // Make the request
     let params = {            // request parameters
         query: TwitterAPIController.getQueryFromFilter( req.body ),
@@ -28,6 +26,7 @@ router.get( "/", (req, res) => {
             console.error(err);
             res.status( StatusCodes.INTERNAL_SERVER_ERROR );
         });
+*/
 });
 
 /*async function saveData(data){  //funzione per salvare i dati ottenuti in un file json

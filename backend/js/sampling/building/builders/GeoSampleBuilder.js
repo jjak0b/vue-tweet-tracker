@@ -1,15 +1,14 @@
 const AbstractSampleBuilder = require("./AbstractSampleBuilder");
 const SampleDescriptor = require("../parts/SampleDescriptor");
-const ContextFilteringRule = require("../parts/filters/rules/ContextFilteringRule");
-const ContextFilter = require("../parts/filters/ContextFilter");
-const JSONBufferedItemsCollection = require("../../../JSONBufferedItemsCollection");
+const GeocodedFilter = require("../parts/filters/GeocodedFilter");
+const ProxyJSONBufferedItemsCollection = require("../../../ProxyJSONBufferedItemsCollection");
 const FSResourceStorage = require("../../../FSResourceStorage");
+const FilteringRule = require("../parts/filters/rules/FilteringRule");
 
-class ContextSampleBuilder extends AbstractSampleBuilder {
+class GeoSampleBuilder extends AbstractSampleBuilder {
     constructor() {
         super();
     }
-
 
     createNewSample(tag, location) {
         super.createNewSample(tag, location);
@@ -18,26 +17,24 @@ class ContextSampleBuilder extends AbstractSampleBuilder {
     }
 
     buildDescriptor( rawFilter, location ) {
-        let filter = new ContextFilter( rawFilter );
+        let filter = new GeocodedFilter( rawFilter );
 
         let tag = this.getSample().tag;
 
-        let rule = new ContextFilteringRule( tag, null, filter);
+        let rule = new FilteringRule( filter );
 
         let descriptor = new SampleDescriptor( tag, rule, location );
+        descriptor.setStorage( FSResourceStorage.getInstance() );
         if( rawFilter.event ) {
             descriptor.setEvent( rawFilter.event );
         }
-
-        descriptor.setStorage( FSResourceStorage.getInstance() );
 
         this.getSample().setDescriptor(descriptor);
     }
 
     buildCollection( initBuffer, location ) {
-        let collection = new JSONBufferedItemsCollection( location, initBuffer, 128 );
+        // items must be fetched with correct ones on remote first
+        let collection = new ProxyJSONBufferedItemsCollection( location, initBuffer, 2 /*300*/ );
         this.getSample().setCollection( collection );
     }
 }
-
-module.exports = ContextSampleBuilder;
