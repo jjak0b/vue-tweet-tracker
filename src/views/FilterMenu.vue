@@ -234,7 +234,11 @@ export default {
         east: event.Sa.j,
         west: event.Sa.i
       }
-      this.$set(this.filter.coordinates, index, value);
+      let arr = [
+        [ value.west, value.north ],
+        [ value.east, value.south ]
+      ]
+      this.$set(this.filter.coordinates, index, arr);
     },
     resetRectangles() {
       this.rectangles = [];
@@ -248,7 +252,12 @@ export default {
         west: event.lng()
       }
       this.rectangles.unshift(value);
-      this.filter.coordinates.unshift(value);
+
+      let arr = [
+          [ value.west, value.north ],
+          [ value.east, value.south ]
+      ]
+      this.filter.coordinates.unshift(arr);
     },
     deleteRectangle(event, index) {
       this.rectangles.splice(index, 1);
