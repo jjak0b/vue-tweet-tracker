@@ -68,7 +68,7 @@ class SampleDescriptor extends AbstractStorableResource{
         this.count = data.count;
         this.tag = data.tag;
         this.rule = Object.assign( this.rule, data.rule );
-        this.event = Object.assign( this.event. data.event );
+        this.event = Object.assign( this.event, data.event );
         return this;
     }
 
