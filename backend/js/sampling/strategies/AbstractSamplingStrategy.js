@@ -53,6 +53,10 @@ class AbstractSamplingStrategy {
         return this.sampleDirector.getSample();
     }
 
+    async add( tag, filter ) {
+
+    }
+
     /**
      *
      * @param sample {Sample}
