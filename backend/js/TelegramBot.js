@@ -90,24 +90,9 @@ bot.command('stop', ctx =>{
     }
 });
 
-function alertEvent(tag, message){
-    let contacts = checkContacts(tag)
+function alertEvent(contact, message, tag){
     let text = tag + "\n" + message
-    for(let i = 0; i < contacts.length; i ++){
-        bot.telegram.sendMessage(contacts[i], text);
-    }
-}
-
-function checkContacts(tag){
-    let contacts = []
-    let users = JSON.parse(fs.readFileSync(filepath))
-    for(let i = 0; i < users[i].length; i++){
-        for(let j = 0; i < users[i].events.length; j++){
-            if(users[i].events[j] == tag)
-                contacts.push(users[i].chatid)
-        }
-    }
-    return contacts
+        bot.telegram.sendMessage(contact, text);
 }
 
 bot.launch();

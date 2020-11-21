@@ -1,4 +1,5 @@
 const NotificationService = require("./NotificationService");
+const telegramBot = require('/backend/js/TelegramBot');
 
 class TelegramNotificationService extends NotificationService {
     constructor() {
@@ -6,7 +7,7 @@ class TelegramNotificationService extends NotificationService {
     }
 
     send( /*TelegramContact*/contact, /*TelegramMessage*/ message ){
-        super.send( contact, message );
+        telegramBot.alertEvent(contact,message);
     }
 }
 

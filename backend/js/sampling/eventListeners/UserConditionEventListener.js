@@ -18,7 +18,7 @@ class UserConditionEventListener extends MyEventListener {
 
         let descriptor = userConditionEvent.getDescriptor();
         let message = new Message("", "");
-        let request = new NotificationRequest( message );
+        let request = new NotificationRequest( message, descriptor.tag );
         console.log(  `[${UserConditionEventListener.name}]`, descriptor.tag, descriptor.count );
     }
 }
