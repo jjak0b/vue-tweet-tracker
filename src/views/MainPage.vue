@@ -25,6 +25,7 @@
           fixed
           bottom
           right
+          href="https://t.me/tt202014_bot"
       >
         <v-icon
             dark

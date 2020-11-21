@@ -9,10 +9,10 @@
           <v-col class="align-end">
             <v-row>
               <v-col>
-                <v-checkbox v-model="checkbox" label="Notify me" color="secondary" @click="associateEvent"> </v-checkbox>
+                <v-checkbox label="Notify me" color="secondary" @click="associateEvent"> </v-checkbox>
               </v-col>
               <v-col>
-                <v-text-field v-if="notify_me" :rules="onlyNumbers" label="Number of required tweet"></v-text-field>
+                <v-text-field v-if="filter.event" :rules="onlyNumbers" v-model.number="filter.event.countRequired" label="Number of required tweet"></v-text-field>
               </v-col>
             </v-row>
           </v-col>
@@ -182,6 +182,18 @@ export default {
 
     associateEvent(){
      this.notify_me = !this.notify_me;
+
+     if(this.notify_me){
+       /*this.filter = Object.assign({}, this.filter, { event: {
+           countRequired: null
+         }
+       })
+     */
+       this.$set(this.filter,"event", {countRequired: null})
+     }
+     else if(this.filter.event){
+       this.$delete(this.filter,"event")
+     }
     }
   },
   data: () => ({
@@ -202,6 +214,7 @@ export default {
         to: [],
         mentioning: []
       },
+
      /* filters: {
         //replies: true,
         //repliesValue: "replies-and-tweets",
