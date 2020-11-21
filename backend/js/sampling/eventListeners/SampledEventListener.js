@@ -1,5 +1,4 @@
 const EventListener = require("./MyEventListener");
-const EventsManager = require("../services/EventsManager");
 const UserConditionEvent = require( "../events/UserConditionEvent");
 const SampledEvent = require("../events/SampledEvent");
 
@@ -10,22 +9,27 @@ class SampledEventListener extends EventListener {
     }
 
     /**
-     * @param sampledEvent {SampledEvent}
+     *
+     * @return {Function} handleEvent
      */
-    static handleEvent( sampledEvent ) {
+    getHandler() {
+        // let self = this;
         /**
-         * @type {EventsManager}
+         * @param sampledEvent {SampledEvent}
          */
-        let self = this;
-        let descriptor = sampledEvent.getDescriptor();
-        let event = descriptor.getEvent();
-        if( event.countRequired > 0 && descriptor.count >= event.countRequired && !event.submitted ) {
-            event.submitted = true;
-            self.emit(
-                self.constructor.ENUM.EVENTS.USER_CONDITION,
-                new UserConditionEvent( descriptor )
-            );
+        function handleEvent(sampledEvent){
+            // this @type {EventsManager}
+            let descriptor = sampledEvent.getDescriptor();
+            let event = descriptor.getEvent();
+            if ( event.countRequired > 0 && descriptor.count >= event.countRequired && !event.submitted ) {
+                event.submitted = true;
+                this.emit(
+                    this.constructor.ENUM.EVENTS.USER_CONDITION,
+                    new UserConditionEvent(descriptor)
+                );
+            }
         }
+        return handleEvent;
     }
 }
 

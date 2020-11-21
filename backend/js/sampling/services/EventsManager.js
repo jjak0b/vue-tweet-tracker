@@ -27,8 +27,10 @@ class EventsManager extends EventEmitter{
     constructor() {
         super();
 
-        this.addListener( EventsManager.ENUM.EVENTS.SAMPLED, SampledEventListener.handleEvent );
-        this.addListener( EventsManager.ENUM.EVENTS.USER_CONDITION, UserConditionEventListener.handleEvent );
+        const userConditionEventListener = new UserConditionEventListener();
+        const sampledEventListener = new SampledEventListener()
+        this.addListener( EventsManager.ENUM.EVENTS.SAMPLED, sampledEventListener.getHandler() );
+        this.addListener( EventsManager.ENUM.EVENTS.USER_CONDITION, userConditionEventListener.getHandler() );
     }
 
 }

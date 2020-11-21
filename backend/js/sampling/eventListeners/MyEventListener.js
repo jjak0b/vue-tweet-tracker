@@ -1,14 +1,21 @@
-const EventEmitter = require('events');
-
 class MyEventListener {
     constructor() {
     }
 
     /**
-     * @this emitter
-     * @param event
+     *
+     * @return {Function} handleEvent
      */
-    static handleEvent(/*MyEvent*/event) {}
+    getHandler() {
+        /**
+         * @this emitter
+         * @param event
+         */
+        function handleEvent(/*MyEvent*/event) {
+
+        }
+        return handleEvent;
+    }
 }
 
 module.exports = MyEventListener;
