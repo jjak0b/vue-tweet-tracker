@@ -1,4 +1,3 @@
-const Twitter = require("twitter-v2");
 const StatusCodes = require("http-status-codes").StatusCodes;
 const Tweet = require( "../../sampleItems/Tweet" );
 const FilterConverter = require( "../../filterConverter");
@@ -6,11 +5,7 @@ const SamplingController = require("../controllers/SamplingController");
 const ContextSampleBuilder = require("../building/builders/ContextSampleBuilder");
 const AbstractSamplingStrategy = require("./AbstractSamplingStrategy");
 const BoundingBox = require("boundingbox");
-
-const appContextClient = new Twitter( {
-    consumer_key: process.env.TWITTER_API_CONSUMER_KEY,
-    consumer_secret: process.env.TWITTER_API_CONSUMER_SECRET
-});
+const appContextClient = require("../../clients/2.0").clientAppContext;
 
 class ContextSamplingStrategy extends AbstractSamplingStrategy {
     static MAX_RESULT_PER_REQUEST = 100;
