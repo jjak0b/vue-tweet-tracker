@@ -18,7 +18,6 @@
             :src="item.url"
             reverse-transition="fade-transition"
             transition="fade-transition"
-
         >
           <v-btn
               fab
@@ -39,9 +38,7 @@
         ></v-skeleton-loader>
       </v-carousel>
     </div>
-    <div v-if="imageMarked">
-      <v-img :src="markedImageUrl" max-width="125" max-height="125"></v-img>
-    </div>
+
     <v-footer absolute>
       <v-btn
           fab
@@ -53,14 +50,11 @@
           small
              @click="footerBtnFunction"
       >
-        <v-icon dark small v-if="!markedImageUrl && selectedWindow === 1">
+        <v-icon dark small v-if="selectedWindow === 1">
           mdi-arrow-right-thick
         </v-icon>
-        <v-icon dark small v-if="!markedImageUrl && selectedWindow === 2">
+        <v-icon dark small v-if="selectedWindow === 2">
           mdi-arrow-left-thick
-        </v-icon>
-        <v-icon dark small v-if="markedImageUrl">
-          mdi-pin-off
         </v-icon>
       </v-btn>
     </v-footer>
@@ -83,30 +77,24 @@ export default {
 
   data(){
     return{
-      markedImageUrl: null,
+      markedImageUrl: undefined,
       selectedWindow: 1,
-      imageMarked: false
     }
   },
 
   methods: {
     footerBtnFunction(){
-      if(!this.imageMarked){
         if(this.selectedWindow === 1){
           this.selectedWindow = 2;
         }
         else if(this.selectedWindow === 2){
           this.selectedWindow = 1;
         }
-      }
-      else{
-        this.imageMarked = !this.imageMarked;
-      }
     },
 
     markImage(url){
-      this.imageMarked = true;
       this.markedImageUrl = url;
+      this.$emit("input", url);
     }
   }
 }

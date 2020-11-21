@@ -23,17 +23,17 @@
 
       >
 
-        <GmapInfoWindow
+        <gmap-info-window
 
             :key="m.reference.data.id"
             v-if="selectedMarker === m"
+            :opened="m.markedImageUrl==undefined"
         >
-            <InfoWindow_Map :selected-info-tweet="m.reference"></InfoWindow_Map>
-            <v-btn @click="m.imageMarked = true"> MARK</v-btn>
+            <InfoWindow_Map :selected-info-tweet="m.reference" v-model="m.markedImageUrl"></InfoWindow_Map>
 
-        </GmapInfoWindow>
-        <gmap-info-window :opened="m.imageMarked" @closeclick="m.imageMarked = false">
-          <p>SEMPRE APERTO</p>
+        </gmap-info-window>
+        <gmap-info-window :opened="m.markedImageUrl!=undefined" @closeclick="m.markedImageUrl=undefined">
+            <v-img :src="m.markedImageUrl" max-width="100" max-height="100"></v-img>
         </gmap-info-window>
       </GmapMarker>
     </GmapMap>
@@ -90,12 +90,12 @@ class Marker extends MapPosition {
       /*double*/ longitude,
       /*String*/ type,
       /*Object*/ reference,
-      /*Boolean*/ imageMarked
+      /*String*/ markedImageUrl
   ) {
     super( latitude, longitude );
     this.type = type;
     this.reference = reference;
-    this.imageMarked = imageMarked;
+    this.markedImageUrl = markedImageUrl;
   }
 
   get icon() {
@@ -166,7 +166,7 @@ export default {
               geo.coordinates.coordinates[ 0 ],
               geo.coordinates.type,
               sample,
-              false,
+              undefined,
           );
         }
         else if( isGeoInPlaces ){
@@ -176,7 +176,7 @@ export default {
               (geo.bbox[ 0 ] + geo.bbox[ 2 ]) / 2.0,
               geo.type,
               sample,
-              false,
+              undefined,
           );
         }
 

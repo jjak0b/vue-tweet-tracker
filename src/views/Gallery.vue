@@ -49,7 +49,7 @@ export default {
 
   data: () => ({
       tweets: json,
-      places:[]
+      places: []
     }),
 
   watch: {
@@ -73,7 +73,7 @@ export default {
 
   methods: {
     setPlaces:function(){
-      let located_tweet=[];
+      let located_tweet = [];
       let alreadyAdded = false;
 
       for (let tweet of this.tweets){
@@ -84,7 +84,7 @@ export default {
                 for(let media of tweet.media){
                   place.media.push(media);
                 }
-                alreadyAdded = !alreadyAdded;
+                alreadyAdded = true;
               }
             }
             if(!alreadyAdded){
@@ -100,7 +100,7 @@ export default {
             for(let place of located_tweet){
               if(tweet.users.location == place.id){
                 place.media.push(tweet.media);
-                alreadyAdded = !alreadyAdded;
+                alreadyAdded = true;
               }
             }
             if(!alreadyAdded){
