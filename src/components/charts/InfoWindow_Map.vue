@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <div v-if="!imageMarked">
+    <div>
       <Tweet v-if="selectedWindow === 1"
              :id = "selectedInfoTweet.data.id"
              :key ="selectedInfoTweet.data.id"
