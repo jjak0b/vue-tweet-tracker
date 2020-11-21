@@ -1,6 +1,6 @@
-const CustomEvent = require("./MyEvent");
+const MyEvent = require("./MyEvent");
 
-class SampledEvent extends CustomEvent {
+class SampledEvent extends MyEvent {
     constructor( /*SampleDescriptor*/ descriptor, /*SampleItem*/sampled ) {
         super( SampledEvent.name, "Sampled new item");
         /**
