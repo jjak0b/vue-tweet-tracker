@@ -210,6 +210,10 @@ export default {
         return
       }
       axios.put('/api/samples/' + this.name, this.filter)
+          .then(() => {
+            this.snackbarText = "New sample '" + this.name + "' created."
+            this.snackbar = true;
+          })
           .catch((error) => {
             if (error.response.status === StatusCodes.CONFLICT) {
               this.snackbarText = "The filter already exists or the name of the filter is already being used."
