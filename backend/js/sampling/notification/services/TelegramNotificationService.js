@@ -29,6 +29,21 @@ class TelegramNotificationService extends NotificationService {
         this.bot.telegram.sendMessage(contact, message);
     }
 
+    getContacts(tag) {
+        let contacts =[]
+        let users = JSON.parse(fs.readFileSync(this.filepath))
+        for(let i = 0; i < users.length; i++){
+            if(users[i].hasOwnProperty('events')){
+                for(let j = 0; j < users[i].events.length; j++){
+                    if(users[i].events[j] == tag){
+                        contacts.push(users[i].chatid)
+                    }
+                }
+            }
+        }
+        return contacts
+    }
+
     start(ctx){
             ctx.reply('Progetto SWE gruppo 14')
 
@@ -54,8 +69,8 @@ class TelegramNotificationService extends NotificationService {
             ctx.reply('Contattare Gruppo 14')
     }
     add(ctx){
-        let active = sampling.getSamplesStates().get("active")
-        let paused = sampling.getSamplesStates().get("paused")
+        let active = sampling.getInstance().getSamplesStates().get("active")
+        let paused = sampling.getInstance().getSamplesStates().get("paused")
         let tags = active.concat(paused)
         let users = JSON.parse(fs.readFileSync(this.filepath))
         let followed = []

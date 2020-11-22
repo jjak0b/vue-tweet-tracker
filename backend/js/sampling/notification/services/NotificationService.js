@@ -7,7 +7,7 @@ class NotificationService {
         throw new Error( `[${this.constructor.name}]: "missing sending implementation` );
     }
 
-    getContacts(){
+    getContacts(tag){
         return this.contacts;
     }
 }
