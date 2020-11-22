@@ -1,31 +1,29 @@
-const StatusCodes = require("http-status-codes").StatusCodes;
 const express = require('express');
 const router = express.Router();
-// const fs = require('fs');
-// const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
-const twitterAPIControllerInstance = require( "../TwitterAPIController").instance;
+const SamplingFacade = require("../js/SamplingFacade");
+const EventsManager = require("../js/sampling/services/EventsManager");
+const UserConditionEventListener = require("../js/sampling/eventListeners/UserConditionEventListener");
+const SampledEventListener = require("../js/sampling/eventListeners/SampledEventListener");
+const samplingFacade = SamplingFacade.getInstance();
+const eventManager = EventsManager.getInstance();
+const userConditionEventListener = new UserConditionEventListener();
+const sampledEventListener = new SampledEventListener();
+
+eventManager.addListener( EventsManager.ENUM.EVENTS.SAMPLED, sampledEventListener.getHandler() );
+eventManager.addListener( EventsManager.ENUM.EVENTS.USER_CONDITION, userConditionEventListener.getHandler() );
 
 router.get( "/", API_getSamples );
 /**
  * Get samples list in some states
  * @API GET /samples/
- * @query states: "active" , "paused" or a string that contains both; will consider both if not specified
  * @StatusCodes: StatusCodes.OK
- * @Body : (in function of "states" parameter ) { active: array of sample tag, paused: array of sample tag }
+ * @Body : { active: array of sample tag, paused: array of sample tag }
  *
  */
 function API_getSamples( req, res ) {
-    // TODO: return list of samples tags
-    let statesQuery = req.query.states;
 
-    let data = {};
-    if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "active" ) ) {
-        data.active = twitterAPIControllerInstance.getActiveSamples().map(sample => sample.rule.tag );
-    }
-    if( !statesQuery || statesQuery.length < 1 || statesQuery.includes( "paused" ) ) {
-        data.paused = twitterAPIControllerInstance.getPausedSamples().map(sample => sample.rule.tag );
-    }
-   res.json( data );
+    let data = samplingFacade.getSamplesStates();
+    res.json( Object.fromEntries( data ) );
 }
 
 router.get( "/:tag", API_getSampleData );
@@ -37,24 +35,18 @@ router.get( "/:tag", API_getSampleData );
  * @Body JSON Array of tweets for the sample tag provided
  *
  */
-function API_getSampleData( req, res ) {
+async function API_getSampleData( req, res ) {
     let tag = req.params.tag;
-    let sample = twitterAPIControllerInstance.getSample(tag);
-    if( sample ) {
-        sample.getCollection( true )
-            .then( (jsonCollection) => {
-                res.setHeader('Content-Type', 'application/json');
-                res.write( jsonCollection );
-                res.end();
-            })
-            .catch( ( err ) => {
-                res.sendStatus( StatusCodes.INTERNAL_SERVER_ERROR );
-                console.error( "[GET API/samples/:tag]", err );
-            });
-    }
-    else {
-        res.sendStatus( StatusCodes.NOT_FOUND );
-    }
+
+
+
+            try {
+                let items = await samplingFacade.getSampleItems(tag);
+                res.json( items );
+            }
+            catch(err) {
+                res.sendStatus(err);
+            }
 }
 
 router.put( "/:tag", API_addSample );
@@ -71,18 +63,15 @@ router.put( "/:tag", API_addSample );
  */
 function API_addSample(req, res) {
     let sampleTag = req.params.tag;
-
-    console.log( "received", sampleTag );
     let filter = req.body;
 
-    let promise = filter ? twitterAPIControllerInstance.addSample( sampleTag, filter ) : Promise.reject( StatusCodes.BAD_REQUEST );
-    promise
-        .then( (statusCode) => {
-            res.sendStatus( statusCode );
-        })
-        .catch( (errCode) => {
-            res.sendStatus( errCode );
-        })
+        samplingFacade.addSample( sampleTag, filter )
+            .then( (statusCode) => {
+                res.sendStatus( statusCode );
+            })
+            .catch( (errCode) => {
+                res.sendStatus( errCode );
+            })
 
 }
 
@@ -99,7 +88,9 @@ router.delete( "/:tag", API_deleteSample );
 function API_deleteSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    twitterAPIControllerInstance.deleteSample( sampleTag )
+
+
+        samplingFacade.deleteSample( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
@@ -125,7 +116,7 @@ router.post( "/:tag/resume", API_resumeSample );
 function API_resumeSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    twitterAPIControllerInstance.resumeSample( sampleTag )
+        samplingFacade.resumeSample( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
@@ -149,7 +140,7 @@ router.post( "/:tag/pause", API_pauseSample );
 function API_pauseSample( req, res ) {
     let sampleTag = req.params.tag;
 
-    twitterAPIControllerInstance.pauseSample( sampleTag )
+        samplingFacade.pauseSample( sampleTag )
         .then( (statusCode) => {
             res.sendStatus( statusCode );
         })
@@ -157,5 +148,33 @@ function API_pauseSample( req, res ) {
             res.sendStatus( errCode );
         })
 }
+
+
+function exitHandler (exitCode) {
+    samplingFacade.storeSamples()
+        .finally(() => {
+            if (exitCode || exitCode === 0)
+                console.log(exitCode);
+            process.exit();
+        });
+}
+
+// flush data when app is closing
+[
+    "uncaughtException", //catches uncaught exceptions
+    // "exit",// when process.exit has been called
+    'SIGUSR1', // catches "kill pid" (for example: nodemon restart)
+    'SIGUSR2',
+    // 'SIGHUP',
+    'SIGINT',//catches ctrl+c event
+    // 'SIGQUIT',
+    // 'SIGILL',
+    // 'SIGTRAP',
+    // 'SIGABRT',
+    // 'SIGBUS',
+    // 'SIGFPE',
+    // 'SIGSEGV',
+    // 'SIGTERM'
+].forEach( (sig) => process.on(sig, exitHandler ) );
 
 module.exports = router;
