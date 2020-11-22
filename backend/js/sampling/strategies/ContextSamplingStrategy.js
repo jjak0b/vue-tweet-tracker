@@ -5,41 +5,10 @@ const SamplingController = require("../controllers/SamplingController");
 const ContextSampleBuilder = require("../building/builders/ContextSampleBuilder");
 const AbstractSamplingStrategy = require("./AbstractSamplingStrategy");
 const BoundingBox = require("boundingbox");
-const appContextClient = require("../../clients/2.0").clientAppContext;
-
+const api = require("../../clients/2.0");
 class ContextSamplingStrategy extends AbstractSamplingStrategy {
     static MAX_RESULT_PER_REQUEST = 100;
     static MAX_STREAMS_COUNT = 25;
-
-    static PARAMETERS = {
-        expansions: [
-            "author_id",
-            "geo.place_id",
-        ].join(),
-        "tweet.fields": [
-            "geo",
-            "public_metrics",
-            "lang",
-            "text",
-            "possibly_sensitive",
-            "context_annotations",
-            "entities"
-        ].join(),
-        "place.fields": [
-            "id",
-            "geo",
-            "place_type", /* city | poi */
-            "full_name",
-            "country_code",
-            "country",
-            "contained_within"
-        ].join(),
-        "user.fields": [
-            "name",
-            "location",
-            "created_at"
-        ].join()
-    };
 
     /**
      *
@@ -69,7 +38,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
         // this.requestAPI("get", "tweets/search/stream/rules", null, null, true)
         let json;
         try {
-            json = await appContextClient.get("tweets/search/stream/rules");
+            json = await api.clientAppContext.get("tweets/search/stream/rules");
         }
         catch (err) {
             console.error(`[${this.constructor.name}]`, "Error fetching remote samples", "cause:", err);
@@ -94,7 +63,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
             }
 
             if( unhandledRules.length > 0 ) {
-                appContextClient.post(
+                api.clientAppContext.post(
                     "tweets/search/stream/rules",
                     {
                         delete: {
@@ -139,7 +108,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
         let queryFilter = ContextSamplingStrategy.getQueryFromFilter( filter );
 
         try {
-            let response = await appContextClient.post(
+            let response = await api.clientAppContext.post(
                 "tweets/search/stream/rules",
                 {
                     add: [{tag:sample.tag, value:queryFilter}]
@@ -210,7 +179,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
             console.log(`[${this.constructor.name}]`, "resuming", rule.tag, "active query:", queryFilter );
             let json;
             try {
-                json = await appContextClient.post(
+                json = await api.clientAppContext.post(
                     "tweets/search/stream/rules",
                     {
                         add: [{tag:rule.tag, value:queryFilter}]
@@ -284,6 +253,9 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
                         this.stop();
                     }
                 }
+                else {
+                    console.warn(`[${this.constructor.name}]`, "stream stopped manually");
+                }
             }
         }while( retry );
     }
@@ -291,12 +263,10 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
     // https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
     async streamConnect( handlers ) {
         //Listen to the stream
-        let params = ContextSamplingStrategy.PARAMETERS;
-
 
         try {
             console.log(`[${this.constructor.name}]`, "Connecting stream ...");
-            this.stream = appContextClient.stream('tweets/search/stream', params );
+            this.stream = await api.getStream();
         }
         catch (e) {
             console.error(`[${this.constructor.name}]`, "Unable to establish connection stream ..." );
@@ -305,6 +275,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
 
             console.log(`[${this.constructor.name}]`, "Listening for stream ...");
             for await (const response of this.stream) {
+                // console.log( response);
                 let errors = response.errors;
 
                 if( errors ) {
@@ -323,11 +294,25 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
     onStreamDataReceived( response ) {
         let destinations = response.matching_rules;
         response.matching_rules = null;
-        this.routesDataToSamples(response, destinations );
+        let possibleTweet = Tweet.toArrayFromResponse({
+            data: [ response.data ],
+            includes: response.includes
+        });
+
+        if( possibleTweet && possibleTweet.length > 0 ) {
+            this.routesDataToSamples(possibleTweet[0], destinations);
+        }
+        else {
+            try {
+                console.error(`[${this.constructor.name}]`, "Invalid data received:\n", response );
+            }
+            catch (e) {
+                console.error(`[${this.constructor.name}]`, "Invalid data receved that caused error:\n", e );
+            }
+        }
     }
 
-    async routesDataToSamples( dataToAssign, destinationRules) {
-        let tweet = new Tweet( dataToAssign );
+    async routesDataToSamples( tweet, destinationRules) {
         for (let i = 0; i < destinationRules.length; i++) {
             let tag = destinationRules[ i ].tag;
             let sample = this.getController().get(tag);
@@ -421,7 +406,7 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
             }
             let response;
             try {
-                response = await appContextClient.post(
+                response = await api.clientAppContext.post(
                     "tweets/search/stream/rules",
                     {
                         delete: {
