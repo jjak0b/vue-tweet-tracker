@@ -1,11 +1,16 @@
 const express = require('express');
-const SamplingFacade = require("../js/SamplingFacade");
-
 const router = express.Router();
-// const fs = require('fs');
-// const TwitterAPIController = require( "../TwitterAPIController").TwitterAPIController;
-
+const SamplingFacade = require("../js/SamplingFacade");
+const EventsManager = require("../js/sampling/services/EventsManager");
+const UserConditionEventListener = require("../js/sampling/eventListeners/UserConditionEventListener");
+const SampledEventListener = require("../js/sampling/eventListeners/SampledEventListener");
 const samplingFacade = SamplingFacade.getInstance();
+const eventManager = EventsManager.getInstance();
+const userConditionEventListener = new UserConditionEventListener();
+const sampledEventListener = new SampledEventListener();
+
+eventManager.addListener( EventsManager.ENUM.EVENTS.SAMPLED, sampledEventListener.getHandler() );
+eventManager.addListener( EventsManager.ENUM.EVENTS.USER_CONDITION, userConditionEventListener.getHandler() );
 
 router.get( "/", API_getSamples );
 /**

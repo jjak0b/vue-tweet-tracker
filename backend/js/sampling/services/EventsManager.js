@@ -1,6 +1,4 @@
 const EventEmitter = require('events');
-const SampledEventListener = require("../eventListeners/SampledEventListener");
-const UserConditionEventListener = require("../eventListeners/UserConditionEventListener");
 
 class EventsManager extends EventEmitter{
 
@@ -27,10 +25,6 @@ class EventsManager extends EventEmitter{
     constructor() {
         super();
 
-        const userConditionEventListener = new UserConditionEventListener();
-        const sampledEventListener = new SampledEventListener()
-        this.addListener( EventsManager.ENUM.EVENTS.SAMPLED, sampledEventListener.getHandler() );
-        this.addListener( EventsManager.ENUM.EVENTS.USER_CONDITION, userConditionEventListener.getHandler() );
     }
 
 }
