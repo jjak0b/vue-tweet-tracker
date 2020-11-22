@@ -4,6 +4,10 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title class="white--text">Twitter tracker</v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-btn text class="white--text mr-2" to="/app/gallery">
+        <v-icon left>mdi-folder-multiple-image</v-icon>
+        Gallery
+      </v-btn>
       <v-btn text class="white--text mr-2" to="/app/dashboard">
         <v-icon left>mdi-view-dashboard</v-icon>
         Dashboard
@@ -13,6 +17,31 @@
         new sample
       </v-btn>
     </v-app-bar>
+
+    <v-footer absolute>
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+              rounded
+              color="primary"
+              dark
+              fixed
+              bottom
+              right
+              href="https://t.me/tt202014_bot"
+              v-bind="attrs"
+              v-on="on"
+          >
+            <v-icon dark left>
+              mdi-telegram
+            </v-icon>
+            BOT TELEGRAM
+          </v-btn>
+        </template>
+        <span>Contact the bot telegram to receive notifications of the events that interest you</span>
+      </v-tooltip>
+    </v-footer>
+
     <v-navigation-drawer app v-model="drawer" bottom>
       <h3 class="pa-3">Samples List</h3>
       <v-divider></v-divider>
@@ -81,6 +110,7 @@ export default {
   data: () => ({
     selectedSample: null,
     drawer: true,
+    overlay: true,
     samples: {
       active: [],
       paused: []

@@ -16,20 +16,6 @@
           align="center"
           justify="space-around"
       >
-        <v-btn
-            id="btn_CreaE"
-            tile
-            dark
-            large
-            color="indigo"
-        >
-          <v-icon left>
-            mdi-pencil
-          </v-icon>
-
-          New Event
-
-        </v-btn>
 
         <v-btn
             id="btn_CreaC"

@@ -45,7 +45,7 @@
         <v-col v-if="isSelected" cols="7">
           <v-card>
             <v-toolbar color="blue" dark>
-              <v-toolbar-title class="font-weight-bold text-h6">Selected Tweet</v-toolbar-title>
+              <v-toolbar-title class="font-weight-bold text-h6">Selected Tweet</v-toolbar-title><v-spacer></v-spacer>
             </v-toolbar>
             <v-expansion-panels accordion>
               <v-expansion-panel>
@@ -112,7 +112,14 @@
                   <h4>Country</h4>
                   <p>{{ this.selectedTweet.places.country }}</p>
                   <h4>Place</h4>
-                  <p>{{ this.selectedTweet.places.full_name }}</p>
+                  <p>{{ this.selectedTweet.places.full_name }}</p></v-expansion-panel-content>
+            </v-expansion-panel>
+            <v-expansion-panel v-if="selectedTweet.media">
+              <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
+              <v-expansion-panel-content>
+                  <ImageWindow
+                      :selected-tweet="selectedTweet"
+                  ></ImageWindow>
                 </v-expansion-panel-content>
               </v-expansion-panel>
             </v-expansion-panels>
@@ -129,6 +136,8 @@ import language from "@/assets/language.json"
 import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
 import Position from "@/js/Position";
+import ImageWindow from "@/components/charts/ImageWindow";
+import axios from "axios";
 
 export default {
 
@@ -137,6 +146,7 @@ export default {
     selectedSample: Array
   },
   components: {
+    ImageWindow,
     WordCloud,
     Map,
     Tweet
@@ -151,11 +161,35 @@ export default {
     }
   },
   data: () => ({
-    centerPosition: new Position(41.902782, 12.496366),// Rome
+    tweets: [],
+    centerPosition: new Position( 41.902782,12.496366 ),// Rome
+    showLocation: false,
+    showTweet: false,
+    showUser: false,
     language: language,
     selectedTweetIndex: null
   }),
+  watch: {
+    selectedSample: function (newVal) {
+      if ( newVal && newVal.length > 0 ) {
+        axios.get('/api/samples/' + newVal)
+            .then( (response) => {
+                  this.tweets = response.data;
+                })
+            .catch( (error) => {
+              console.error("ERROR", error);
+            })
+      }
+    }
+  },
   methods: {
+    getSubString(string) {
+      const substring = string.substring(0, 50);
+      if (string.length > substring.length) {
+        return substring + ' ...'
+      }
+      return substring;
+    },
     getDateString(value) {
       const date = new Date(value);
       return date.toLocaleString('en-US');

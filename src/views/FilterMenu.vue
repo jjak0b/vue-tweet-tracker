@@ -5,10 +5,26 @@
         lazy-validation
     >
       <v-row>
-        <v-container>
+        <v-col>
           <v-btn color="primary" class="mr-1" @click="onSubmit">Submit</v-btn>
           <v-btn color="secondary" @click="onReset">Reset</v-btn>
-        </v-container>
+        </v-col>
+          <v-col class="align-end">
+            <v-row>
+              <v-col>
+                <v-checkbox label="Notify event" color="secondary" @click="associateEvent"> </v-checkbox>
+              </v-col>
+              <v-col>
+                <v-text-field
+                    v-if="filter.event"
+                    :rules="onlyNumbers"
+                    v-model.number="filter.event.countRequired"
+                    label="Number of required tweet"
+                    required
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-col>
       </v-row>
       <v-row>
         <v-col>
@@ -28,7 +44,7 @@
             </v-card-text>
           </v-card>
 
-          <v-card class="mb-5">
+        <v-card class="mb-5">
             <v-card-title>Words</v-card-title>
             <v-card-text>
               <v-combobox
@@ -175,6 +191,30 @@
         </v-col>
       </v-row>
     </v-form>
+
+    <v-overlay :value="overlay">
+      <v-card align="center" light>
+        <div align="right">
+          <v-icon small @click="overlay=false" class="ma-3">
+            mdi-close-circle-outline
+          </v-icon>
+        </div>
+          <v-card-text class="text--black">Contact the bot telegram to receive notifications of the events that interest you</v-card-text>
+          <v-btn
+              rounded
+              color="primary"
+              dark
+              href="https://t.me/tt202014_bot"
+              class="ma-2"
+          >
+            <v-icon dark left>
+              mdi-telegram
+            </v-icon>
+            BOT TELEGRAM
+          </v-btn>
+      </v-card>
+    </v-overlay>
+
     <v-snackbar
         v-model="snackbar"
     >
@@ -242,8 +282,8 @@ export default {
         west: event.Sa.i
       }
       let arr = [
-        [ value.west, value.north ],
-        [ value.east, value.south ]
+        [value.west, value.north],
+        [value.east, value.south]
       ]
       this.$set(this.filter.coordinates, index, arr);
     },
@@ -261,111 +301,123 @@ export default {
       this.rectangles.unshift(value);
 
       let arr = [
-          [ value.west, value.north ],
-          [ value.east, value.south ]
+        [value.west, value.north],
+        [value.east, value.south]
       ]
       this.filter.coordinates.unshift(arr);
     },
     deleteRectangle(event, index) {
       this.rectangles.splice(index, 1);
       this.filter.coordinates.splice(index, 1);
-    }
-  },
-  data: () => ({
-    rectangles: [],
-    snackbar: false,
-    snackbarText: "",
-    name: "",
-    nameRules: [
-      v => !!v || 'Name is required'
-    ],
-    languageArray: null,
-    filter: {
-      coordinates: [],
-      words: {
-        all: [],
-        exact: [],
-        any: [],
-        none: [],
-        hashtags: [],
-        language: null
-      },
-      accounts: {
-        from: [],
-        to: [],
-        mentioning: []
-      },
-      /* filters: {
+
+    },
+    associateEvent() {
+      this.notify_me = !this.notify_me;
+
+      if (this.notify_me) {
+        this.overlay = true; //Mostra overlay con info bot telegram
+        this.$set(this.filter, "event", {countRequired: null})
+      } else if (this.filter.event) {
+        this.$delete(this.filter, "event")
+      }
+    },
+    data: () => ({
+      rectangles: [],
+      snackbar: false,
+      snackbarText: "",
+      name: "",
+      nameRules: [
+        v => !!v || 'Name is required'
+      ],
+      languageArray: null,
+      notify_me: false,
+      overlay: false, // Booleano per mostrare pop up con info bot telegram
+      filter: {
+        coordinates: [],
+        words: {
+          all: [],
+          exact: [],
+          any: [],
+          none: [],
+          hashtags: [],
+          language: null
+        },
+        accounts: {
+          from: [],
+          to: [],
+          mentioning: []
+        },
+        /* filters: {
          //replies: true,
          //repliesValue: "replies-and-tweets",
          links: true,
          linksValue: null
        },*/
-      /*
+        /*
       engagement: {
         minReplies: "",
         minLikes: "",
         minRetweets: ""
       },
       */
-      dates: {
-        from: null,
-        to: null
-      }
-    },
-    toMenu: false,
-    fromMenu: false,
-    labels: {
-      name: {
-        hint: "Name of the sample",
-        label: "Name",
-        key: "name"
-      },
-      words: {
-        all: {
-          hint: 'Example: what’s happening · contains both “what’s” and “happening”',
-          label: "All of these words",
-          key: "all"
-        },
-        exact: {
-          hint: 'Example: happy hour · contains the exact phrase “happy hour”',
-          label: "This exact phrase",
-          key: "exact"
-        },
-        any: {
-          hint: 'Example: cats dogs · contains either “cats” or “dogs” (or both)',
-          label: "Any of these words",
-          key: "any"
-        },
-        none: {
-          hint: 'Example: cats dogs · does not contain “cats” and does not contain “dogs”',
-          label: "None of these words",
-          key: "none"
-        },
-        hashtags: {
-          hint: 'Example: #ThrowbackThursday · contains the hashtag #ThrowbackThursday',
-          label: "These hashtags",
-          key: "hashtags"
+        dates: {
+          from: null,
+          to: null
         }
       },
-      accounts: {
-        from: {
-          hint: "Example: @Twitter · sent from @Twitter",
-          label: "From these accounts",
-          key: "from"
+      toMenu: false,
+      fromMenu: false,
+      labels: {
+        name: {
+          hint: "Name of the sample",
+          label: "Name",
+          key: "name"
         },
-        to: {
-          hint: "Example: @Twitter · sent in reply to @Twitter",
-          label: "To these accounts",
-          key: "to"
+        words: {
+          all: {
+            hint: 'Example: what’s happening · contains both “what’s” and “happening”',
+            label: "All of these words",
+            key: "all"
+          },
+          exact: {
+            hint: 'Example: happy hour · contains the exact phrase “happy hour”',
+            label: "This exact phrase",
+            key: "exact"
+          },
+          any: {
+            hint: 'Example: cats dogs · contains either “cats” or “dogs” (or both)',
+            label: "Any of these words",
+            key: "any"
+          },
+          none: {
+            hint: 'Example: cats dogs · does not contain “cats” and does not contain “dogs”',
+            label: "None of these words",
+            key: "none"
+          },
+          hashtags: {
+            hint: 'Example: #ThrowbackThursday · contains the hashtag #ThrowbackThursday',
+            label: "These hashtags",
+            key: "hashtags"
+          }
         },
-        mentioning: {
-          hint: "Example: @SFBART @Caltrain · mentions @SFBART or mentions @Caltrain",
-          label: "Mentioning these accounts",
-          key: "mentioning"
+        accounts: {
+          from: {
+            hint: "Example: @Twitter · sent from @Twitter",
+            label: "From these accounts",
+            key: "from"
+          },
+          to: {
+            hint: "Example: @Twitter · sent in reply to @Twitter",
+            label: "To these accounts",
+            key: "to"
+          },
+          mentioning: {
+            hint: "Example: @SFBART @Caltrain · mentions @SFBART or mentions @Caltrain",
+            label: "Mentioning these accounts",
+            key: "mentioning"
+          },
         },
-      },
-      /*engagement: {
+        /*engagement: {
         minReplies: {
           hint: "Example: 280 · Tweets with at least 280 replies",
           label: "Minimum replies",
@@ -382,21 +434,28 @@ export default {
           key: "minRetweets"
         },
       }*/
-    }
-  }),
-  mounted() {
-    let arr = [];
-    arr.push({
-      text: "Any language",
-      value: null
-    })
-    for (const lang in language) {
+      },
+
+      onlyNumbers: [
+        value => !!value || 'Required.',
+        value => (value >= 1) || 'At least 1',
+      ]
+
+    }),
+    mounted() {
+      let arr = [];
       arr.push({
-        text: language[lang],
-        value: lang
+        text: "Any language",
+        value: null
       })
+      for (const lang in language) {
+        arr.push({
+          text: language[lang],
+          value: lang
+        })
+      }
+      this.languageArray = arr;
     }
-    this.languageArray = arr;
   }
 }
 </script>

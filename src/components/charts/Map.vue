@@ -22,22 +22,19 @@
           @click="selectedMarker=center=m"
 
       >
-        <GmapInfoWindow
+
+        <gmap-info-window
 
             :key="m.reference.data.id"
             v-if="selectedMarker === m"
+            :opened="m.markedImageUrl==undefined"
         >
-          <Tweet
-            class="mb-7"
-            :id="m.reference.data.id"
-            :key="m.reference.data.id"
-          >
-            <v-skeleton-loader
-                width="10rem"
-                type="card"
-            ></v-skeleton-loader>
-        </Tweet>
-        </GmapInfoWindow>
+            <InfoWindow_Map :selected-info-tweet="m.reference" v-model="m.markedImageUrl"></InfoWindow_Map>
+
+        </gmap-info-window>
+        <gmap-info-window :opened="m.markedImageUrl!=undefined" @closeclick="m.markedImageUrl=undefined">
+            <v-img :src="m.markedImageUrl" max-width="100" max-height="100"></v-img>
+        </gmap-info-window>
       </GmapMarker>
     </GmapMap>
   </v-card>
@@ -47,7 +44,9 @@
 import Position from "@/js/Position";
 import Vue from 'vue'
 import * as VueGoogleMaps from 'vue2-google-maps'
-import {Tweet} from 'vue-tweet-embed';
+import InfoWindow_Map from "@/components/charts/InfoWindow_Map";
+//import ImageWindow from "@/components/charts/ImageWindow";
+//import {Tweet} from 'vue-tweet-embed';
 
 Vue.use(VueGoogleMaps, {
   load: {
@@ -90,12 +89,13 @@ class Marker extends MapPosition {
       /*double*/ latitude,
       /*double*/ longitude,
       /*String*/ type,
-      /*Object*/ reference
+      /*Object*/ reference,
+      /*String*/ markedImageUrl
   ) {
     super( latitude, longitude );
-
     this.type = type;
     this.reference = reference;
+    this.markedImageUrl = markedImageUrl;
   }
 
   get icon() {
@@ -106,8 +106,9 @@ class Marker extends MapPosition {
 
 export default {
   name: "Map",
+  //components: {InfoWindow_Map},
   components: {
-    Tweet,
+    InfoWindow_Map
   },
   props: {
     samples: Array,
@@ -164,7 +165,8 @@ export default {
               geo.coordinates.coordinates[ 1 ],
               geo.coordinates.coordinates[ 0 ],
               geo.coordinates.type,
-              sample
+              sample,
+              undefined,
           );
         }
         else if( isGeoInPlaces ){
@@ -173,7 +175,8 @@ export default {
               (geo.bbox[ 1 ] + geo.bbox[ 3 ]) / 2.0,
               (geo.bbox[ 0 ] + geo.bbox[ 2 ]) / 2.0,
               geo.type,
-              sample
+              sample,
+              undefined,
           );
         }
 
@@ -182,6 +185,21 @@ export default {
       });
       return markers;
     }
+
+    /*footerBtnFunction(){
+      if(!this.imageMarked){
+        if(this.selectedWindow === 1){
+          this.selectedWindow = 2;
+        }
+        else if(this.selectedWindow === 2){
+          this.selectedWindow = 1;
+        }
+      }
+      else{
+        this.imageMarked = !this.imageMarked;
+      }
+    }, */
+
   }
 }
 
