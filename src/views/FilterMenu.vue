@@ -9,10 +9,16 @@
           <v-col class="align-end">
             <v-row>
               <v-col>
-                <v-checkbox label="Notify me" color="secondary" @click="associateEvent"> </v-checkbox>
+                <v-checkbox label="Notify event" color="secondary" @click="associateEvent"> </v-checkbox>
               </v-col>
               <v-col>
-                <v-text-field v-if="filter.event" :rules="onlyNumbers" v-model.number="filter.event.countRequired" label="Number of required tweet"></v-text-field>
+                <v-text-field
+                    v-if="filter.event"
+                    :rules="onlyNumbers"
+                    v-model.number="filter.event.countRequired"
+                    label="Number of required tweet"
+                    required
+                ></v-text-field>
               </v-col>
             </v-row>
           </v-col>
@@ -166,6 +172,30 @@
         </v-col>
       </v-row>
     </v-form>
+
+    <v-overlay :value="overlay">
+      <v-card align="center" light>
+        <div align="right">
+          <v-icon small @click="overlay=false" class="ma-3">
+            mdi-close-circle-outline
+          </v-icon>
+        </div>
+          <v-card-text class="text--black">Contact the bot telegram to receive notifications of the events that interest you</v-card-text>
+          <v-btn
+              rounded
+              color="primary"
+              dark
+              href="https://t.me/tt202014_bot"
+              class="ma-2"
+          >
+            <v-icon dark left>
+              mdi-telegram
+            </v-icon>
+            BOT TELEGRAM
+          </v-btn>
+      </v-card>
+    </v-overlay>
+
   </v-container>
 </template>
 
@@ -184,6 +214,7 @@ export default {
      this.notify_me = !this.notify_me;
 
      if(this.notify_me){
+       this.overlay = true; //Mostra overlay con info bot telegram
        this.$set(this.filter,"event", {countRequired: null})
      }
      else if(this.filter.event){
@@ -195,6 +226,7 @@ export default {
     name: "",
     languageArray: null,
     notify_me: false,
+    overlay: false, // Booleano per mostrare pop up con info bot telegram
     filter: {
       words: {
         all: [],
@@ -301,7 +333,6 @@ export default {
 
     onlyNumbers: [
       value => !!value || 'Required.',
-      value => (value <= 12000) || 'At most 12000',
       value => (value >= 1) || 'At least 1',
     ]
 

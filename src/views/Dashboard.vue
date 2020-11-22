@@ -140,7 +140,6 @@
 
 <script>
 import {Tweet} from 'vue-tweet-embed'
-import json from "../../backend/repositories/testMultipleImmagini.json"
 import language from "@/assets/language.json"
 import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
@@ -187,7 +186,7 @@ export default {
 
   },
   data: () => ({
-    tweets: json,
+    tweets: [],
     centerPosition: new Position( 41.902782,12.496366 ),// Rome
     showLocation: false,
     showTweet: false,

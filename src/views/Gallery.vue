@@ -38,7 +38,6 @@
 </template>
 
 <script>
-import json from "../../backend/repositories/testMultipleImmagini.json"
 import axios from "axios";
 
 export default {
@@ -48,7 +47,7 @@ export default {
   },
 
   data: () => ({
-      tweets: json,
+      tweets:[],
       places: {}
     }),
 

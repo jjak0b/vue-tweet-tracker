@@ -17,25 +17,31 @@
         new sample
       </v-btn>
     </v-app-bar>
+
     <v-footer absolute>
-      <v-btn
-          rounded
-          color="primary"
-          dark
-          fixed
-          bottom
-          right
-          href="https://t.me/tt202014_bot"
-      >
-        <v-icon
-            dark
-            left
-        >
-          mdi-telegram
-        </v-icon>
-        BOT TELEGRAM
-      </v-btn>
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+              rounded
+              color="primary"
+              dark
+              fixed
+              bottom
+              right
+              href="https://t.me/tt202014_bot"
+              v-bind="attrs"
+              v-on="on"
+          >
+            <v-icon dark left>
+              mdi-telegram
+            </v-icon>
+            BOT TELEGRAM
+          </v-btn>
+        </template>
+        <span>Contact the bot telegram to receive notifications of the events that interest you</span>
+      </v-tooltip>
     </v-footer>
+
     <v-navigation-drawer app v-model="drawer" bottom>
       <h3 class="pa-3">Samples List</h3>
       <v-divider></v-divider>
@@ -83,6 +89,7 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
+
     <v-main class="grey lighten-3">
       <v-container fluid>
         <router-view :selectedSample="selectedSample"></router-view>
@@ -101,6 +108,7 @@ export default {
   data: () => ({
     selectedSample: null,
     drawer: true,
+    overlay: true,
     samples: {
       active: ["sample 1", "sample 2", ],
       paused: [ "sample 3" ]
