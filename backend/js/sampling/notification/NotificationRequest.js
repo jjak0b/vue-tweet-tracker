@@ -1,6 +1,7 @@
 class NotificationRequest {
     constructor(/*Message*/message, tag) {
-        this.message = tag + '\n' + message;
+        this.message = message;
+        this.tag = tag;
     }
 
     /**

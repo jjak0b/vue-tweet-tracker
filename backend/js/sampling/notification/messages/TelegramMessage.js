@@ -1,12 +1,12 @@
 const Message = require("./Message");
 
 class TelegramMessage extends Message{
-    constructor( header, body ) {
-        super( header, body )
+    constructor( message ) {
+        super( message.getHeader(), message.getBody() )
     }
 
     toString(){
-        this.message = this.getHeader() + '\n' + this.getBody()
+        return this.getHeader() + '\n' + this.getBody();
     }
 }
 
