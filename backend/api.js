@@ -7,7 +7,7 @@ const logger = require('morgan');
 
 const app = express();
 
-const bot = require("./js/TelegramBot");
+const bot = require("./js/sampling/notification/services/TelegramNotificationService");
 
 app.use(logger('dev'));
 app.use(express.json());
