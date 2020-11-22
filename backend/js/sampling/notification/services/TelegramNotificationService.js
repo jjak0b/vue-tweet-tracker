@@ -3,7 +3,7 @@ const { Telegraf } = require('telegraf');
 const fs = require('fs');
 const path = require("path");
 const Markup = require('telegraf/markup');
-const sampling = require('../../../SamplingFacade');
+const sampling = require('../../../SamplingFacade').getInstance();
 
 class TelegramNotificationService extends NotificationService {
     constructor() {
