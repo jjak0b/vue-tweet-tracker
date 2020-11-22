@@ -9,7 +9,7 @@ class TelegramNotificationServiceHandler extends NotificationServiceHandler{
 
     handleRequest( /*NotificationRequest*/request) {
         this.getService()
-            .getContacts()
+            .getContacts(request.tag)
             .forEach(
                 (contact) => this.getService().send( contact, request.message)
             );
