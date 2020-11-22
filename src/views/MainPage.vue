@@ -4,7 +4,11 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title class="white--text">Twitter tracker</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn text class="white--text mr-2" to="/app">
+      <v-btn text class="white--text mr-2" to="/app/gallery">
+        <v-icon left>mdi-folder-multiple-image</v-icon>
+        Gallery
+      </v-btn>
+      <v-btn text class="white--text mr-2" to="/app/dashboard">
         <v-icon left>mdi-view-dashboard</v-icon>
         Dashboard
       </v-btn>
@@ -13,6 +17,31 @@
         new sample
       </v-btn>
     </v-app-bar>
+
+    <v-footer absolute>
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+              rounded
+              color="primary"
+              dark
+              fixed
+              bottom
+              right
+              href="https://t.me/tt202014_bot"
+              v-bind="attrs"
+              v-on="on"
+          >
+            <v-icon dark left>
+              mdi-telegram
+            </v-icon>
+            BOT TELEGRAM
+          </v-btn>
+        </template>
+        <span>Contact the bot telegram to receive notifications of the events that interest you</span>
+      </v-tooltip>
+    </v-footer>
+
     <v-navigation-drawer app v-model="drawer" bottom>
       <h3 class="pa-3">Samples List</h3>
       <v-divider></v-divider>
@@ -20,7 +49,7 @@
         <v-list-item
           v-for="item in samplesList"
           :key="item"
-          @click="selectedSample = item"
+          @click="selectSample(item)"
         >
             <v-list-item-content>
               <v-list-item-title v-text="item"></v-list-item-title>
@@ -62,7 +91,10 @@
     </v-navigation-drawer>
     <v-main class="grey lighten-3">
       <v-container fluid>
-        <router-view :selectedSample="selectedSample"></router-view>
+        <router-view
+            :selectedSample="selectedSample"
+            @update-samples="updateSampleList()"
+        ></router-view>
       </v-container>
     </v-main>
   </v-app>
@@ -78,9 +110,10 @@ export default {
   data: () => ({
     selectedSample: null,
     drawer: true,
+    overlay: true,
     samples: {
-      active: ["sample 1", "sample 2", ],
-      paused: [ "sample 3" ]
+      active: [],
+      paused: []
     }
   }),
   computed: {
@@ -92,11 +125,19 @@ export default {
     this.updateSampleList();
   },
   methods: {
+    selectSample(item) {
+      axios.get('/api/samples/' + item)
+          .then( (response) => {
+            this.selectedSample = response.data;
+          })
+          .catch( (error) => {
+            console.error("ERROR", error);
+          })
+    },
     updateSampleList() {
       axios.get("/api/samples/")
           .then( (response) => {
             let data = response.data;
-            // this.samplesList = data.active;
             this.samples.active = data.active || [];
             this.samples.paused = data.paused || [];
           })
@@ -129,7 +170,6 @@ export default {
     activeSample(name) {
       axios.post(`/api/samples/${name}/resume`)
         .then( (data) => {
-          // this.samplesList = data.active;
           this.samples.active = data.active || [];
           this.samples.paused = data.paused || [];
         })
