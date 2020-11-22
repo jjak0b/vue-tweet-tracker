@@ -7,8 +7,7 @@ class UserConditionEventListener extends MyEventListener {
     constructor() {
         super();
 
-        const telegramService = new TelegramNotificationServiceHandler();
-        this.startHandler = telegramService;
+        this.startHandler = new TelegramNotificationServiceHandler();
     }
 
     /**
@@ -26,9 +25,12 @@ class UserConditionEventListener extends MyEventListener {
     function handleEvent( userConditionEvent ) {
 
         let descriptor = userConditionEvent.getDescriptor();
-        let message = new Message("", "");
+        let message = new Message(
+            `## The event "${ descriptor.tag }" occurred !##`,
+            `The event received ${descriptor.count} sampled items\nCheck the sampled items through the app dashboard !`
+        );
         let request = new NotificationRequest( message, descriptor.tag );
-        console.log(  `[${UserConditionEventListener.name}]`, descriptor.tag, descriptor.count );
+        console.log(  `[${UserConditionEventListener.name}]`, descriptor.tag, descriptor.count, message);
         self.startHandler.handleRequest( request );
     }
         return handleEvent;
