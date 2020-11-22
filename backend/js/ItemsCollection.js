@@ -10,6 +10,10 @@ class ItemsCollection extends AbstractStorableResource {
         this.buffer = collection || [];
     }
 
+    getItems() {
+        return this.buffer;
+    }
+
     /**
      * @return {*[]}
      */
@@ -40,7 +44,7 @@ class ItemsCollection extends AbstractStorableResource {
      * @returns {Promise<[]>}
      */
     async toArray() {
-        return this.buffer;
+        return this.getItems();
     }
 }
 
