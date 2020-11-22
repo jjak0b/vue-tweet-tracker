@@ -11,8 +11,8 @@ class TelegramNotificationServiceHandler extends NotificationServiceHandler{
         this.getService()
             .getContacts()
             .forEach(
-                (contact) => this.getService().send( contact, request.message )
-            );``
+                (contact) => this.getService().send( contact, request.message)
+            );
         if( this.nextHandler ) {
             return this.nextHandler.handleRequest( request );
         }

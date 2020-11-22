@@ -16,7 +16,7 @@ class SamplingFacade extends ISampler {
         this.eventManager = EventsManager.getInstance();
 
         const contextSamplingStrategy = new ContextSamplingStrategy(
-            path.join( process.env.PATH_REPOSITORIES_SAMPLES, "context" ),
+            path.join( process.env.PATH_REPOSITORIES_SAMPLES || "", "context" ),
             this.eventManager
         );
         // const geoSamplingStrategy = new GeoSamplingStrategy(
