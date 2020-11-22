@@ -30,7 +30,6 @@ class UserConditionEventListener extends MyEventListener {
             `The event received ${descriptor.count} sampled items\nCheck the sampled items through the app dashboard !`
         );
         let request = new NotificationRequest( message, descriptor.tag );
-        console.log(  `[${UserConditionEventListener.name}]`, descriptor.tag, descriptor.count, message);
         self.startHandler.handleRequest( request );
     }
         return handleEvent;
