@@ -151,6 +151,24 @@
               ></v-combobox>
             </v-card-text>
           </v-card>
+
+          <v-card class="mb-5">
+            <v-card-title>Context</v-card-title>
+            <v-card-text>
+              <v-combobox
+                  v-for="item in labels.context"
+                  v-model.trim="filter.context[item.key]"
+                  :key="item.label"
+                  :hint="item.hint"
+                  :label="item.label"
+                  clearable
+                  multiple
+                  chips
+                  deletable-chips
+              ></v-combobox>
+            </v-card-text>
+          </v-card>
+
           <!--
         <v-card class="mb-5">
           <v-card-title>Filters</v-card-title>
@@ -321,6 +339,7 @@ export default {
         this.$delete(this.filter, "event")
       }
     },
+  },
     data: () => ({
       rectangles: [],
       snackbar: false,
@@ -346,6 +365,10 @@ export default {
           from: [],
           to: [],
           mentioning: []
+        },
+
+        context:{
+          entities: []
         },
         /* filters: {
          //replies: true,
@@ -417,6 +440,15 @@ export default {
             key: "mentioning"
           },
         },
+
+        context: {
+          entities: {
+            hint: "Example: Bologna · Bologna Football Club is related to Bologna" ,
+            label: "Related to this context",
+            key: "entities"
+
+          },
+        }
         /*engagement: {
         minReplies: {
           hint: "Example: 280 · Tweets with at least 280 replies",
@@ -456,7 +488,6 @@ export default {
       }
       this.languageArray = arr;
     }
-  }
 }
 </script>
 
