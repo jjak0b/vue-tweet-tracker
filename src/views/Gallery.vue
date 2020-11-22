@@ -1,13 +1,13 @@
 <template>
   <v-container>
-  <v-row v-for="item in places" v-bind:key="item.id" >
+  <v-row v-for="(mediaList, id) in places" v-bind:key="id" >
     <v-row>
       <v-col>
-      <p>{{item.id}}</p>
+      <p>{{id}}</p>
         <v-row>
           <v-col
-              v-for="(media,i) in item.media"
-              :key="i"
+              v-for="(media) in mediaList"
+              :key="media.url"
               class="d-flex child-flex"
               cols="4"
           >
@@ -49,7 +49,7 @@ export default {
 
   data: () => ({
       tweets: json,
-      places: []
+      places: {}
     }),
 
   watch: {
@@ -68,53 +68,36 @@ export default {
   },
 
   created() {
-    this.places = this.setPlaces();
+    this.places = this.getPlaces();
   },
 
   methods: {
-    setPlaces:function(){
-      let located_tweet = [];
-      let alreadyAdded = false;
+    getPlaces:function(){
+      /**
+       *
+       * @type {Map<String, []>}
+       */
+      let places = new Map();
 
       for (let tweet of this.tweets){
-        if(tweet.media){
+        if(tweet.media ){
+          let place = null;
           if(tweet.places.full_name){
-            for(let place of located_tweet){
-              if(tweet.places.full_name == place.id){
-                for(let media of tweet.media){
-                  place.media.push(media);
-                }
-                alreadyAdded = true;
-              }
-            }
-            if(!alreadyAdded){
-             located_tweet.push(
-                  {
-                    id: tweet.places.full_name,
-                    media: tweet.media
-                  }
-              );
-            }
+            place = tweet.places.full_name;
           }
           else if(tweet.users.location){
-            for(let place of located_tweet){
-              if(tweet.users.location == place.id){
-                place.media.push(tweet.media);
-                alreadyAdded = true;
-              }
+            place = tweet.users.location;
+          }
+
+          if( place ) {
+            if( !places.has( place ) ) {
+              places.set( place, [] );
             }
-            if(!alreadyAdded){
-              located_tweet.push(
-                  {
-                    id: tweet.users.location,
-                    media: tweet.media
-                  }
-              );
-            }
+            places.get(place).push( ...tweet.media );
           }
         }
       }
-      return located_tweet;
+      return Object.fromEntries( places );
     }
   }
 }
