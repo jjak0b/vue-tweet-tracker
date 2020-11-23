@@ -114,7 +114,7 @@
                   <h4>Place</h4>
                   <p>{{ this.selectedTweet.places.full_name }}</p></v-expansion-panel-content>
             </v-expansion-panel>
-            <v-expansion-panel v-if="selectedTweet.media">
+            <v-expansion-panel v-if="thereAreImages(selectedTweet)">
               <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
               <v-expansion-panel-content>
                   <ImageWindow
@@ -161,7 +161,7 @@ export default {
     }
   },
   data: () => ({
-    tweets: [],
+    tweets:[],
     centerPosition: new Position( 41.902782,12.496366 ),// Rome
     showLocation: false,
     showTweet: false,
@@ -193,6 +193,16 @@ export default {
     getDateString(value) {
       const date = new Date(value);
       return date.toLocaleString('en-US');
+    },
+
+    thereAreImages(tweet){
+      if(tweet.media && tweet.media.some((media) =>
+          media.type==='photo')){
+        return true
+      }
+      else{
+        return false
+      }
     }
   }
 }

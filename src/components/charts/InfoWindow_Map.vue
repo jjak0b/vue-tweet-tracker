@@ -11,7 +11,7 @@
         ></v-skeleton-loader>
       </Tweet>
 
-      <v-carousel v-if="selectedInfoTweet.media && selectedWindow === 2">
+      <v-carousel v-if="thereAreImages(selectedInfoTweet) && selectedWindow === 2">
         <v-carousel-item
             v-for="(item,i) in selectedInfoTweet.media"
             :key="i"
@@ -37,17 +37,18 @@
             type="card"
         ></v-skeleton-loader>
       </v-carousel>
+
     </div>
 
     <v-footer absolute>
-      <v-btn
-          fab
-          color="primary"
-          dark
-          bottom
-          fixed
-          left
-          small
+      <v-btn v-if="thereAreImages(selectedInfoTweet)"
+             fab
+             color="primary"
+             dark
+             bottom
+             fixed
+             left
+             small
              @click="footerBtnFunction"
       >
         <v-icon dark small v-if="selectedWindow === 1">
@@ -58,6 +59,7 @@
         </v-icon>
       </v-btn>
     </v-footer>
+
   </v-container>
 </template>
 
@@ -95,7 +97,19 @@ export default {
     markImage(url){
       this.markedImageUrl = url;
       this.$emit("input", url);
+    },
+
+    thereAreImages(tweet){
+      if(tweet.media && tweet.media.some((media) =>
+          media.type==='photo')){
+        return true
+      }
+      else{
+        return false
+      }
     }
+
+
   }
 }
 </script>
