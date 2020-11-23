@@ -92,6 +92,7 @@
     <v-main class="grey lighten-3">
       <v-container fluid>
         <router-view
+            :selectedSampleTag="selectedSampleTag"
             :selectedSample="selectedSample"
             @update-samples="updateSampleList()"
         ></router-view>
@@ -109,6 +110,7 @@ export default {
 
   data: () => ({
     selectedSample: null,
+    selectedSampleTag: null,
     drawer: true,
     overlay: true,
     samples: {
@@ -129,6 +131,7 @@ export default {
       axios.get('/api/samples/' + item)
           .then( (response) => {
             this.selectedSample = response.data;
+            this.selectedSampleTag=item;
           })
           .catch( (error) => {
             console.error("ERROR", error);

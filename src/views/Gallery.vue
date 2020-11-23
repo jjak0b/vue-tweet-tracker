@@ -6,13 +6,13 @@
       <p>{{id}}</p>
         <v-row>
           <v-col
-              v-for="(media) in mediaList"
-              :key="media.url"
+              v-for="(media, i ) in mediaList"
+              :key="id + '_' + i + '_' + media.media_key"
               class="d-flex child-flex"
               cols="4"
           >
             <v-img
-                :src="media.url"
+                :src="media.url || media.preview_image_url"
                 aspect-ratio="1"
                 class="grey lighten-2"
             >
@@ -38,35 +38,26 @@
 </template>
 
 <script>
-import axios from "axios";
 
 export default {
   name: "Gallery",
   props: {
-    selectedSample: String
+    selectedSample: Array,
   },
-
   data: () => ({
-      tweets:[],
+      tweets: [],
       places: {}
     }),
 
   watch: {
-
     selectedSample: function (newVal) {
-      if ( newVal && newVal.length > 0 ) {
-        axios.get('/api/samples/' + newVal)
-            .then( (response) => {
-              this.tweets = response.data;
-            })
-            .catch( (error) => {
-              console.error("ERROR", error);
-            })
-      }
+      this.tweets = newVal;
+      this.places = this.getPlaces();
     }
   },
 
   created() {
+    this.tweets = this.selectedSample;
     this.places = this.getPlaces();
   },
 
@@ -78,21 +69,30 @@ export default {
        */
       let places = new Map();
 
+      let priority;
+      let place;
       for (let tweet of this.tweets){
+        priority = 0;
+        place = null;
         if(tweet.media ){
-          let place = null;
-          if(tweet.places.full_name){
+          if(tweet.places && tweet.places.full_name){
             place = tweet.places.full_name;
+            priority = 2;
           }
-          else if(tweet.users.location){
+          else if(tweet.users && tweet.users.location){
             place = tweet.users.location;
+            priority = 1;
           }
 
           if( place ) {
             if( !places.has( place ) ) {
               places.set( place, [] );
             }
-            places.get(place).push( ...tweet.media );
+            // place first more precise locations
+            if( priority > 1 )
+              places.get(place).unshift( ...tweet.media );
+            else
+              places.get(place).push( ...tweet.media );
           }
         }
       }
