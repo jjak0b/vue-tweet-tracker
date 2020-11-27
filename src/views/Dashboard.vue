@@ -30,8 +30,8 @@
                   color="primary"
               >
                 <v-list-item
-                    v-for="item in selectedSample"
-                    :key="item.data.id"
+                    v-for="(item, index) in selectedSample"
+                    :key="index"
                 >
                   <v-list-item-content>
                     <v-list-item-title v-text="item.data.text"></v-list-item-title>
@@ -54,7 +54,7 @@
                   <Tweet
                       class="mb-7"
                       :id="selectedTweet.data.id"
-                      :key="selectedTweet.data.id">
+                  >
                     <v-skeleton-loader
                         width="100%"
                         type="card"
