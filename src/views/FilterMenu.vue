@@ -271,12 +271,14 @@ export default {
           .then(() => {
             this.snackbarText = "New sample '" + this.name + "' created."
             this.snackbar = true;
+            this.$emit('update-samples');
           })
           .catch((error) => {
             if (error.response.status === StatusCodes.CONFLICT) {
               this.snackbarText = "The filter already exists or the name of the filter is already being used."
               this.snackbar = true;
-            } else if (error.response.status === StatusCodes.INTERNAL_SERVER_ERROR) {
+            } else if ( error.response.status === StatusCodes.INTERNAL_SERVER_ERROR ||
+                        error.response.status === StatusCodes.NOT_IMPLEMENTED ) {
               this.snackbarText = "Add more filters."
               this.snackbar = true;
             } else if (error.response.status === StatusCodes.TOO_MANY_REQUESTS) {
@@ -284,7 +286,6 @@ export default {
               this.snackbar = true;
             }
           });
-      this.$emit('update-samples');
     },
     onReset() {
       this.$refs.form.resetValidation();
