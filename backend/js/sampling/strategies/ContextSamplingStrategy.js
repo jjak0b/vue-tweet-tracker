@@ -369,7 +369,16 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
             else if( item.places && item.places.geo && item.places.geo ) {
                 if( item.places.geo.type === "Feature" ) {
                     let rectangle = item.places.geo.bbox;
-                    let itemBBox = getBBoxFromRectangle( rectangle );
+                    let itemBBox = getBBoxFromRectangle([
+                        [
+                            rectangle[0],
+                            rectangle[1]
+                        ],
+                        [
+                            rectangle[2],
+                            rectangle[3]
+                        ]
+                    ]);
                     isMatching = bBoxes.some( (bBox) => itemBBox.intersects( bBox ) || itemBBox.within( bBox ) );
                 }
                 else {
