@@ -1,10 +1,10 @@
 <template>
-  <div v-if="selectedSample">
+  <div v-if="selectedSample && selectedSample.length > 0">
     <v-container>
       <v-row>
         <v-col>
           <WordCloud
-              :samples="selectedSample.slice(0, 10)"
+              :samples="selectedSample"
           >
           </WordCloud>
         </v-col>
@@ -30,8 +30,8 @@
                   color="primary"
               >
                 <v-list-item
-                    v-for="item in selectedSample"
-                    :key="item.data.id"
+                    v-for="(item, index) in selectedSample"
+                    :key="index"
                 >
                   <v-list-item-content>
                     <v-list-item-title v-text="item.data.text"></v-list-item-title>
@@ -54,7 +54,7 @@
                   <Tweet
                       class="mb-7"
                       :id="selectedTweet.data.id"
-                      :key="selectedTweet.data.id">
+                      :key="'tweet'+ selectedTweet.data.id">
                     <v-skeleton-loader
                         width="100%"
                         type="card"
@@ -137,7 +137,6 @@ import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
 import Position from "@/js/Position";
 import ImageWindow from "@/components/charts/ImageWindow";
-import axios from "axios";
 
 export default {
 
@@ -161,40 +160,16 @@ export default {
     }
   },
   data: () => ({
-    tweets:[],
     centerPosition: new Position( 41.902782,12.496366 ),// Rome
     showLocation: false,
-    showTweet: false,
-    showUser: false,
     language: language,
     selectedTweetIndex: null
   }),
-  watch: {
-    selectedSample: function (newVal) {
-      if ( newVal && newVal.length > 0 ) {
-        axios.get('/api/samples/' + newVal)
-            .then( (response) => {
-                  this.tweets = response.data;
-                })
-            .catch( (error) => {
-              console.error("ERROR", error);
-            })
-      }
-    }
-  },
   methods: {
-    getSubString(string) {
-      const substring = string.substring(0, 50);
-      if (string.length > substring.length) {
-        return substring + ' ...'
-      }
-      return substring;
-    },
     getDateString(value) {
       const date = new Date(value);
       return date.toLocaleString('en-US');
     },
-
     thereAreImages(tweet){
       if(tweet.media && tweet.media.some((media) =>
           media.type==='photo')){

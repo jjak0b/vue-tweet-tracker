@@ -21,7 +21,7 @@ export default {
   name: "ImageWindow",
 
   props: {
-    selectedTweet: Array,
+    selectedTweet: Object,
   }
 }
 </script>

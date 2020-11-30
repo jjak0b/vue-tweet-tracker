@@ -76,7 +76,7 @@ export default {
     [VueWordCloud.name]: VueWordCloud,
   },
   props: {
-    value: String,
+    //value: String,
 
     samples: Array
   },
@@ -101,9 +101,9 @@ export default {
       }
   },
   watch: {
-    value: function ( wordToFilter ) {
+    /*value: function ( wordToFilter ) {
       this.updateWordCloud( wordToFilter );
-    },
+    },*/
     samples: function () {
       this.updateWordCloud( this.value );
     },
@@ -114,9 +114,9 @@ export default {
   created() {
     this.color.rainbow.setSpectrum( this.color.start , this.color.end );
   },
-  mounted() {
+  /*mounted() {
     this.updateWordCloud( this.value );
-  },
+  },*/
   methods: {
     updateWordCloud( wordToFilter ) {
       this.countWordMax = 0;
