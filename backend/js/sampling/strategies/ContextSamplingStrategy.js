@@ -358,27 +358,36 @@ class ContextSamplingStrategy extends AbstractSamplingStrategy {
 
         let isMatching = true;
         if( bBoxes.length > 0 ) {
+            isMatching = false;
             if( item.data.geo && item.data.geo.coordinates ) {
-                let itemBbox = new BoundingBox( {
-                    lon: item.data.geo.coordinates[0],
-                    lat: item.data.geo.coordinates[1]
-                });
+                if( item.data.geo.coordinates.type && item.data.geo.coordinates.type === "Point" ) {
+                    let coordinates = item.data.geo.coordinates.coordinates; // i know it's weird but twitter send this structure
+                    let itemBbox = new BoundingBox( {
+                        lon: coordinates[0],
+                        lat: coordinates[1]
+                    });
 
-                isMatching = bBoxes.some( (bBox) => itemBbox.within( bBox ) );
+                    isMatching = bBoxes.some((bBox) => itemBbox.within(bBox));
+                }
             }
             else if( item.places && item.places.geo && item.places.geo ) {
                 if( item.places.geo.type === "Feature" ) {
                     let rectangle = item.places.geo.bbox;
-                    let itemBBox = getBBoxFromRectangle( rectangle );
+                    let itemBBox = getBBoxFromRectangle([
+                        [
+                            rectangle[0],
+                            rectangle[1]
+                        ],
+                        [
+                            rectangle[2],
+                            rectangle[3]
+                        ]
+                    ]);
                     isMatching = bBoxes.some( (bBox) => itemBBox.intersects( bBox ) || itemBBox.within( bBox ) );
                 }
                 else {
-                    isMatching = false;
                     console.error(`[${this.constructor.name}]`, `IMPORTANT Found unsupported geo type "${item.places.geo.type}" in sample "${descriptor.tag}:\n`, item );
                 }
-            }
-            else {
-                isMatching = false;
             }
         }
 
