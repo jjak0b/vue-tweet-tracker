@@ -106,13 +106,22 @@
                   <p>{{ this.selectedTweet.data.public_metrics.retweet_count }}</p>
                 </v-expansion-panel-content>
               </v-expansion-panel>
-              <v-expansion-panel v-if="selectedTweet.places">
+              <v-expansion-panel v-if="isGeoInPlaces || isGeoInData">
                 <v-expansion-panel-header class="font-weight-medium text-body-1">Location</v-expansion-panel-header>
                 <v-expansion-panel-content>
-                  <h4>Country</h4>
-                  <p>{{ this.selectedTweet.places.country }}</p>
-                  <h4>Place</h4>
-                  <p>{{ this.selectedTweet.places.full_name }}</p></v-expansion-panel-content>
+                  <v-responsive :min-height="300">
+                    <Map
+                        :center-position="selectedPosition"
+                        :samples="[selectedTweet]"
+                    ></Map>
+                  </v-responsive>
+                  <div v-if="isGeoInPlaces">
+                    <h4 class="mt-3">Country</h4>
+                    <p>{{ this.selectedTweet.places.country }}</p>
+                    <h4>Place</h4>
+                    <p>{{ this.selectedTweet.places.full_name }}</p>
+                  </div>
+                </v-expansion-panel-content>
             </v-expansion-panel>
             <v-expansion-panel v-if="thereAreImages(selectedTweet)">
               <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
@@ -151,12 +160,36 @@ export default {
     Tweet
   },
   computed: {
-
     isSelected() {
       return this.selectedTweetIndex || this.selectedTweetIndex === 0
     },
     selectedTweet: function () {
       return this.isSelected ? this.selectedSample[this.selectedTweetIndex] : null
+    },
+    isGeoInData: function() {
+      return !!(this.selectedTweet && this.selectedTweet.data && this.selectedTweet.data.geo &&
+          this.selectedTweet.data.geo.coordinates && this.selectedTweet.data.geo.coordinates.coordinates)
+    },
+    isGeoInPlaces: function() {
+      return !!(this.selectedTweet && this.selectedTweet.places &&
+          this.selectedTweet.places.geo && this.selectedTweet.places.geo.bbox)
+    },
+    selectedPosition: function () {
+      if (this.selectedTweet ) {
+        let coordinates;
+        if ( this.isGeoInData ) {
+          let coordinates = this.selectedTweet.data.geo.coordinates.coordinates;
+          return new Position( coordinates[1],coordinates[0] )
+        }
+        else if ( this.isGeoInPlaces ) {
+          coordinates = this.selectedTweet.places.geo.bbox;
+          return new Position(
+              (coordinates[ 1 ] + coordinates[ 3 ]) / 2.0,
+              (coordinates[ 0 ] + coordinates[ 2 ]) / 2.0
+          )
+        }
+      }
+      return this.centerPosition
     }
   },
   data: () => ({
