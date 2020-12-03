@@ -345,44 +345,6 @@
               ></v-combobox>
             </v-card-text>
           </v-card>
-
-          <!--
-        <v-card class="mb-5">
-          <v-card-title>Filters</v-card-title>
-
-          <v-card-text>
-            <v-switch label="Replies" v-model="filter.filters.replies"></v-switch>
-            <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.replies">
-              <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
-              <v-radio label="Only show replies" value="only-replies"></v-radio>
-            </v-radio-group>
-            <v-switch label="Links" v-model="filter.filters.links"></v-switch>
-            <v-text-field
-                v-model.trim="filter.filters.linksValue"
-                label="Link to filter"
-            ></v-text-field>
-            <v-radio-group v-model="filter.filters.linksValue" v-if="filter.filters.links">
-              <v-radio label="Include Tweets with links" value="include-links"></v-radio>
-              <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
-            </v-radio-group>
-          </v-card-text>
-        </v-card>
--->
-          <!--
-                   <v-card class="mb-5">
-                      <v-card-title>Engagement</v-card-title>
-                      <v-card-text>
-                        <v-text-field
-                            v-for="item in labels.engagement"
-                            v-model="filter.engagement[item.key]"
-                            :key="item.label"
-                            :hint="item.hint"
-                            :label="item.label"
-                            clearable
-                        ></v-text-field>
-                      </v-card-text>
-                    </v-card>
-          -->
         </v-col>
       </v-row>
     </v-form>
@@ -435,6 +397,7 @@ import axios from "axios";
 import language from "@/assets/language.json"
 import StatusCodes from 'http-status-codes'
 import positionInput from "@/components/charts/positionInput";
+import Filter from "@/js/Filter";
 
 export default {
   name: 'FilterMenu',
@@ -468,43 +431,7 @@ export default {
         time: null
       }
     },
-    filter: {
-      coordinates: [],
-      words: {
-        all: [],
-        exact: [],
-        any: [],
-        none: [],
-        hashtags: [],
-        language: null
-      },
-      accounts: {
-        from: [],
-        to: [],
-        mentioning: []
-      },
-
-      context: {
-        entities: []
-      },
-      /* filters: {
-       //replies: true,
-       //repliesValue: "replies-and-tweets",
-       links: true,
-       linksValue: null
-     },*/
-      /*
-    engagement: {
-      minReplies: "",
-      minLikes: "",
-      minRetweets: ""
-    },
-    */
-      dates: {
-        from: null,
-        to: null
-      }
-    },
+    filter: new Filter(),
     showFromTimePostingMenu: false,
     showToTimePostingMenu: false,
     showFromDatePostingMenu: false,
@@ -570,23 +497,6 @@ export default {
 
         },
       }
-      /*engagement: {
-      minReplies: {
-        hint: "Example: 280 · Tweets with at least 280 replies",
-        label: "Minimum replies",
-        key: "minReplies"
-      },
-      minLikes: {
-        hint: "Example: 280 · Tweets with at least 280 Likes",
-        label: "Minimum Likes",
-        key: "minLikes"
-      },
-      minRetweets: {
-        hint: "Example: 280 · Tweets with at least 280 Retweets",
-        label: "Minimum Retweets",
-        key: "minRetweets"
-      },
-    }*/
     },
 
     onlyNumbers: [
@@ -661,7 +571,6 @@ export default {
     deleteRectangle(event, index) {
       this.rectangles.splice(index, 1);
       this.filter.coordinates.splice(index, 1);
-
     },
     associateEvent() {
       this.notify_me = !this.notify_me;

@@ -1,10 +1,11 @@
 <template>
-  <div v-if="selectedSample && selectedSample.length > 0">
+  <div v-if="filteredSample">
     <v-container>
       <v-row>
         <v-col>
           <WordCloud
-              :samples="selectedSample"
+              :samples="filteredSample.slice(0,10)"
+              @input="localFilter.words.all.push($event);filterSample()"
           >
           </WordCloud>
         </v-col>
@@ -14,38 +15,71 @@
           >
             <Map
                 :center-position="centerPosition"
-                :samples="selectedSample"
+                :samples="filteredSample"
             ></Map>
           </v-card>
         </v-col>
       </v-row>
       <v-row>
         <v-col cols="4">
-          <v-card>
-            <v-card-title>Tweets</v-card-title>
-            <v-list dense rounded>
-              <v-list-item-group
-                  id="list-tweet"
-                  v-model="selectedTweetIndex"
-                  color="primary"
-              >
-                <v-list-item
-                    v-for="(item, index) in selectedSample"
-                    :key="index"
+          <v-row no-gutters>
+            <v-dialog
+                v-model="showLocalFilter"
+                max-width="1200"
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                    color="primary"
+                    v-bind="attrs"
+                    v-on="on"
                 >
-                  <v-list-item-content>
-                    <v-list-item-title v-text="item.data.text"></v-list-item-title>
-                    <v-list-item-subtitle v-text="item.users.name"></v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list-item-group>
-            </v-list>
-          </v-card>
+                  Filter
+                </v-btn>
+              </template>
+              <local-filter
+                  :filter="localFilter"
+                  @submit="onSubmitLocalFilter"
+              ></local-filter>
+            </v-dialog>
+            <v-btn
+                class="ml-2"
+                color="red"
+                dark
+                @click="resetLocalFilter"
+            >
+              reset
+            </v-btn>
+          </v-row>
+          <v-row no-gutters class="mt-2">
+            <v-col>
+              <v-card>
+                <v-card-title>Tweets</v-card-title>
+                <v-list dense rounded>
+                  <v-list-item-group
+                      id="list-tweet"
+                      v-model="selectedTweetIndex"
+                      color="primary"
+                  >
+                    <v-list-item
+                        v-for="(item, index) in filteredSample"
+                        :key="index"
+                    >
+                      <v-list-item-content>
+                        <v-list-item-title v-text="item.data.text"></v-list-item-title>
+                        <v-list-item-subtitle v-text="item.users.name"></v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list-item-group>
+                </v-list>
+              </v-card>
+            </v-col>
+          </v-row>
         </v-col>
         <v-col v-if="isSelected" cols="7">
           <v-card>
             <v-toolbar color="blue" dark>
-              <v-toolbar-title class="font-weight-bold text-h6">Selected Tweet</v-toolbar-title><v-spacer></v-spacer>
+              <v-toolbar-title class="font-weight-bold text-h6">Selected Tweet</v-toolbar-title>
+              <v-spacer></v-spacer>
             </v-toolbar>
             <v-expansion-panels accordion>
               <v-expansion-panel>
@@ -122,10 +156,10 @@
                     <p>{{ this.selectedTweet.places.full_name }}</p>
                   </div>
                 </v-expansion-panel-content>
-            </v-expansion-panel>
-            <v-expansion-panel v-if="thereAreImages(selectedTweet)">
-              <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
-              <v-expansion-panel-content>
+              </v-expansion-panel>
+              <v-expansion-panel v-if="thereAreImages(selectedTweet)">
+                <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
+                <v-expansion-panel-content>
                   <ImageWindow
                       :selected-tweet="selectedTweet"
                   ></ImageWindow>
@@ -146,6 +180,8 @@ import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
 import Position from "@/js/Position";
 import ImageWindow from "@/components/charts/ImageWindow";
+import localFilter from "@/components/localFilter";
+import Filter from "@/js/Filter";
 
 export default {
 
@@ -157,62 +193,192 @@ export default {
     ImageWindow,
     WordCloud,
     Map,
-    Tweet
+    Tweet,
+    localFilter
   },
   computed: {
     isSelected() {
       return this.selectedTweetIndex || this.selectedTweetIndex === 0
     },
     selectedTweet: function () {
-      return this.isSelected ? this.selectedSample[this.selectedTweetIndex] : null
+      return this.isSelected ? this.filteredSample[this.selectedTweetIndex] : null
     },
-    isGeoInData: function() {
-      return !!(this.selectedTweet && this.selectedTweet.data && this.selectedTweet.data.geo &&
+    isGeoInData: function () {
+      return (this.selectedTweet && this.selectedTweet.data && this.selectedTweet.data.geo &&
           this.selectedTweet.data.geo.coordinates && this.selectedTweet.data.geo.coordinates.coordinates)
     },
-    isGeoInPlaces: function() {
-      return !!(this.selectedTweet && this.selectedTweet.places &&
+    isGeoInPlaces: function () {
+      return (this.selectedTweet && this.selectedTweet.places &&
           this.selectedTweet.places.geo && this.selectedTweet.places.geo.bbox)
     },
     selectedPosition: function () {
-      if (this.selectedTweet ) {
+      if (this.selectedTweet) {
         let coordinates;
-        if ( this.isGeoInData ) {
+        if (this.isGeoInData) {
           let coordinates = this.selectedTweet.data.geo.coordinates.coordinates;
-          return new Position( coordinates[1],coordinates[0] )
-        }
-        else if ( this.isGeoInPlaces ) {
+          return new Position(coordinates[1], coordinates[0])
+        } else if (this.isGeoInPlaces) {
           coordinates = this.selectedTweet.places.geo.bbox;
           return new Position(
-              (coordinates[ 1 ] + coordinates[ 3 ]) / 2.0,
-              (coordinates[ 0 ] + coordinates[ 2 ]) / 2.0
+              (coordinates[1] + coordinates[3]) / 2.0,
+              (coordinates[0] + coordinates[2]) / 2.0
           )
         }
       }
       return this.centerPosition
     }
   },
-  data: () => ({
-    centerPosition: new Position( 41.902782,12.496366 ),// Rome
-    showLocation: false,
-    language: language,
-    selectedTweetIndex: null
-  }),
+  watch: {
+    selectedSample: function (newVal) {
+      this.filteredSample = newVal;
+      this.localFilter = new Filter();
+    }
+  },
   methods: {
+    onSubmitLocalFilter() {
+      this.showLocalFilter = false;
+      this.filterSample();
+    },
+    resetLocalFilter() {
+      this.filteredSample = this.selectedSample;
+    },
+    filterSample() {
+      if (!this.localFilter) return;
+      this.filteredSample = this.selectedSample;
+
+      if (this.localFilter.accounts.from.length > 0) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          for (const word of this.localFilter.accounts.from) {
+            if (word === tweet.users.username) return true
+          }
+          return false
+        })
+      }
+      if (this.localFilter.accounts.from.length > 0) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          for (const word of this.localFilter.accounts.from) {
+            if (word === tweet.users.username) return true
+          }
+          return false
+        })
+      }
+      if (this.localFilter.accounts.mentioning.length > 0) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          for (const word of this.localFilter.accounts.mentioning) {
+            if (tweet.data.entities && tweet.data.entities.mentions) {
+              for (const mention of tweet.data.entities.mentions) {
+                if (mention.username === word) return true
+              }
+            }
+          }
+          return false
+        })
+      }
+      if (this.localFilter.words.language) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          return (tweet.data.lang === this.localFilter.words.language);
+        })
+      }
+      let nord, sud, est, ovest;
+      let point = {lat: null, long: null};
+      let bbox = {nord: null, sud: null, est: null, ovest: null};
+      for (const coord of this.localFilter.coordinates) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          ovest = coord[0][0] + 180;
+          nord = coord[0][1] + 90;
+          est = coord[1][0] + 180;
+          sud = coord[1][1] + 90;
+          if (tweet.data.geo && tweet.data.geo.coordinates) {
+            point.lat = tweet.data.geo.coordinates.coordinates[1] + 90;
+            point.long = tweet.data.geo.coordinates.coordinates[0] + 180;
+            if (ovest <= point.long && point.long <= est && sud <= point.lat && point.lat <= nord) {
+              return true
+            }
+          } else if (tweet.places && tweet.places.geo) {
+            bbox.ovest = tweet.places.geo.bbox[0] + 180;
+            bbox.sud = tweet.places.geo.bbox[1] + 90;
+            bbox.est = tweet.places.geo.bbox[2] + 180;
+            bbox.nord = tweet.places.geo.bbox[3] + 90;
+            if (ovest < bbox.est && bbox.ovest < est && sud < bbox.nord && bbox.sud < nord) {
+              return true
+            }
+          }
+          return false
+        })
+      }
+      if (this.localFilter.dates.from) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          return (Date.parse(this.localFilter.dates.from) < Date.parse(tweet.data.created_at));
+        })
+      }
+      if (this.localFilter.dates.to) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          return (Date.parse(this.localFilter.dates.to + 'T23:59:59') > Date.parse(tweet.data.created_at));
+        })
+      }
+      for (const word of this.localFilter.words.hashtags) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          return (tweet.data.text.includes('#' + word));
+        })
+      }
+      for (const word of this.localFilter.words.exact) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          return (tweet.data.text.includes(word));
+        })
+      }
+      for (const word of this.localFilter.words.none) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          return (!tweet.data.text.toLowerCase().includes(word.toLowerCase()));
+        })
+      }
+      if (this.localFilter.words.any.length > 0) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          for (const word of this.localFilter.words.any) {
+            if (tweet.data.text.toLowerCase().includes(word.toLowerCase())) return true
+          }
+          return false
+        })
+      }
+      for (const word of this.localFilter.words.all) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          return (tweet.data.text.toLowerCase().includes(word.toLowerCase()));
+        })
+      }
+      if (this.localFilter.context.entities.length > 0) {
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          for (const word of this.localFilter.context.entities) {
+            if (tweet.data.context_annotations) {
+              for (const context of tweet.data.context_annotations) {
+                if (context.entity.name.toLowerCase() === word.toLowerCase()) return true
+              }
+            }
+          }
+          return false
+        })
+      }
+    },
     getDateString(value) {
       const date = new Date(value);
       return date.toLocaleString('en-US');
     },
-    thereAreImages(tweet){
-      if(tweet.media && tweet.media.some((media) =>
-          media.type==='photo')){
+    thereAreImages(tweet) {
+      if (tweet.media && tweet.media.some((media) =>
+          media.type === 'photo')) {
         return true
-      }
-      else{
+      } else {
         return false
       }
     }
-  }
+  },
+  data: () => ({
+    localFilter: new Filter(),
+    showLocalFilter: false,
+    filteredSample: null,
+    selectedTweetIndex: null,
+    centerPosition: new Position(41.902782, 12.496366),// Rome
+    showLocation: false,
+    language: language
+  })
 }
 </script>
 
