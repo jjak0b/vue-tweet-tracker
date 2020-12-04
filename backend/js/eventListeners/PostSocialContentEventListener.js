@@ -49,7 +49,6 @@ class PostSocialContentEventListener extends MyEventListener {
                      */
                     let wordMap;
 
-                    let status = ``;
                     try {
                         let workerWordMap = await spawn(
                             new Worker(
@@ -61,6 +60,7 @@ class PostSocialContentEventListener extends MyEventListener {
                          * @type {WordMap}
                          */
                         wordMap = await workerWordMap.createAndUpdate( items, (item) => item.data.text );
+                        let status = `Here there is the updated word-cloud related to "${event.sampleTag}"`;
                         await this.socialContentProvider.publishWordCloud( status, wordMap);
                     }
                     catch (e) {
