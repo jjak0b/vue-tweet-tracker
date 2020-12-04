@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+global.__basedir = __dirname;
+// load .env files in process.env global variable
+require('dotenv').config();
+
 /**
  * Module dependencies.
  */
