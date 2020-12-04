@@ -1,7 +1,7 @@
 const MyEventListener = require("./MyEventListener");
-const NotificationRequest = require("../notification/NotificationRequest");
-const Message = require("../notification/messages/Message");
-const TelegramNotificationServiceHandler = require("../notification/handlers/TelegramNotificationServiceHandler");
+const NotificationRequest = require("../sampling/notification/NotificationRequest");
+const Message = require("../sampling/notification/messages/Message");
+const TelegramNotificationServiceHandler = require("../sampling/notification/handlers/TelegramNotificationServiceHandler");
 
 class UserConditionEventListener extends MyEventListener {
     constructor() {

@@ -3,7 +3,8 @@
 /**
  * Module dependencies.
  */
-
+const system = require('./js/system');
+system.init();
 const app = require('./api');
 const debug = require('debug')('');
 const http = require('http');
