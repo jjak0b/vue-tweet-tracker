@@ -25,7 +25,7 @@ class SocialContentProvider {
      * @param wordMap {WordMap}
      * @return {Promise<*[] | Number>}
      */
-    async publishPost( status, wordMap ) {
+    async publishWordCloud(status, wordMap ) {
         let wordCloudBuilder = new WordCloudImageBuilder();
         let wordCloudDirector = new WordCloudImageDirector( wordCloudBuilder );
 
