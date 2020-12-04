@@ -6,7 +6,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="sonarModuleSettings">
-    <option name="localAnalysisScripName" value="&lt;PROJECT&gt;" />
-    <option name="serverName" value="&lt;PROJECT&gt;" />
+    <option name="localAnalysisScripName" value="sonar" />
+    <option name="serverName" value="SonarQube Unibo" />
   </component>
 </module>

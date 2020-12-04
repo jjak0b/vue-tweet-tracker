@@ -4,9 +4,9 @@
  * Module dependencies.
  */
 
-var app = require('./api');
-var debug = require('debug')('');
-var http = require('http');
+const app = require('./api');
+const debug = require('debug')('');
+const http = require('http');
 
 /**
  * Get port from environment and store in Express.
@@ -34,16 +34,16 @@ server.on('listening', onListening);
  */
 
 function normalizePort(val) {
-    var port = parseInt(val, 10);
+    let _port = parseInt(val, 10);
 
-    if (isNaN(port)) {
+    if (isNaN(_port)) {
         // named pipe
         return val;
     }
 
-    if (port >= 0) {
+    if (_port >= 0) {
         // port number
-        return port;
+        return _port;
     }
 
     return false;

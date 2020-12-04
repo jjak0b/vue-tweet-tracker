@@ -7,8 +7,8 @@
   </component>
   <component name="sonarModuleSettings">
     <option name="alternativeWorkingDirPath" value="" />
-    <option name="localAnalysisScripName" value="&lt;PROJECT&gt;" />
-    <option name="serverName" value="&lt;PROJECT&gt;" />
+    <option name="localAnalysisScripName" value="sonar" />
+    <option name="serverName" value="SonarQube Unibo" />
     <option name="useAlternativeWorkingDir" value="false" />
     <option name="workingDirSelection" value="&lt;MODULE&gt;" />
   </component>

@@ -13,14 +13,13 @@ const clientUserContext = new Twitter({
 });
 
 function getUserContextClient( subdomain ) {
-    let clientUserContext = new Twitter({
+    return new Twitter({
         subdomain,
         consumer_key: process.env.TWITTER_API_CONSUMER_KEY,
         consumer_secret: process.env.TWITTER_API_CONSUMER_SECRET, // from Twitter.
         access_token_key: process.env.TWITTER_API_ACCESS_TOKEN, // from your User (oauth_token)
         access_token_secret: process.env.TWITTER_API_ACCESS_TOKEN_SECRET, // from your User (oauth_token_secret)
     });
-    return clientUserContext;
 }
 
 module.exports = {
