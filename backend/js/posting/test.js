@@ -8,9 +8,11 @@ function main() {
 
     let socialProvider = new SocialContentProvider();
     let wordMap1 = new WordMap( [ status1 ], null );
+    wordMap1.update();
     let wordMap2 = new WordMap( [ status2, status2 ], null );
-    let promises1 = socialProvider.publishPost(status1, wordMap1 );
-    let promises2 = socialProvider.publishPost(status2, wordMap2 );
+    wordMap2.update();
+    let promises1 = socialProvider.publishWordCloud(status1, wordMap1 );
+    let promises2 = socialProvider.publishWordCloud(status2, wordMap2 );
 
     promises1
         .then( (data) => {

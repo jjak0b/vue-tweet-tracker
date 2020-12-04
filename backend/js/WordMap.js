@@ -12,9 +12,7 @@ class WordMap extends Map {
          * @type {(function(*): String)}
          */
         this.getText = textGetterFunc || function (item){ return item };
-        this.update();
     }
-
 
     update() {
         // const regexDetectStartAndEndWhiteSpace = /(^\s*)|(\s*$)/gi;
@@ -51,6 +49,11 @@ class WordMap extends Map {
                 data.count++;
             }
         }
+    }
+
+    dispose() {
+        this.rawData = null;
+        this.getText = null;
     }
 }
 
