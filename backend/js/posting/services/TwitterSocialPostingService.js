@@ -1,4 +1,3 @@
-const StatusCodes = require("http-status-codes").StatusCodes;
 const ISocialPostingService = require("./ISocialPostingService");
 
 const uploadClient = require("../../clients/1.1").getUserContextClient("upload");
@@ -39,7 +38,7 @@ class TwitterSocialPostingService extends ISocialPostingService{
         }
         catch (e) {
             console.error( `[${this.constructor.name}]`, "Error posting status", text, "cause:\n", e );
-            return StatusCodes.BAD_GATEWAY
+            return e
         }
 
 
