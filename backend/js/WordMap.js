@@ -16,15 +16,15 @@ class WordMap extends Map {
 
     update() {
         // const regexDetectStartAndEndWhiteSpace = /(^\s*)|(\s*$)/gi;
-        const regexDetectMore1WhiteSpaces = /[ \n]{2,}/i;
-        const regexDetectPunctuationAndSpace = /[ \n]*[.,/?!$%^&*;:{}=\-_"”'’`~()](?=[ \n])*/i;
-
+        const regexDetectMore1WhiteSpaces = /(\s)+/g;
+        const regexDetectPunctuationAndSpace = /(\W)+/g;
+        const regexDetectURI = /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?/g;
         let words = null;
         for (const item of this.rawData) {
             words = this.getText( item )
                 .trim() // .replace(regexDetectStartAndEndWhiteSpace,"") //exclude  start and end white-space
+                .replace(regexDetectURI," ")
                 .replace(regexDetectPunctuationAndSpace," ") // exclude punctuation with a following start spacing
-                .replace("\n"," ")
                 .replace(regexDetectMore1WhiteSpaces," ") //2 or more white-space to 1
                 .split(" ")
                 .filter( (word) => word.length );
