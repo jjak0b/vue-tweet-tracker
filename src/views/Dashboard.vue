@@ -20,62 +20,63 @@
           </v-card>
         </v-col>
       </v-row>
-      <v-row>
-        <v-col cols="4">
-          <v-row no-gutters>
-            <v-dialog
-                v-model="showLocalFilter"
-                max-width="1200"
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn
-                    color="primary"
-                    v-bind="attrs"
-                    v-on="on"
-                >
-                  Filter
-                </v-btn>
-              </template>
-              <local-filter
-                  :filter="localFilter"
-                  @submit="onSubmitLocalFilter"
-              ></local-filter>
-            </v-dialog>
+      <v-row no-gutters class="mt-3">
+        <v-dialog
+            v-model="showLocalFilter"
+            max-width="1200"
+        >
+          <template v-slot:activator="{ on, attrs }">
             <v-btn
-                class="ml-2"
-                color="red"
-                dark
-                @click="resetLocalFilter"
+                color="primary"
+                v-bind="attrs"
+                v-on="on"
             >
-              reset
+              Filter
             </v-btn>
-          </v-row>
-          <v-row no-gutters class="mt-2">
+          </template>
+          <local-filter
+              :filter="localFilter"
+              @submit="onSubmitLocalFilter"
+          ></local-filter>
+        </v-dialog>
+        <v-btn
+            class="ml-2"
+            color="red"
+            dark
+            @click="resetLocalFilter"
+        >
+          reset
+        </v-btn>
+      </v-row>
+      <v-row>
+        <v-col cols="6">
+          <v-row no-gutters>
             <v-col>
               <v-card>
                 <v-card-title>Tweets</v-card-title>
-                <v-list dense rounded>
-                  <v-list-item-group
-                      id="list-tweet"
-                      v-model="selectedTweetIndex"
-                      color="primary"
-                  >
-                    <v-list-item
-                        v-for="(item, index) in filteredSample"
-                        :key="index"
-                    >
-                      <v-list-item-content>
-                        <v-list-item-title v-text="item.data.text"></v-list-item-title>
-                        <v-list-item-subtitle v-text="item.users.name"></v-list-item-subtitle>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </v-list-item-group>
-                </v-list>
+                <v-data-table
+                    v-model="selectedTweet"
+                    :single-select="true"
+                    :headers="headers"
+                    :items="filteredSample"
+                    item-key="data.id"
+                    show-select
+                >
+                  <template v-slot:item.data.text="{ item }">
+                    <div class="my-2 mx-1">
+                      <p class="ma-0 text--primary">{{ item.data.text.slice(0,60) +'...' }}</p>
+                      <p class="ma-0 text--secondary">{{ item.users.name }}</p>
+                    </div>
+                  </template>
+                  <template v-slot:item.data.created_at="{ item }">
+                    {{ getDateString(item.data.created_at) }}
+                  </template>
+                </v-data-table>
               </v-card>
             </v-col>
           </v-row>
         </v-col>
-        <v-col v-if="isSelected" cols="7">
+        <v-col v-if="selectedTweet && selectedTweet[0]" cols="6">
           <v-card>
             <v-toolbar color="blue" dark>
               <v-toolbar-title class="font-weight-bold text-h6">Selected Tweet</v-toolbar-title>
@@ -87,17 +88,19 @@
                 <v-expansion-panel-content>
                   <Tweet
                       class="mb-7"
-                      :id="selectedTweet.data.id"
-                      :key="'tweet'+ selectedTweet.data.id">
+                      :id="selectedTweet[0].data.id"
+                      :key="'tweet'+ selectedTweet[0].data.id">
                     <v-skeleton-loader
                         width="100%"
                         type="card"
                     ></v-skeleton-loader>
                   </Tweet>
                   <h4>ID</h4>
-                  <p>{{ this.selectedTweet.data.id }}</p>
+                  <p>{{ this.selectedTweet[0].data.id }}</p>
                   <h4>Language</h4>
-                  <p>{{ language[this.selectedTweet.data.lang] }}</p>
+                  <p>{{ language[this.selectedTweet[0].data.lang] }}</p>
+                  <h4>Created at</h4>
+                  <p>{{ getDateString(this.selectedTweet[0].data.created_at) }}</p>
                 </v-expansion-panel-content>
               </v-expansion-panel>
               <v-expansion-panel>
@@ -106,25 +109,25 @@
                   <v-row>
                     <v-col>
                       <h4>ID</h4>
-                      <p>{{ this.selectedTweet.data.author_id }}</p>
+                      <p>{{ this.selectedTweet[0].data.author_id }}</p>
                       <h4>Name</h4>
-                      <p>{{ this.selectedTweet.users.username }}</p>
+                      <p>{{ this.selectedTweet[0].users.username }}</p>
                       <h4>Screen name</h4>
-                      <p>{{ this.selectedTweet.users.name }}</p>
-                      <div v-if="selectedTweet.users.location">
+                      <p>{{ this.selectedTweet[0].users.name }}</p>
+                      <div v-if="selectedTweet[0].users.location">
                         <h4>Location</h4>
-                        <p>{{ this.selectedTweet.users.location }}</p>
+                        <p>{{ this.selectedTweet[0].users.location }}</p>
                       </div>
                       <h4>Created at</h4>
-                      <p>{{ getDateString(this.selectedTweet.users.created_at) }}</p>
+                      <p>{{ getDateString(this.selectedTweet[0].users.created_at) }}</p>
                     </v-col>
-                    <v-col v-if="selectedTweet.users.public_metrics">
+                    <v-col v-if="selectedTweet[0].users.public_metrics">
                       <h4>Following</h4>
-                      <p>{{ selectedTweet.users.public_metrics.following_count }}</p>
+                      <p>{{ selectedTweet[0].users.public_metrics.following_count }}</p>
                       <h4>Followers</h4>
-                      <p>{{ selectedTweet.users.public_metrics.followers_count }}</p>
+                      <p>{{ selectedTweet[0].users.public_metrics.followers_count }}</p>
                       <h4>Number of Tweets</h4>
-                      <p>{{ selectedTweet.users.public_metrics.tweet_count }}</p>
+                      <p>{{ selectedTweet[0].users.public_metrics.tweet_count }}</p>
                     </v-col>
                   </v-row>
                 </v-expansion-panel-content>
@@ -133,11 +136,11 @@
                 <v-expansion-panel-header class="font-weight-medium text-body-1">Engagement</v-expansion-panel-header>
                 <v-expansion-panel-content>
                   <h4>Likes</h4>
-                  <p>{{ this.selectedTweet.data.public_metrics.like_count }}</p>
+                  <p>{{ this.selectedTweet[0].data.public_metrics.like_count }}</p>
                   <h4>Replies</h4>
-                  <p>{{ this.selectedTweet.data.public_metrics.reply_count }}</p>
+                  <p>{{ this.selectedTweet[0].data.public_metrics.reply_count }}</p>
                   <h4>Retweets</h4>
-                  <p>{{ this.selectedTweet.data.public_metrics.retweet_count }}</p>
+                  <p>{{ this.selectedTweet[0].data.public_metrics.retweet_count }}</p>
                 </v-expansion-panel-content>
               </v-expansion-panel>
               <v-expansion-panel v-if="isGeoInPlaces || isGeoInData">
@@ -146,22 +149,22 @@
                   <v-responsive :min-height="300">
                     <Map
                         :center-position="selectedPosition"
-                        :samples="[selectedTweet]"
+                        :samples="[selectedTweet[0]]"
                     ></Map>
                   </v-responsive>
                   <div v-if="isGeoInPlaces">
                     <h4 class="mt-3">Country</h4>
-                    <p>{{ this.selectedTweet.places.country }}</p>
+                    <p>{{ this.selectedTweet[0].places.country }}</p>
                     <h4>Place</h4>
-                    <p>{{ this.selectedTweet.places.full_name }}</p>
+                    <p>{{ this.selectedTweet[0].places.full_name }}</p>
                   </div>
                 </v-expansion-panel-content>
               </v-expansion-panel>
-              <v-expansion-panel v-if="thereAreImages(selectedTweet)">
+              <v-expansion-panel v-if="thereAreImages(selectedTweet[0])">
                 <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
                 <v-expansion-panel-content>
                   <ImageWindow
-                      :selected-tweet="selectedTweet"
+                      :selected-tweet="selectedTweet[0]"
                   ></ImageWindow>
                 </v-expansion-panel-content>
               </v-expansion-panel>
@@ -197,28 +200,22 @@ export default {
     localFilter
   },
   computed: {
-    isSelected() {
-      return this.selectedTweetIndex || this.selectedTweetIndex === 0
-    },
-    selectedTweet: function () {
-      return this.isSelected ? this.filteredSample[this.selectedTweetIndex] : null
-    },
     isGeoInData: function () {
-      return (this.selectedTweet && this.selectedTweet.data && this.selectedTweet.data.geo &&
-          this.selectedTweet.data.geo.coordinates && this.selectedTweet.data.geo.coordinates.coordinates)
+      return (this.selectedTweet && this.selectedTweet[0] && this.selectedTweet[0].data && this.selectedTweet[0].data.geo &&
+          this.selectedTweet[0].data.geo.coordinates && this.selectedTweet[0].data.geo.coordinates.coordinates)
     },
     isGeoInPlaces: function () {
-      return (this.selectedTweet && this.selectedTweet.places &&
-          this.selectedTweet.places.geo && this.selectedTweet.places.geo.bbox)
+      return (this.selectedTweet && this.selectedTweet[0] && this.selectedTweet[0].places &&
+          this.selectedTweet[0].places.geo && this.selectedTweet[0].places.geo.bbox)
     },
     selectedPosition: function () {
-      if (this.selectedTweet) {
+      if (this.selectedTweet && this.selectedTweet[0]) {
         let coordinates;
         if (this.isGeoInData) {
-          let coordinates = this.selectedTweet.data.geo.coordinates.coordinates;
+          let coordinates = this.selectedTweet[0].data.geo.coordinates.coordinates;
           return new Position(coordinates[1], coordinates[0])
         } else if (this.isGeoInPlaces) {
-          coordinates = this.selectedTweet.places.geo.bbox;
+          coordinates = this.selectedTweet[0].places.geo.bbox;
           return new Position(
               (coordinates[1] + coordinates[3]) / 2.0,
               (coordinates[0] + coordinates[2]) / 2.0
@@ -244,6 +241,7 @@ export default {
     },
     filterSample() {
       if (!this.localFilter) return;
+      this.selectedTweet = [];
       this.filteredSample = this.selectedSample;
 
       if (this.localFilter.accounts.from.length > 0) {
@@ -374,10 +372,21 @@ export default {
     localFilter: new Filter(),
     showLocalFilter: false,
     filteredSample: null,
-    selectedTweetIndex: null,
+    selectedTweet: [],
     centerPosition: new Position(41.902782, 12.496366),// Rome
     showLocation: false,
-    language: language
+    language: language,
+    headers: [
+      {
+        text: 'Tweet',
+        align: 'start',
+        sortable: false,
+        value: 'data.text',
+      },
+      { text: 'Date', value: 'data.created_at' },
+      { text: 'Retweets', value: 'data.public_metrics.retweet_count' },
+      { text: 'Likes', value: 'data.public_metrics.like_count' }
+    ],
   })
 }
 </script>
