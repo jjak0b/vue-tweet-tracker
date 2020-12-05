@@ -1,8 +1,10 @@
 class Timer {
-    constructor(start, end, period){  //dates in ISOString, period in DD:HH:MM
+    constructor(start, end, day, hour, minute){  //dates in ISOString, period in DD:HH:MM
         this.startTime = start;
         this.endTime = end;
-        this.period = period;
+        this.day = day;
+        this.hours = hour;
+        this.minutes = minute;
     }
 
     getStartTime(){
@@ -12,12 +14,9 @@ class Timer {
         return this.endTime;
     }
     getPeriod(){
-        return this.period;
+        return this.getPeriodInMs();
     }
     getPeriodInMs(){
-        //TODO
-    }
-    periodToString(){
-        return
+        return this.minutes * 60000 + this.hours * 3600000 + this.day * 86400000;
     }
 }
