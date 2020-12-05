@@ -1,6 +1,6 @@
 class Contact {
-    constructor() {
-
+    constructor(props) {
+        this.events = props.events || [];
     }
 }
 module.exports = Contact;
