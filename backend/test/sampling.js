@@ -31,6 +31,15 @@ async function publishSomeTweets( texts ) {
     return ids;
 }
 
+async function deleteSomeTweets( ids ) {
+    for await (const id of ids) {
+        await userPostingClient.post(
+            `/statuses/destroy/${id}`
+        )
+    }
+    return ids;
+}
+
 function checkStatusIDS( sampleItems, statusIds ){
     let ok = true;
     for (const sampleItem of sampleItems) ok = ok && statusIds.some( (id) => id === sampleItem.id );
@@ -39,7 +48,7 @@ function checkStatusIDS( sampleItems, statusIds ){
 
 describe( "Test sampling API" , function () {
 
-    let today = new Date().toISOString().slice(0, 10);
+    let today = new Date().toISOString();
     let tests = new Map([
         [
             "valid",
@@ -214,6 +223,7 @@ describe( "Test sampling API" , function () {
                 done();
             });
         }
+
         describe( "Check sample states after resume", function () {
             let url = `${samples_API_URL}/`;
             it( `GET ${url}`, check_GET_samples.bind( this ) );
@@ -241,16 +251,23 @@ describe( "Test sampling API" , function () {
         });
 
         let statusIds = [];
-/*
-        publishSomeTweets(
-            [ tests.get( "valid").sample.words.exact[0] ]
-        )
-            .then( (ids) => statusIds = ids );
-*/
+
+        describe( "posting some statuses to verify later", function () {
+            it('should post some statuses', async function () {
+                statusIds = await publishSomeTweets(
+                    [ tests.get( "valid").sample.words.exact[0] ]
+                )
+                return Promise.resolve();
+            });
+            it('should wait some time so sampler can sample tweets', async function () {
+                let time = 15000;
+                this.timeout( time )
+                await awaitTimeout( time-100 )
+                return Promise.resolve();
+            });
+        });
+
         describe( "Pause sample", function () {
-
-            //await awaitTimeout( 10000 );
-
             tests.forEach((test, testType) => {
                 describe("Test type:" + testType, function () {
                     let url = `${samples_API_URL}/${test.sampleName}/pause`;
@@ -297,8 +314,6 @@ describe( "Test sampling API" , function () {
                     });
                 });
             })
-
-            //return Promise.resolve();
         });
 
         describe( "Check sample states after pause", function () {
@@ -372,6 +387,61 @@ describe( "Test sampling API" , function () {
 
                         it(`GET ${url}`, function (done) {
                             client.request("GET", `${url}`, null, config, function (err, response) {
+                                if (responseCallback) {
+                                    responseCallback.bind(this);
+                                    responseCallback(err, response);
+                                }
+                                done();
+                            })
+                        });
+                    });
+                });
+            })
+        });
+
+        describe( 'cleanup used statuses for testing in user account', function () {
+            it("should delete posts", async function () {
+                await deleteSomeTweets( statusIds );
+            });
+        });
+
+        describe( "Delete sample", function () {
+            tests.forEach((test, testType) => {
+                describe("Test type:" + testType, function () {
+                    let url = `${samples_API_URL}/${test.sampleName}`;
+                    describe(`Delete sample "${test.sampleName}"`, function () {
+                        let responseCallback;
+
+                        switch (testType) {
+                            case "valid":
+                                responseCallback = function (err, response) {
+                                    assert.strictEqual(!!err, false, err);
+                                    assert.strictEqual(response.statusCode, StatusCodes.OK);
+                                }
+                                break;
+                            case "invalid":
+                                responseCallback = function (err, response) {
+                                    assert.strictEqual(!!err, false, err);
+                                    assert.strictEqual(response.statusCode, StatusCodes.NOT_FOUND);
+                                }
+                                break;
+                            // duplicate_name sample have same tag of "valid" so can't be deleted because has been already deleted
+                            case "duplicate_name":
+                                responseCallback = function (err, response) {
+                                    assert.strictEqual(!!err, false, err);
+                                    assert.strictEqual(response.statusCode, StatusCodes.NOT_FOUND);
+                                }
+                                break;
+                            case "duplicate_filter":
+                                responseCallback = function (err, response) {
+                                    assert.strictEqual(!!err, false, err);
+                                    assert.strictEqual(response.statusCode, StatusCodes.OK);
+                                }
+                                break;
+                        }
+
+                        it(`DELETE ${url}`, function (done) {
+                            client.request("DELETE", `${url}`, null, config, function (err, response) {
                                 if (responseCallback) {
                                     responseCallback.bind(this);
                                     responseCallback(err, response);
