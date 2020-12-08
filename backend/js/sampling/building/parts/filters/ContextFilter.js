@@ -20,9 +20,9 @@ class ContextFilter extends StandardFilter {
 
         if( rawData.words ) {
             this.context.language = rawData.words.language;
-            this.keywords.none = this.keywords.none.concat(rawData.words.none);
+            this.keywords.none = this.keywords.none.concat( rawData.words.none || [] );
         }
-        this.locations = Object.assign(this.locations, rawData.coordinates );
+        this.locations = Object.assign(this.locations, rawData.coordinates || [] );
         this.context = Object.assign( this.context, rawData.context );
         this.dates = Object.assign(this.dates, rawData.dates );
     }

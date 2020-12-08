@@ -48,9 +48,9 @@ class PostSocialContentEventListener extends MyEventListener {
                      * @type {WordMap}
                      */
                     let wordMap;
-
+                    let workerWordMap;
                     try {
-                        let workerWordMap = await spawn(
+                        workerWordMap = await spawn(
                             new Worker(
                                 path.join( __dirname, "..", "workers", "WordMapWorker")
                             )
@@ -72,7 +72,8 @@ class PostSocialContentEventListener extends MyEventListener {
                             wordMap.dispose();
                             wordMap = null;
                         }
-                        Thread.terminate(workerWordMap).catch( (e) => console.error(`[${this.constructor.name}:handlePostingSampleBased]`, `Error while Terminate worker, reason:\n`, e ) );
+                        if( workerWordMap )
+                            Thread.terminate(workerWordMap).catch( (e) => console.error(`[${this.constructor.name}:handlePostingSampleBased]`, `Error while Terminate worker, reason:\n`, e ) );
                     }
                 }
             )
