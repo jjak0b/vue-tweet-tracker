@@ -35,7 +35,7 @@
             >
               <v-row>
                 <v-col
-                >Frequenza</v-col>
+                >Frequency</v-col>
                 <v-col
                 >
                   <output>{{ weight }}</output>
@@ -43,7 +43,7 @@
               </v-row>
               <v-row>
                 <v-col
-                >Percentuale totale</v-col>
+                >Percentage</v-col>
                 <v-col
                 >
                   <output>{{ countWordMax > 0 ? `${ ( weight / countWordMax ).toFixed(2) } %` : "" }}</output>
@@ -60,7 +60,7 @@
 <script>
 
 import VueWordCloud from 'vuewordcloud';
-import Rainbow from "../../../node_modules/rainbowvis.js/rainbowvis";
+import Rainbow from "rainbowvis.js";
 
 /***
  * ## props
@@ -73,7 +73,7 @@ import Rainbow from "../../../node_modules/rainbowvis.js/rainbowvis";
 export default {
   name: "WordCloud",
   components: {
-    [VueWordCloud.name]: VueWordCloud,
+    "vueWordCloud": VueWordCloud,
   },
   props: {
     //value: String,
@@ -82,8 +82,11 @@ export default {
   },
   data() {
     return {
+      /**
+       * @type {Map<String,*>}
+       */
+      wordMap: null,
       countWordMax: 0,
-      weights: {},
       wordsWeights : [],
       loadingProgress: null,
       color: {
@@ -94,11 +97,11 @@ export default {
     }
   },
   computed: {
-      loadingPercentage() {
-        return this.loadingProgress && this.loadingProgress.totalWords !== 0
-            ? Math.round(this.loadingProgress.completedWords / this.loadingProgress.totalWords * 100)
-            : 100;
-      }
+    loadingPercentage() {
+      return this.loadingProgress && this.loadingProgress.totalWords !== 0
+          ? Math.round(this.loadingProgress.completedWords / this.loadingProgress.totalWords * 100)
+          : 100;
+    }
   },
   watch: {
     /*value: function ( wordToFilter ) {
@@ -114,9 +117,9 @@ export default {
   created() {
     this.color.rainbow.setSpectrum( this.color.start , this.color.end );
   },
-  /*mounted() {
+  mounted() {
     this.updateWordCloud( this.value );
-  },*/
+  },
   methods: {
     updateWordCloud( wordToFilter ) {
       this.countWordMax = 0;
@@ -125,45 +128,45 @@ export default {
       this.color.rainbow.setNumberRange(1, this.countWordMax );
     },
     computeWordsBySamples( wordToFilter ) {
-      for (let i = 0; i < this.samples.length; i++) {
-        if( this.samples[ i ] && this.samples[ i ].data.text ) {
-          let text = this.samples[ i ].data.text;
-          if( !wordToFilter || text.includes( wordToFilter ) ) {
-            this.computeWords( text );
+      if( this.samples && this.samples.length > 0 ) {
+        let texts = this.samples.map( (sample) => sample.data.text || "" );
+        texts = texts.filter( (text) => text.length > 0 && ( !wordToFilter || text.includes( wordToFilter ) ) );
+        const regexDetectWhiteSpaces = /(\s)+/g;
+        const regexDetectNotWords = /(\W)+/g;
+        const regexDetectURISequence = /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?/g;
+
+        this.wordMap = null;
+        this.wordMap = new Map();
+
+        for (const text of texts) {
+          let words = text.trim()
+              .replace(regexDetectURISequence," ")
+              .replace(regexDetectNotWords," ") // exclude punctuation with a following start spacing
+              .replace(regexDetectWhiteSpaces," ") //2 or more white-space to 1
+              .split(" ")
+              .filter( (word) => word.length );
+
+          for (const word of words) {
+            let data = this.wordMap.get( word );
+            if( !data ) {
+              this.wordMap.set( word, {
+                count: 1
+              });
+            }
+            else {
+              data.count++;
+            }
           }
         }
       }
     },
-    computeWords( string ) {
-      if( !string || string.length < 1 ) return;
-      // remove punctuation
-      let tempWords = string.replace(/[.,/?!$%^&*;:{}=\-_"'`~()]/gm, " ").split( " " );
-
-      // count the words and add them to the list of those used
-      tempWords.forEach( ( word ) => {
-        // Pick only meaningful words
-        /* Note:  it is necessary because a combination like "," ("," + "") is converted to ""
-                  and then in [""] using split()
-         */
-
-        let wordCount = 0;
-        if( word.length > 0 ) {
-          if( !(word in this.weights) ) {
-            wordCount = this.weights[ word ] = 1;
-          }
-          else {
-            wordCount = 1 + (this.weights[ word ] ++)
-          }
-          this.countWordMax = Math.max( this.countWordMax, wordCount );
-        }
-      });
-    },
     updateWordsWeight() {
-      let words = Object.keys( this.weights );
-      this.wordsWeights = new Array( words.length );
-
-      words
-          .forEach( (word, i ) => this.wordsWeights[ i ] = [ word, this.weights[ word ] ] );
+      this.wordsWeights = new Array( this.wordMap.size );
+      this.countWordMax = 0;
+      this.wordMap.forEach( (item, word) => {
+        this.wordsWeights[ this.countWordMax ] = [ word, item.count ];
+        this.countWordMax++;
+      });
     },
     onWordClick( event, wordAndWeight ) {
       let word = wordAndWeight[ 0 ];
