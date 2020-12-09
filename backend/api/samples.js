@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const SamplingFacade = require("../js/SamplingFacade");
 const samplingFacade = SamplingFacade.getInstance();
-
+const periodicSocialPostingTimersHandler = require("../js/posting/handlers/PeriodicSocialPostingTimersHandler").getInstance();
 router.get( "/", API_getSamples );
 /**
  * Get samples list in some states
@@ -58,6 +58,11 @@ function API_addSample(req, res) {
 
         samplingFacade.addSample( sampleTag, filter )
             .then( (statusCode) => {
+                if( filter.posting ) {
+                    let timer = new Timer( filter.posting );
+                    periodicSocialPostingTimersHandler.add( timer );
+                }
+
                 res.sendStatus( statusCode );
             })
             .catch( (errCode) => {
@@ -83,6 +88,7 @@ function API_deleteSample( req, res ) {
 
         samplingFacade.deleteSample( sampleTag )
         .then( (statusCode) => {
+            periodicSocialPostingTimersHandler.deleteTimer( sampleTag );
             res.sendStatus( statusCode );
         })
         .catch( (errCode) => {
@@ -139,33 +145,5 @@ function API_pauseSample( req, res ) {
             res.sendStatus( errCode );
         })
 }
-
-
-function exitHandler (exitCode) {
-    samplingFacade.storeSamples()
-        .finally(() => {
-            if (exitCode || exitCode === 0)
-                console.log(exitCode);
-            process.exit();
-        });
-}
-
-// flush data when app is closing
-[
-    "uncaughtException", //catches uncaught exceptions
-    // "exit",// when process.exit has been called
-    'SIGUSR1', // catches "kill pid" (for example: nodemon restart)
-    'SIGUSR2',
-    // 'SIGHUP',
-    'SIGINT',//catches ctrl+c event
-    // 'SIGQUIT',
-    // 'SIGILL',
-    // 'SIGTRAP',
-    // 'SIGABRT',
-    // 'SIGBUS',
-    // 'SIGFPE',
-    // 'SIGSEGV',
-    // 'SIGTERM'
-].forEach( (sig) => process.on(sig, exitHandler ) );
 
 module.exports = router;
