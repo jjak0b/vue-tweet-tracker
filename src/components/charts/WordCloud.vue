@@ -67,6 +67,7 @@
 
 import VueWordCloud from 'vuewordcloud';
 import Rainbow from "rainbowvis.js";
+import {getWordMapFromStringArray} from "@/js/shared"
 
 /***
  * ## props
@@ -135,37 +136,10 @@ export default {
       this.$forceUpdate();
     },
     computeWordsBySamples( wordToFilter ) {
-      this.wordMap = null;
-      this.wordMap = new Map();
+      let texts = this.samples.map( (sample) => sample.data ? sample.data.text : "" );
+      texts = texts.filter( (text) => text.length > 0 && ( !wordToFilter || text.includes( wordToFilter ) ) );
       console.log( `[WordCloud]`, `computing words of ${this.samples.length} samples`);
-      if( this.samples && this.samples.length > 0 ) {
-        let texts = this.samples.map( (sample) => sample.data ? sample.data.text : "" );
-        texts = texts.filter( (text) => text.length > 0 && ( !wordToFilter || text.includes( wordToFilter ) ) );
-        const regexDetectWhiteSpaces = /(\s)+/g;
-        const regexDetectNotWords = /(\W)+/g;
-        const regexDetectURISequence = /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?/g;
-
-        for (const text of texts) {
-          let words = text.trim()
-              .replace(regexDetectURISequence," ")
-              .replace(regexDetectNotWords," ") // exclude punctuation with a following start spacing
-              .replace(regexDetectWhiteSpaces," ") //2 or more white-space to 1
-              .split(" ")
-              .filter( (word) => word.length );
-
-          for (const word of words) {
-            let data = this.wordMap.get( word );
-            if( !data ) {
-              this.wordMap.set( word, {
-                count: 1
-              });
-            }
-            else {
-              data.count++;
-            }
-          }
-        }
-      }
+      this.wordMap = getWordMapFromStringArray( texts );
       console.log( `[WordCloud]`, `computing complete, ${ this.wordMap.size} keywords found`);
     },
     updateWordsWeight() {
