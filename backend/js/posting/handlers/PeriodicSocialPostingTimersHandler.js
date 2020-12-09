@@ -25,8 +25,10 @@ class PeriodicSocialPostingTimersHandler extends TimersHandler {
     }
 
     startTimer( timer ) {
+        console.log( `[${this.constructor.name}]`, `Tracking Timer interval of "${timer.getName()}"`);
         timer.run(
             () => {
+                console.log( `[${this.constructor.name}]`, `Notify posting of "${timer.getName()}"`);
                 EventsManager.getInstance().emit(
                     EventsManager.ENUM.EVENTS.POST_SAMPLE_SUMMARY,
                     new PostSocialContentEvent(
@@ -36,6 +38,7 @@ class PeriodicSocialPostingTimersHandler extends TimersHandler {
                 );
             },
             () => {
+                console.log( `[${this.constructor.name}]`, `End Timer "${timer.getName()}"`);
                 this.deleteTimer( timer.name );
             }
         );

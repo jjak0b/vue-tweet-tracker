@@ -105,7 +105,7 @@ class SamplesHandler extends ISampler {
     }
 
     async addSample( tag, filter ) {
-        let timer = new Timer(tag,filter);
+
         this.sampler.setStrategy( this.strategy );
         // Force unique tag samples for all handler
         let isHandledByAny = false;

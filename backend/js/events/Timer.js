@@ -1,15 +1,26 @@
 class Timer {
     constructor(tag, data ){
-        this.startTime = data.from.date;
-        this.endTime = data.to.date;
+        this.startTime = new Date( data.from.date );
+        this.endTime = new Date( data.to.date );
         this.day = data.frequency.days;
         this.hours = data.frequency.hours;
         this.minutes = data.frequency.minutes;
         this.name = tag;
+
         this.intervalHandler = null;
         this.timeoutHandler = null;
     }
 
+    toJSON() {
+        return {
+            name: this.name,
+            startTime: this.startTime,
+            endTime: this.endTime,
+            day: this.day,
+            hours: this.hours,
+            minutes: this.minutes
+        }
+    }
     getName(){
         return this.name;
     }
@@ -82,3 +93,5 @@ class Timer {
         if( endCallback ) endCallback();
     }
 }
+
+module.exports = Timer;

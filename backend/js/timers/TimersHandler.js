@@ -1,8 +1,9 @@
-const itemsCollection = require('../ItemsCollection');
+const ItemsCollection = require('../ItemsCollection');
 const FSResourceStorage = require("../FSResourceStorage");
 const EventsManager = require("../sampling/services/EventsManager");
+const Timer = require("../events/Timer");
 
-class TimersHandler extends itemsCollection {
+class TimersHandler extends ItemsCollection {
     constructor( location, initCollection) {
         super( location, initCollection );
         this.setStorage(FSResourceStorage.getInstance());
@@ -54,8 +55,8 @@ class TimersHandler extends itemsCollection {
              * @type {Timer}
              */
             let timer = array[ index ];
-            timer.startTime = new Date( timer.startTime.from.date );
-            timer.endTime = new Date( timer.startTime.to.date );
+            timer.startTime.from.date = new Date( timer.startTime.from.date );
+            timer.endTime.to.date = new Date( timer.startTime.to.date );
             this.startTimer( timer );
         });
         return items;
