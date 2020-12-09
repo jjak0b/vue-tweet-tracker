@@ -134,6 +134,7 @@ export default {
     selectSample(item) {
       axios.get('/api/samples/' + item)
           .then( (response) => {
+            console.log("Select sample", item);
             this.selectedSample = response.data;
             this.selectedSampleTag=item;
           })
@@ -182,7 +183,10 @@ export default {
         })
         .catch( (err) => {
           console.error( err );
-        });
+        })
+      .finally( () => {
+          this.updateSampleList();
+        })
     }
   }
 }

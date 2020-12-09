@@ -1,10 +1,10 @@
 <template>
-  <div v-if="selectedSample">
+  <div v-if="selectedSample && selectedSample.length > 0">
     <v-container>
       <v-row>
         <v-col>
           <WordCloud
-              :samples="selectedSample.slice(0, 10)"
+              :samples="selectedSample"
           >
           </WordCloud>
         </v-col>
@@ -30,8 +30,8 @@
                   color="primary"
               >
                 <v-list-item
-                    v-for="item in selectedSample"
-                    :key="item.data.id"
+                    v-for="(item, index) in selectedSample"
+                    :key="index"
                 >
                   <v-list-item-content>
                     <v-list-item-title v-text="item.data.text"></v-list-item-title>
@@ -54,7 +54,7 @@
                   <Tweet
                       class="mb-7"
                       :id="selectedTweet.data.id"
-                      :key="selectedTweet.data.id">
+                      :key="'tweet'+ selectedTweet.data.id">
                     <v-skeleton-loader
                         width="100%"
                         type="card"
@@ -106,13 +106,22 @@
                   <p>{{ this.selectedTweet.data.public_metrics.retweet_count }}</p>
                 </v-expansion-panel-content>
               </v-expansion-panel>
-              <v-expansion-panel v-if="selectedTweet.places">
+              <v-expansion-panel v-if="isGeoInPlaces || isGeoInData">
                 <v-expansion-panel-header class="font-weight-medium text-body-1">Location</v-expansion-panel-header>
                 <v-expansion-panel-content>
-                  <h4>Country</h4>
-                  <p>{{ this.selectedTweet.places.country }}</p>
-                  <h4>Place</h4>
-                  <p>{{ this.selectedTweet.places.full_name }}</p></v-expansion-panel-content>
+                  <v-responsive :min-height="300">
+                    <Map
+                        :center-position="selectedPosition"
+                        :samples="[selectedTweet]"
+                    ></Map>
+                  </v-responsive>
+                  <div v-if="isGeoInPlaces">
+                    <h4 class="mt-3">Country</h4>
+                    <p>{{ this.selectedTweet.places.country }}</p>
+                    <h4>Place</h4>
+                    <p>{{ this.selectedTweet.places.full_name }}</p>
+                  </div>
+                </v-expansion-panel-content>
             </v-expansion-panel>
             <v-expansion-panel v-if="thereAreImages(selectedTweet)">
               <v-expansion-panel-header class="font-weight-medium text-body-1">Media</v-expansion-panel-header>
@@ -137,7 +146,6 @@ import WordCloud from "@/components/charts/WordCloud";
 import Map from "@/components/charts/Map";
 import Position from "@/js/Position";
 import ImageWindow from "@/components/charts/ImageWindow";
-import axios from "axios";
 
 export default {
 
@@ -152,49 +160,49 @@ export default {
     Tweet
   },
   computed: {
-
     isSelected() {
       return this.selectedTweetIndex || this.selectedTweetIndex === 0
     },
     selectedTweet: function () {
       return this.isSelected ? this.selectedSample[this.selectedTweetIndex] : null
+    },
+    isGeoInData: function() {
+      return !!(this.selectedTweet && this.selectedTweet.data && this.selectedTweet.data.geo &&
+          this.selectedTweet.data.geo.coordinates && this.selectedTweet.data.geo.coordinates.coordinates)
+    },
+    isGeoInPlaces: function() {
+      return !!(this.selectedTweet && this.selectedTweet.places &&
+          this.selectedTweet.places.geo && this.selectedTweet.places.geo.bbox)
+    },
+    selectedPosition: function () {
+      if (this.selectedTweet ) {
+        let coordinates;
+        if ( this.isGeoInData ) {
+          let coordinates = this.selectedTweet.data.geo.coordinates.coordinates;
+          return new Position( coordinates[1],coordinates[0] )
+        }
+        else if ( this.isGeoInPlaces ) {
+          coordinates = this.selectedTweet.places.geo.bbox;
+          return new Position(
+              (coordinates[ 1 ] + coordinates[ 3 ]) / 2.0,
+              (coordinates[ 0 ] + coordinates[ 2 ]) / 2.0
+          )
+        }
+      }
+      return this.centerPosition
     }
   },
   data: () => ({
-    tweets:[],
     centerPosition: new Position( 41.902782,12.496366 ),// Rome
     showLocation: false,
-    showTweet: false,
-    showUser: false,
     language: language,
     selectedTweetIndex: null
   }),
-  watch: {
-    selectedSample: function (newVal) {
-      if ( newVal && newVal.length > 0 ) {
-        axios.get('/api/samples/' + newVal)
-            .then( (response) => {
-                  this.tweets = response.data;
-                })
-            .catch( (error) => {
-              console.error("ERROR", error);
-            })
-      }
-    }
-  },
   methods: {
-    getSubString(string) {
-      const substring = string.substring(0, 50);
-      if (string.length > substring.length) {
-        return substring + ' ...'
-      }
-      return substring;
-    },
     getDateString(value) {
       const date = new Date(value);
       return date.toLocaleString('en-US');
     },
-
     thereAreImages(tweet){
       if(tweet.media && tweet.media.some((media) =>
           media.type==='photo')){
