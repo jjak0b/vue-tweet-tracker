@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const SamplingFacade = require("../js/SamplingFacade");
+const Timer = require("../js/events/Timer");
 const samplingFacade = SamplingFacade.getInstance();
 const periodicSocialPostingTimersHandler = require("../js/posting/handlers/PeriodicSocialPostingTimersHandler").getInstance();
 router.get( "/", API_getSamples );
@@ -59,7 +60,7 @@ function API_addSample(req, res) {
         samplingFacade.addSample( sampleTag, filter )
             .then( (statusCode) => {
                 if( filter.posting ) {
-                    let timer = new Timer( filter.posting );
+                    let timer = new Timer( sampleTag, filter.posting );
                     periodicSocialPostingTimersHandler.add( timer );
                 }
 
