@@ -47,7 +47,20 @@ class TimersHandler extends ItemsCollection {
     }
 
     async fetch() {
-        await super.fetch();
+        try {
+            console.log(`[${this.constructor.name}] fetching`, this.getLocation() );
+            await super.fetch();
+        }
+        catch ( e ) {
+            if( e.code === "ENOENT" ) {
+                console.log(`[${this.constructor.name}]`, "Init timers" );
+                await this.store();
+            }
+            else {
+                console.error(`[${this.constructor.name}]`, `Error reading local ${this.getLocation()}, "reason:`, e);
+            }
+        }
+
         let items = this.getItems();
         items.forEach( (item, index, array) => {
             Object.setPrototypeOf( array[index], Timer.prototype );
@@ -55,11 +68,22 @@ class TimersHandler extends ItemsCollection {
              * @type {Timer}
              */
             let timer = array[ index ];
-            timer.startTime.from.date = new Date( timer.startTime.from.date );
-            timer.endTime.to.date = new Date( timer.startTime.to.date );
+            timer.startTime = new Date( timer.startTime );
+            timer.endTime = new Date( timer.startTime );
             this.startTimer( timer );
         });
         return items;
+    }
+
+    async store() {
+        try {
+            console.log(`[${this.constructor.name}]`, "Storing", this.getLocation() );
+            return await super.store();
+        }
+        catch ( e ) {
+            console.error( `[${this.constructor.name}]`, "Error writing local", this.getLocation(), "reason:", e );
+            return Promise.reject( e );
+        }
     }
 
     /**
