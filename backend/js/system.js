@@ -21,18 +21,28 @@ function init() {
     eventManager.addListener( EventsManager.ENUM.EVENTS.USER_CONDITION, userConditionEventListener.getHandler() );
     eventManager.addListener( EventsManager.ENUM.EVENTS.POST_SAMPLE_SUMMARY, postSocialContentListener.getHandler() );
 
-    periodicSocialPostingTimersHandler.fetch();
+    periodicSocialPostingTimersHandler.fetch()
+        .catch( (e) => console.warn( e ) );
 
-    function exitHandler (exitCode) {
+    async function exitHandler (exitCode) {
         let promises = [];
         promises.push( samplingFacade.storeSamples() );
         promises.push( periodicSocialPostingTimersHandler.store() );
-        Promise.all( promises )
-            .finally(() => {
-                if (exitCode || exitCode === 0)
-                    console.log(exitCode);
-                process.exit();
-            });
+
+        let i = 0;
+        for( const promise of promises ) {
+            try {
+                await promise;
+            }
+            catch (e) {
+                console.error( "[System]", "Error while flushing promise ", i, "reason:\n", e );
+            }
+            i++;
+        }
+
+        if (exitCode || exitCode === 0)
+            console.log(exitCode);
+        process.exit();
     }
 
     // flush data when app is closing
