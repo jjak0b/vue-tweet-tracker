@@ -1,7 +1,7 @@
 const EventsManager = require('/backend/js/sampling/services/EventsManager');
 const PostSocialContentEvent = require('/backend/js/events/PostSocialContentEvent');
-const ItemCollection = require('../../ItemsCollection');
-const FSResourceStorage = require('../../FSResourceStorage')
+const ItemCollection = require('../ItemsCollection');
+const FSResourceStorage = require('../FSResourceStorage')
 const Timer = require('../events/Timer')
 
 class TimerListener {

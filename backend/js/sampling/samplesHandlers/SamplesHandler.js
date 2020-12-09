@@ -2,7 +2,7 @@ const StatusCodes = require("http-status-codes").StatusCodes;
 
 const ISampler = require("../ISampler");
 
-const Timer = require('../events/Timer');
+const Timer = require('../../events/Timer');
 
 class SamplesHandler extends ISampler {
     /**
