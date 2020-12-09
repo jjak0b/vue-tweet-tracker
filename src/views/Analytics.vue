@@ -11,22 +11,30 @@
           outlined
       ></v-select>
       <p>{{tweetsCountry}}</p>
-      <p>{{ChartData}}</p>
+      <p>{{LineData}}</p>
       <p>{{labelDates}}</p>
 
       <div v-if="selectedState" align="right">
         <v-btn v-if="(slice+7<=labelDates.length) || (slice>0 && slice<labelDates.length)"
-               @click="seeMore()"
+               @click="seeMore(1)"
         >
           See most recents informations
           <v-icon right>mdi-arrow-right-drop-circle-outline</v-icon>
         </v-btn>
-        <line-chart :selected-state="selectedState" :chart-data="ChartData"></line-chart>
+        <line-chart :selected-state="selectedState" :chart-data="LineData"></line-chart>
       </div>
     </v-card>
-    <v-card>
+    <v-card v-if="labelWords.length > 0 && wordsFrequency.length > 0" class="pa-4 mt-4">
       <v-card-title>Chart words frequency</v-card-title>
-      <bar-chart></bar-chart>
+      <div align="right">
+        <v-btn v-if="(sliceWords+10<=labelWords.length) || (sliceWords>0 && sliceWords<labelWords.length)"
+               @click="seeMore(2)"
+        >
+          See other words
+          <v-icon right>mdi-arrow-right-drop-circle-outline</v-icon>
+        </v-btn>
+        <bar-chart :chart-data = "BarData"></bar-chart>
+      </div>
     </v-card>
   </div>
 </template>
@@ -34,7 +42,9 @@
 <script>
 import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
-import exampletweets from "../../repositories/context/ama/collection.json";
+//import exampletweets from "../../repositories/context/ama/collection.json";
+//import Rainbow from "rainbowvis.js";
+import {getWordMapFromStringArray} from "@/js/shared"
 
 export default {
   name: "Analytics",
@@ -49,41 +59,57 @@ export default {
   },
 
   data: () => ({
-
-    tweets: exampletweets,
+    tweets: [],
+      //LineChart
     labelDates:[],
     tweetsCountry: {},
-    ChartData: [],
+    LineData: [],
     selectedState:"",
-    slice: 0
+    slice: 0,
+      //BarChart
+    BarData:[],
+    labelWords:[],
+    wordsFrequency:[],
+    sliceWords: 0
   }),
 
 
   watch: {
+
     selectedSample: function (newVal) {
       this.tweets = newVal;
       this.tweetsCountry = this.addCountriesData();
+      this.LineData = this.createLineData();
+      this.createWordsData();
+      this.BarData = this.createBarData();
     },
 
     slice: function (){
-      this.ChartData = this.createDatasets();
+      this.LineData = this.createLineData();
+    },
+
+    sliceWords: function (){
+      this.BarData = this.createBarData();
     },
 
     selectedState: function (newVal){
       this.selectedState = newVal;
-      this.ChartData = this.createDatasets();
+      this.LineData = this.createLineData();
       this.slice = 0; //Ricomincio dall'inizio
     }
 
   },
 
   created() {
+    this.tweets = this.selectedSample;
     this.tweetsCountry = this.addCountriesData();
+    this.createWordsData();
+    this.BarData = this.createBarData();
   },
 
   methods: {
 
-    //FUNZIONANTE
+    //LINECHART FUNCTIONS
     addCountriesData:function() {
       let countriesData = {};
       let labelDates = [];
@@ -120,7 +146,7 @@ export default {
       return countriesData;
     },
 
-    createDatasets:function(){
+    createLineData:function(){
       //Solo qui l'array mi serve splittato quindi lo creo qui, parto da slice e fino ad altri 7
       let regions = Object.keys(this.tweetsCountry[this.selectedState]);
       let datasets = [];
@@ -147,7 +173,7 @@ export default {
       return chartData;
     },
 
-    //UTILI
+    //UTILI per LINECHART
     getRegion(country_string) {
       //Prendo la posizione della virgola nella stringa
       let i = country_string.indexOf(',');
@@ -185,12 +211,83 @@ export default {
       return tweetsXDay;
     },
 
-    seeMore: function (){
-      if(this.slice+7 <= this.labelDates.length) this.slice += 7;
-      else if(this.slice > 0 && this.slice< this.labelDates.length){
-        let difference = this.labelDates.length - this.slice;
-        this.slice += difference;
+    seeMore: function (buttonNumber){
+      if(buttonNumber == 1){ //BUTTON LINE CHART
+        if(this.slice+7 <= this.labelDates.length) this.slice += 7;
+        else if(this.slice > 0 && this.slice< this.labelDates.length){
+          let difference = this.labelDates.length - this.slice;
+          this.slice += difference;
+        }
       }
+      else if(buttonNumber == 2){ //BUTTON BAR CHART
+        if(this.sliceWords+10 <= this.labelWords.length) this.sliceWords += 10;
+        else if(this.sliceWords > 0 && this.sliceWords< this.labelWords.length){
+          let difference = this.labelWords.length - this.sliceWords;
+          this.sliceWords += difference;
+        }
+      }
+    },
+
+    //FUNZIONI BARCHART
+    createWordsData:function (){
+      let texts = this.tweets.map((tweet) => tweet.data ? tweet.data.text: "");
+      let wordsMap = getWordMapFromStringArray(texts);
+      let orderedMap = new Map([...wordsMap].sort((a, b) => (b[1].count > a[1].count && 1) || (b[1].count === a[1].count ? 0 : -1)))
+      let labelWords = [];
+      let wordsFrequency = [];
+
+      orderedMap.forEach((value, key) => {
+        labelWords.push(key);
+        wordsFrequency.push(value.count);
+      })
+
+      this.labelWords = labelWords;
+      this.wordsFrequency = wordsFrequency;
+    },
+
+    createBarData: function (){
+      let sliceWords = this.labelWords.slice(this.sliceWords,this.sliceWords+10);
+      let sliceFrequency = this.wordsFrequency.slice(this.sliceWords, this.sliceWords+10)
+      let dataset = [];
+
+      let obj = new Object({
+        label: 'Words',
+        borderWidth: 1,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255,159,64,0.2)',
+          'rgba(24,90,132,0.2)',
+          'rgba(90, 90, 2, 0.2)',
+          'rgba(45, 206, 80, 0.2)',
+          'rgba(90, 15, 50, 0.2)',
+        ],
+        borderColor: [
+          'rgba(255,99,132,1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgb(255,64,64)',
+          'rgba(24,90,132,1)',
+          'rgba(90, 90, 2, 1)',
+          'rgba(45, 206, 80, 1)',
+          'rgba(90, 15, 50, 1)',
+        ],
+        pointBorderColor: '#2554FF',
+        data: sliceFrequency
+      })
+      dataset.push(obj);
+
+      let chartData = {
+        labels: sliceWords,
+        datasets: dataset
+      }
+
+      return chartData;
     }
   }
 }
