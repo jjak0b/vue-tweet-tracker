@@ -68,7 +68,7 @@ class TimersHandler extends itemsCollection {
     startTimer( timer ) {
         timer.run(
             () => {
-                EventsManager.getInstance().emit( "timerTick", timer );
+                EventsManager.getInstance().emit(  EventsManager.ENUM.EVENTS.TIMER_TICK, timer );
             },
             () => {
                 this.deleteTimer( timer.name );

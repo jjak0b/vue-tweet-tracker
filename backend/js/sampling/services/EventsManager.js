@@ -17,7 +17,7 @@ class EventsManager extends EventEmitter{
 
     static ENUM = {
         EVENTS: {
-            REGISTER_TIMER: "registerTimer",
+            TIMER_TICK: "timerTick",
             POST_SAMPLE_SUMMARY: "postSampleSummary",
             SAMPLED: "sampled",
             USER_CONDITION: "userCondition"
