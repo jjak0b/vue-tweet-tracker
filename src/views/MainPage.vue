@@ -4,6 +4,10 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title class="white--text">Twitter tracker</v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-btn text class="white--text mr-2" to="/app/analytics">
+        <v-icon left>mdi-chart-areaspline</v-icon>
+        Analytics
+      </v-btn>
       <v-btn text class="white--text mr-2" to="/app/gallery">
         <v-icon left>mdi-folder-multiple-image</v-icon>
         Gallery

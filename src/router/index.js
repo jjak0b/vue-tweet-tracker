@@ -5,6 +5,7 @@ import HomePage from "@/views/HomePage";
 import MainPage from "@/views/MainPage";
 import FilterMenu from "@/views/FilterMenu";
 import Gallery from "@/views/Gallery";
+import Analytics from "@/views/Analytics";
 
 Vue.use(VueRouter)
 
@@ -33,6 +34,11 @@ const routes = [
         path: '/app/gallery',
         name: 'Gallery',
         component: Gallery
+      },
+      {
+        path: '/app/analytics',
+        name: 'Analytics',
+        component: Analytics
       }
     ]
   },
