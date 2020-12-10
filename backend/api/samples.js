@@ -57,11 +57,14 @@ function API_addSample(req, res) {
     let sampleTag = req.params.tag;
     let filter = req.body;
 
+    console.log( JSON.stringify( filter, null, 4 ) );
         samplingFacade.addSample( sampleTag, filter )
             .then( (statusCode) => {
-                if( filter.posting ) {
-                    let timer = new Timer( sampleTag, filter.posting );
-                    periodicSocialPostingTimersHandler.add( timer );
+                if( statusCode >= 200 && statusCode < 300 ) {
+                    if (filter.posting && filter.posting.active) {
+                        let timer = new Timer(sampleTag, filter.posting);
+                        periodicSocialPostingTimersHandler.add(timer);
+                    }
                 }
 
                 res.sendStatus( statusCode );
