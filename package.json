@@ -30,7 +30,7 @@
     "threads": "^1.6.3",
     "tiny-worker": "^2.3.0",
     "twitter-lite": "^0.14.0",
-    "twitter-v2": "^0.2.0",
+    "twitter-v2": "^1.0.0",
     "vue": "^2.6.11",
     "vuetify": "^2.2.11"
   },
