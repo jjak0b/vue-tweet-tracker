@@ -1,10 +1,10 @@
 class Timer {
     constructor(tag, data ){
-        this.startTime = new Date( data.from.date );
-        this.endTime = new Date( data.to.date );
-        this.day = data.frequency.days;
-        this.hours = data.frequency.hours;
-        this.minutes = data.frequency.minutes;
+        this.startTime = new Date( `${data.from.date}T${data.from.time}`  );
+        this.endTime = new Date( `${data.to.date}T${data.to.time}` );
+        this.days =  Number.parseInt( "" + data.frequency.days ) || 0;
+        this.hours = Number.parseInt( "" + data.frequency.hours  ) || 0;
+        this.minutes = Number.parseInt( "" + data.frequency.minutes ) || ( ( !this.days && !this.hours ) ? 1 : 0  );
         this.name = tag;
 
         this.intervalHandler = null;
@@ -16,7 +16,7 @@ class Timer {
             name: this.name,
             startTime: this.startTime,
             endTime: this.endTime,
-            day: this.day,
+            days: this.days,
             hours: this.hours,
             minutes: this.minutes
         }
@@ -34,7 +34,7 @@ class Timer {
         return this.getPeriodInMs();
     }
     getPeriodInMs(){
-        return this.minutes * 60000 + this.hours * 3600000 + this.day * 86400000;
+        return this.minutes * 60000 + this.hours * 3600000 + this.days * 86400000;
     }
 
     /**
