@@ -22,6 +22,22 @@ export default class Filter {
         this.dates = {
             from: null,
             to: null
+        };
+        this.posting = {
+            active: false,
+                frequency: {
+                days: null,
+                    hours: null,
+                    minutes: null
+            },
+            from: {
+                date: null,
+                    time: null
+            },
+            to: {
+                date: null,
+                    time: null
+            }
         }
     }
 }

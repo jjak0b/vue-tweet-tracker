@@ -1,10 +1,10 @@
 <template>
-  <div v-if="filteredSample">
+  <div v-if="filteredSample && filteredSample.length > 0">
     <v-container>
       <v-row>
         <v-col>
           <WordCloud
-              :samples="filteredSample.slice(0,10)"
+              :samples="filteredSample"
               @input="localFilter.words.all.push($event);filterSample()"
           >
           </WordCloud>
