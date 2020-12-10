@@ -17,6 +17,7 @@ class WordCloudImageBuilder {
         this.maxWordItemsCount = 128;
         this.worditems = [];
         this.processedWordItems = [];
+        this.totalWords = 0;
         this.workingDOM = new JSDOM("<!DOCTYPE html><body></body>");
         /**
          *
@@ -48,11 +49,16 @@ class WordCloudImageBuilder {
                 )
             });
 
-        this.worditems = this.worditems.sort( (l, r) => r.count - l.count );
+       this.worditems.sort( (l, r) => r.count - l.count );
 
         if( this.worditems.length > this.maxWordItemsCount ) {
             this.worditems = this.worditems.slice(0, this.maxWordItemsCount);
         }
+
+        this.totalWords = 0;
+        this.worditems.forEach( (item) => this.totalWords += item.count );
+
+        console.log( this.worditems );
     }
 
 
@@ -72,9 +78,10 @@ class WordCloudImageBuilder {
         let baseFontSize = baseSize;
         if( width * height !== 1280*720 ) {
             // baseSize : baseWidth = x : width
-            baseFontSize = (baseSize/baseWidth) * width;
+            baseFontSize = baseSize * (width/baseWidth);
         }
 
+        let averageRequiredSpace = width / baseFontSize; // average size based on width
         this.layout = Cloud()
             .size([width, height])
             .words( this.worditems )
@@ -83,10 +90,15 @@ class WordCloudImageBuilder {
             .font("Impact")
             .text( (item) => item.text )
             // .fontSize(function(item) { return 10 + (100 * (item.count / totalCount)) } )
-            .fontSize(function(item) {
-                // resize font size based on word count but no more than 1/4 of width
-                return baseFontSize *
-                    Math.min(
+            // resize font size based on word count
+            .fontSize((item) => {
+
+                return baseFontSize
+                    + (
+                        averageRequiredSpace
+                        * (item.count/this.totalWords)
+                    )
+                    * Math.min(
                         width >> 2,
                         Math.sqrt( item.count )
                     )
