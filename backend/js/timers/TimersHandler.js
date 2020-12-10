@@ -27,6 +27,7 @@ class TimersHandler extends ItemsCollection {
      * @param name {String}
      */
     deleteTimer( name ) {
+        console.log(`[${this.constructor.name}] deleting timer`, name );
         let timer = this.getTimer( name );
         if( timer ) {
             this.stopTimer( timer );
@@ -48,13 +49,11 @@ class TimersHandler extends ItemsCollection {
 
     async fetch() {
         try {
-            console.log(`[${this.constructor.name}] fetching`, this.getLocation() );
             await super.fetch();
         }
         catch ( e ) {
             if( e.code === "ENOENT" ) {
                 console.log(`[${this.constructor.name}]`, "Init timers" );
-                await this.store();
             }
             else {
                 console.error(`[${this.constructor.name}]`, `Error reading local ${this.getLocation()}, "reason:`, e);
@@ -77,8 +76,7 @@ class TimersHandler extends ItemsCollection {
 
     async store() {
         try {
-            console.log(`[${this.constructor.name}]`, "Storing", this.getLocation() );
-            return await super.store();
+            return super.store();
         }
         catch ( e ) {
             console.error( `[${this.constructor.name}]`, "Error writing local", this.getLocation(), "reason:", e );
@@ -91,6 +89,7 @@ class TimersHandler extends ItemsCollection {
      * @param timer {Timer}
      */
     startTimer( timer ) {
+        console.log( `[${this.constructor.name}] starting timer for`, timer.getName() );
         timer.run(
             () => {
                 EventsManager.getInstance().emit(  EventsManager.ENUM.EVENTS.TIMER_TICK, timer );
