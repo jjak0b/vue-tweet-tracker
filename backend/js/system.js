@@ -24,47 +24,38 @@ function init() {
     periodicSocialPostingTimersHandler.fetch()
         .catch( (e) => console.warn( e ) );
 
-    async function exitHandler (exitCode) {
-        let promises = [];
-        promises.push( samplingFacade.storeSamples() );
-        promises.push( periodicSocialPostingTimersHandler.store() );
-
-        let i = 0;
-        for( const promise of promises ) {
-            try {
-                await promise;
-            }
-            catch (e) {
-                console.error( "[System]", "Error while flushing promise ", i, "reason:\n", e );
-            }
-            i++;
-        }
-
-        if (exitCode || exitCode === 0)
-            console.log(exitCode);
-        process.exit();
+    function exitHandler (exitCode) {
+        console.log("Exit Handler:", exitCode );
+        Promise.all([
+            periodicSocialPostingTimersHandler.store(),
+            samplingFacade.storeSamples()
+        ])
+            .finally( () => {
+                console.log("exit");
+                process.exit();
+            })
     }
 
     // flush data when app is closing
-    [
+    let signals = [
         "uncaughtException", //catches uncaught exceptions
-        // "exit",// when process.exit has been called
-        'SIGUSR1', // catches "kill pid" (for example: nodemon restart)
-        'SIGUSR2',
-        // 'SIGHUP',
-        'SIGINT',//catches ctrl+c event
-        // 'SIGQUIT',
-        // 'SIGILL',
-        // 'SIGTRAP',
-        // 'SIGABRT',
-        // 'SIGBUS',
-        // 'SIGFPE',
-        // 'SIGSEGV',
-        // 'SIGTERM'
-    ].forEach( (sig) => process.on(sig, exitHandler ) );
+        // 'SIGUSR2',
+        'SIGHUP', //catches close console window event on Windows ( 10 seconds left to run code )
+        'SIGINT', //catches ctrl+c event on Unix ( override default exit behaviour )
+        'SIGTERM'
+    ];
+
+    if (process.platform === "win32") {
+        // only way to catch ctr
+        require("readline")
+            .createInterface({
+                input: process.stdin,
+                output: process.stdout
+            })
+            .on("SIGINT", () => exitHandler( "SIGINT" ) );
+    }
+    signals.forEach( (sig) => process.on(sig, exitHandler ) );
 }
-
-
 
 module.exports = {
     init: init
