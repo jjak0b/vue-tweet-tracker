@@ -1,9 +1,9 @@
 const Contact = require("./Contact");
 
 class TelegramContact extends Contact{
-    constructor( id ) {
-        super();
-        this.id = id;
+    constructor( props = {events: [], chatid: null} ) {
+        super(props);
+        this.chatid = props.chatid;
     }
 }
 
