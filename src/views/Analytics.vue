@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="selectedSample">
     <v-card v-if="labelDates.length > 0" class="pa-4">
       <v-card-title>Chart geografic areas tweets</v-card-title>
 
@@ -10,9 +10,6 @@
           dense
           outlined
       ></v-select>
-      <p>{{tweetsCountry}}</p>
-      <p>{{LineData}}</p>
-      <p>{{labelDates}}</p>
 
       <div v-if="selectedState" align="right">
         <v-btn v-if="(slice+7<=labelDates.length) || (slice>0 && slice<labelDates.length)"
@@ -63,11 +60,11 @@ export default {
       //LineChart
     labelDates:[],
     tweetsCountry: {},
-    LineData: [],
+    LineData: {},
     selectedState:"",
     slice: 0,
       //BarChart
-    BarData:[],
+    BarData:{},
     labelWords:[],
     wordsFrequency:[],
     sliceWords: 0
@@ -82,6 +79,9 @@ export default {
       this.LineData = this.createLineData();
       this.createWordsData();
       this.BarData = this.createBarData();
+      //Se cambiano i tweets ricomincio da capo
+      this.sliceWords = 0;
+      this.slice = 0;
     },
 
     slice: function (){
