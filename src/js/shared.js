@@ -34,3 +34,30 @@ export function getWordMapFromStringArray(texts) {
     }
     return wordMap;
 }
+
+/**
+ *
+ * @param tweets
+ * @return {Map<String, {count: Number}>}
+ */
+export function getHashtags( tweets ) {
+    let hashtagMap = new Map();
+    if( tweets && tweets.length > 0 ) {
+        for (const tweet of tweets) {
+            if (tweet.entities && tweet.entities.hashtags && tweet.entities.hashtags.length > 0) {
+                for ( const { tag } of tweet.entities.hashtags ) {
+                    let data = hashtagMap.get( tag );
+                    if (!data) {
+                        hashtagMap.set( tag, {
+                            count: 1
+                        });
+                    }
+                    else {
+                        data.count++;
+                    }
+                }
+            }
+        }
+    }
+    return hashtagMap;
+}
