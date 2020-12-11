@@ -58,11 +58,8 @@
           dense
           outlined
       ></v-select>
-      <p>{{tweetsDomain}}</p>
-      <p>{{BarCakeData}}</p>
-      <p>{{labelArg}}</p>
       <div v-if="selectedDomain">
-        <bar-chart :chart-data = "BarCakeData"></bar-chart>
+        <pie-chart :chart-data = "BarCakeData"></pie-chart>
       </div>
     </v-card>
 
@@ -72,8 +69,9 @@
 <script>
 import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
+import PieChart from "@/components/charts/PieChart";
 //import exampletweets from "../../repositories/context/ama/collection.json";
-//import Rainbow from "rainbowvis.js";
+import Rainbow from "rainbowvis.js";
 import {getWordMapFromStringArray, getHashtags, getContextEntities} from "@/js/shared";
 
 export default {
@@ -81,7 +79,8 @@ export default {
 
   components:{
     LineChart,
-    BarChart
+    BarChart,
+    PieChart
   },
 
   props: {
@@ -106,7 +105,7 @@ export default {
     labelHashtags:[],
     hashtagsFrequency:[],
     sliceHashtag: 0,
-     //DoughnutChart per i domini
+     //PieChart per i domini
     labelArg: [],
     tweetsDomain: {},
     BarCakeData:[],
@@ -114,7 +113,22 @@ export default {
     domainNames: [],
     cakeFrequency: [],
     entityTweets: {},
-    cakeSlice: 0
+    cakeSlice: 0,
+    RainbowColors: {
+      rainbow: new Rainbow(),
+      colorSpectrum: [
+        '#FFA2EB',
+        '#36A2EB',
+        '#FFCE56',
+        '#4BC0C0',
+        '#9966FF',
+        '#FF4040',
+        '#185A84',
+        '#5A5A02',
+        '#2DCE50',
+        '#5A0F32'
+      ]
+    }
   }),
 
 
@@ -209,10 +223,13 @@ export default {
       let regions = Object.keys(this.tweetsCountry[this.selectedState]);
       let datasets = [];
       let sliceDates = this.labelDates.slice(this.slice,this.slice+7);
+      this.RainbowColors.rainbow.setSpectrumByArray(this.RainbowColors.colorSpectrum);
+      this.RainbowColors.rainbow.setNumberRange(0, regions.length);
 
-      for(let region of regions) {
+      for (let i = 0; i < regions.length; i++) {
+        let region = regions[i];
         let tweetsXDay = this.setTweetsXDay(region, sliceDates); //Da passare lo slice
-        let randomColor = '#'+Math.floor(Math.random()*16777215).toString(16);
+        let randomColor = "#"+this.RainbowColors.rainbow.colorAt(i);
         let obj = new Object(
             {label: region,
             data: tweetsXDay,
@@ -318,33 +335,19 @@ export default {
       let obj = new Object({
         label: 'Words',
         borderWidth: 1,
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-          'rgba(255,159,64,0.2)',
-          'rgba(24,90,132,0.2)',
-          'rgba(90, 90, 2, 0.2)',
-          'rgba(45, 206, 80, 0.2)',
-          'rgba(90, 15, 50, 0.2)',
-        ],
-        borderColor: [
-          'rgba(255,99,132,1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgb(255,64,64)',
-          'rgba(24,90,132,1)',
-          'rgba(90, 90, 2, 1)',
-          'rgba(45, 206, 80, 1)',
-          'rgba(90, 15, 50, 1)',
-        ],
+        backgroundColor: [],
+        borderColor: [],
         pointBorderColor: '#2554FF',
         data: sliceFrequency
       })
+      let colors = new Array(sliceWords.length);
+      this.RainbowColors.rainbow.setSpectrumByArray(this.RainbowColors.colorSpectrum);
+      this.RainbowColors.rainbow.setNumberRange(0, sliceWords.length);
+      for (let i = 0; i < sliceWords.length; i++) {
+        colors[i]="#"+this.RainbowColors.rainbow.colorAt(i);
+      }
+      obj.backgroundColor = colors;
+      obj.borderColor = colors;
       dataset.push(obj);
 
       let chartData = {
@@ -376,33 +379,19 @@ export default {
       let obj = new Object({
         label: 'HashTags',
         borderWidth: 1,
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-          'rgba(255,159,64,0.2)',
-          'rgba(24,90,132,0.2)',
-          'rgba(90, 90, 2, 0.2)',
-          'rgba(45, 206, 80, 0.2)',
-          'rgba(90, 15, 50, 0.2)',
-        ],
-        borderColor: [
-          'rgba(255,99,132,1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgb(255,64,64)',
-          'rgba(24,90,132,1)',
-          'rgba(90, 90, 2, 1)',
-          'rgba(45, 206, 80, 1)',
-          'rgba(90, 15, 50, 1)',
-        ],
+        backgroundColor: [],
+        borderColor: [],
         pointBorderColor: '#2554FF',
         data: sliceFrequency
       })
+      let colors = new Array(sliceHashtags.length);
+      this.RainbowColors.rainbow.setSpectrumByArray(this.RainbowColors.colorSpectrum);
+      this.RainbowColors.rainbow.setNumberRange(0, sliceHashtags.length);
+      for (let i = 0; i < sliceHashtags.length; i++) {
+        colors[i]="#"+this.RainbowColors.rainbow.colorAt(i);
+      }
+      obj.backgroundColor = colors;
+      obj.borderColor = colors;
       dataset.push(obj);
 
       let chartData = {
@@ -443,49 +432,28 @@ export default {
       let obj = new Object({
         label: 'Contexts',
         borderWidth: 1,
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-          'rgba(255,159,64,0.2)',
-          'rgba(24,90,132,0.2)',
-          'rgba(90, 90, 2, 0.2)',
-          'rgba(45, 206, 80, 0.2)',
-          'rgba(90, 15, 50, 0.2)',
-        ],
-        borderColor: [
-          'rgba(255,99,132,1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgb(255,64,64)',
-          'rgba(24,90,132,1)',
-          'rgba(90, 90, 2, 1)',
-          'rgba(45, 206, 80, 1)',
-          'rgba(90, 15, 50, 1)',
-        ],
-        pointBorderColor: '#2554FF',
+        backgroundColor: [],
+        borderColor: [],
         data: frequencies
       })
+      let colors = new Array(names.length);
+      this.RainbowColors.rainbow.setSpectrumByArray(this.RainbowColors.colorSpectrum);
+      this.RainbowColors.rainbow.setNumberRange(0, names.length);
+      for (let i = 0; i < names.length; i++) {
+        colors[i]="#"+this.RainbowColors.rainbow.colorAt(i);
+      }
+      obj.backgroundColor = colors;
+      obj.borderColor = colors;
       dataset.push(obj);
 
       let chartData = {
         labels: names,
         datasets: dataset
       }
-
       return chartData;
     }
-
-
   }
 }
-
 </script>
-
 <style scoped>
-
 </style>
