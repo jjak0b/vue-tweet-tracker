@@ -2,7 +2,7 @@
 import { Pie } from 'vue-chartjs'
 
 export default {
-  name: "BarChart",
+  name: "PieChart",
   extends: Pie,
 
   props: {
@@ -17,7 +17,7 @@ export default {
           display: true
         },
         responsive: true,
-        maintainAspectRatio: false
+        maintainAspectRatio: true
       }
     }
   },

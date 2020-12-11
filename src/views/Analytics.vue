@@ -46,20 +46,24 @@
         <bar-chart :chart-data = "HashtagBarData"></bar-chart>
       </div>
     </v-card>
-    <v-card v-if="Object.keys(tweetsDomain).length > 0" class="pa-4">
-     <v-card-title>Domain chart</v-card-title>
+    <v-card v-if="Object.keys(tweetsDomain).length > 0" class="pa-4 mt-4">
+     <v-card-title>Context chart</v-card-title>
       <v-select
           :items="Object.keys(tweetsDomain)"
           v-model="selectedDomain"
-          label="Select a Twitter Domain to see the chart"
+          label="Select a context category to see the chart of all the topics discussed in tweets"
           dense
           outlined
       ></v-select>
-      <div v-if="selectedDomain">
-        <pie-chart :chart-data = "BarCakeData"></pie-chart>
+      <div
+          class="d-flex"
+      >
+          <pie-chart
+              class="pie-chart mx-auto"
+              :chart-data = "BarCakeData"
+          ></pie-chart>
       </div>
     </v-card>
-
   </div>
 </template>
 
@@ -67,7 +71,6 @@
 import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
 import PieChart from "@/components/charts/PieChart";
-//import exampletweets from "../../repositories/context/ama/collection.json";
 import Rainbow from "rainbowvis.js";
 import {getWordMapFromStringArray, getHashtags, getContextEntities} from "@/js/shared";
 
@@ -451,4 +454,7 @@ export default {
 }
 </script>
 <style scoped>
+.pie-chart {
+  width: 75%;
+}
 </style>
