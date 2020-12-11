@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card v-if="labelDates.length > 0" class="pa-4">
-      <v-card-title>Chart geografic areas tweets</v-card-title>
+      <v-card-title>Geographical tweets chart</v-card-title>
 
       <v-select
           :items="Object.keys(tweetsCountry)"
@@ -49,6 +49,22 @@
         <bar-chart :chart-data = "HashtagBarData"></bar-chart>
       </div>
     </v-card>
+    <v-card v-if="Object.keys(tweetsDomain).length > 0" class="pa-4">
+     <v-card-title>Domain chart</v-card-title>
+      <v-select
+          :items="Object.keys(tweetsDomain)"
+          v-model="selectedDomain"
+          label="Select a Twitter Domain to see the chart"
+          dense
+          outlined
+      ></v-select>
+      <p>{{tweetsDomain}}</p>
+      <p>{{BarCakeData}}</p>
+      <p>{{labelArg}}</p>
+      <div v-if="selectedDomain">
+        <bar-chart :chart-data = "BarCakeData"></bar-chart>
+      </div>
+    </v-card>
 
   </div>
 </template>
@@ -58,7 +74,7 @@ import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
 //import exampletweets from "../../repositories/context/ama/collection.json";
 //import Rainbow from "rainbowvis.js";
-import {getWordMapFromStringArray, getHashtags} from "@/js/shared";
+import {getWordMapFromStringArray, getHashtags, getContextEntities} from "@/js/shared";
 
 export default {
   name: "Analytics",
@@ -89,8 +105,16 @@ export default {
     HashtagBarData:[],
     labelHashtags:[],
     hashtagsFrequency:[],
-    sliceHashtag: 0
-
+    sliceHashtag: 0,
+     //DoughnutChart per i domini
+    labelArg: [],
+    tweetsDomain: {},
+    BarCakeData:[],
+    selectedDomain:"",
+    domainNames: [],
+    cakeFrequency: [],
+    entityTweets: {},
+    cakeSlice: 0
   }),
 
 
@@ -104,6 +128,7 @@ export default {
       this.BarData = this.createBarData();
       this.createHashtagsData();
       this.HashtagBarData = this.createBarDataForHashtags();
+      this.tweetDomains = this.addDomains();
     },
 
     slice: function (){
@@ -122,6 +147,10 @@ export default {
       this.selectedState = newVal;
       this.LineData = this.createLineData();
       this.slice = 0; //Ricomincio dall'inizio
+    },
+    selectedDomain: function(newVal){
+      this.BarCakeData = this.createCakeForDomains(newVal);
+      console.log(this.BarCakeData);
     }
 
   },
@@ -133,6 +162,7 @@ export default {
     this.BarData = this.createBarData();
     this.createHashtagsData();
     this.HashtagBarData = this.createBarDataForHashtags();
+    this.tweetDomains = this.addDomains();
   },
 
   methods: {
@@ -381,10 +411,79 @@ export default {
       }
 
       return chartData;
+    },
+    //BARCHART PLACEHOLDER PER I DOMINI
+
+    addDomains: function(){
+      this.tweetsDomain = {};
+      let domainMap = getContextEntities(this.tweets);
+      console.log(domainMap);
+      let frequencies;
+      let entityNames;
+      domainMap.forEach((entityMap, domainName)=>{
+        frequencies = new Array();
+        entityNames = new Array();
+        entityMap.forEach(({count} ,entityName)=>{
+          frequencies.push(count);
+          entityNames.push(entityName);
+        })
+        this.tweetsDomain[domainName] =  {
+          frequencies: frequencies,
+          entityNames: entityNames
+        };
+      })
+    },
+
+    createCakeForDomains: function (domainName){
+      let frequencies = this.tweetsDomain[domainName].frequencies;
+      console.log(domainName, frequencies, names);
+      let names = this.tweetsDomain[domainName].entityNames;
+      let dataset = [];
+
+      let obj = new Object({
+        label: 'Contexts',
+        borderWidth: 1,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255,159,64,0.2)',
+          'rgba(24,90,132,0.2)',
+          'rgba(90, 90, 2, 0.2)',
+          'rgba(45, 206, 80, 0.2)',
+          'rgba(90, 15, 50, 0.2)',
+        ],
+        borderColor: [
+          'rgba(255,99,132,1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgb(255,64,64)',
+          'rgba(24,90,132,1)',
+          'rgba(90, 90, 2, 1)',
+          'rgba(45, 206, 80, 1)',
+          'rgba(90, 15, 50, 1)',
+        ],
+        pointBorderColor: '#2554FF',
+        data: frequencies
+      })
+      dataset.push(obj);
+
+      let chartData = {
+        labels: names,
+        datasets: dataset
+      }
+
+      return chartData;
     }
+
 
   }
 }
+
 </script>
 
 <style scoped>
