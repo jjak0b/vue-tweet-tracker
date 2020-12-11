@@ -79,10 +79,10 @@ export function getContextEntities(tweets) {
         for (const tweet of tweets) {
             if (tweet.data.context_annotations && tweet.data.context_annotations.length > 0) {
                 for ( const { domain, entity } of tweet.data.context_annotations) {
-                    let data = contextMap.get( domain.name );
-                    if (!data) {
+                    let entityMap = contextMap.get( domain.name );
+                    if (!entityMap) {
                         contextMap.set(
-                            domain,
+                            domain.name,
                             new Map([
                                 [
                                     entity.name,
@@ -94,7 +94,16 @@ export function getContextEntities(tweets) {
                         );
                     }
                     else {
-                        data.count++;
+                        let entityData = entityMap.get( entity.name );
+                        if( !entityData ) {
+                            entityData = {
+                                count: 1
+                            }
+                            entityMap.set( entity.name, entityData );
+                        }
+                        else {
+                            entityData.count++;
+                        }
                     }
                 }
             }
