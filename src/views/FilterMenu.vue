@@ -51,32 +51,32 @@
               <v-row no-gutters>
                 <v-col>
                   <v-checkbox
-                      v-model="posting.active"
+                      v-model="filter.posting.active"
                       label="Post samples automatically"
                   ></v-checkbox>
                 </v-col>
 
                 <v-col>
-                  <div v-if="posting.active">
+                  <div v-if="filter.posting.active">
                     <h4 class="font-weight-medium">Post frequency</h4>
                     <v-row>
                       <v-col>
                         <v-text-field
-                            v-model="posting.frequency.days"
+                            v-model="filter.posting.frequency.days"
                             type="number"
                             label="days"
                         ></v-text-field>
                       </v-col>
                       <v-col>
                         <v-text-field
-                            v-model="posting.frequency.hours"
+                            v-model="filter.posting.frequency.hours"
                             type="number"
                             label="hours"
                         ></v-text-field>
                       </v-col>
                       <v-col>
                         <v-text-field
-                            v-model="posting.frequency.minutes"
+                            v-model="filter.posting.frequency.minutes"
                             type="number"
                             label="minutes"
                         ></v-text-field>
@@ -86,7 +86,7 @@
                 </v-col>
               </v-row>
 
-              <v-row v-if="posting.active" no-gutters>
+              <v-row v-if="filter.posting.active" no-gutters>
                 <v-col>
                   <h4 class="font-weight-medium">Automated posting duration</h4>
                   <v-row>
@@ -98,19 +98,19 @@
                       >
                         <template v-slot:activator="{ on, attrs }">
                           <v-text-field
-                              :value="posting.from.date"
+                              :value="filter.posting.from.date"
                               label="From date"
                               prepend-icon="mdi-calendar"
                               readonly
                               v-bind="attrs"
                               v-on="on"
                               clearable
-                              @click:clear="posting.from.date = null"
+                              @click:clear="filter.posting.from.date = null"
                           ></v-text-field>
                         </template>
                         <v-date-picker
-                            v-model="posting.from.date"
-                            :max="posting.to.date"
+                            v-model="filter.posting.from.date"
+                            :max="filter.posting.to.date"
                             @input="showFromDatePostingMenu = false"
                         ></v-date-picker>
                       </v-menu>
@@ -121,20 +121,20 @@
                       >
                         <template v-slot:activator="{ on, attrs }">
                           <v-text-field
-                              :value="posting.from.time"
+                              :value="filter.posting.from.time"
                               label="From time"
                               prepend-icon="mdi-calendar"
                               readonly
                               v-bind="attrs"
                               v-on="on"
                               clearable
-                              @click:clear="posting.from.time = null"
+                              @click:clear="filter.posting.from.time = null"
                           ></v-text-field>
                         </template>
                         <v-time-picker
                             light
                             format="ampm"
-                            v-model="posting.from.time"
+                            v-model="filter.posting.from.time"
                             :landscape="$vuetify.breakpoint.smAndUp"
                             ampm-in-title
                             @change="showFromTimePostingMenu = false"
@@ -149,19 +149,19 @@
                       >
                         <template v-slot:activator="{ on, attrs }">
                           <v-text-field
-                              v-model.trim="posting.to.date"
+                              v-model.trim="filter.posting.to.date"
                               label="To date"
                               prepend-icon="mdi-calendar"
                               readonly
                               v-bind="attrs"
                               v-on="on"
                               clearable
-                              @click:clear="posting.to.date = null"
+                              @click:clear="filter.posting.to.date = null"
                           ></v-text-field>
                         </template>
                         <v-date-picker
-                            v-model.trim="posting.to.date"
-                            :min="posting.from.date"
+                            v-model.trim="filter.posting.to.date"
+                            :min="filter.posting.from.date"
                             @input="showToDatePostingMenu = false"
                         ></v-date-picker>
                       </v-menu>
@@ -172,20 +172,20 @@
                       >
                         <template v-slot:activator="{ on, attrs }">
                           <v-text-field
-                              :value="posting.to.time"
+                              :value="filter.posting.to.time"
                               label="To time"
                               prepend-icon="mdi-calendar"
                               readonly
                               v-bind="attrs"
                               v-on="on"
                               clearable
-                              @click:clear="posting.to.time = null"
+                              @click:clear="filter.posting.to.time = null"
                           ></v-text-field>
                         </template>
                         <v-time-picker
                             light
                             format="ampm"
-                            v-model="posting.to.time"
+                            v-model="filter.posting.to.time"
                             :landscape="$vuetify.breakpoint.smAndUp"
                             @change="showToTimePostingMenu = false"
                             ampm-in-title
@@ -345,44 +345,6 @@
               ></v-combobox>
             </v-card-text>
           </v-card>
-
-          <!--
-        <v-card class="mb-5">
-          <v-card-title>Filters</v-card-title>
-
-          <v-card-text>
-            <v-switch label="Replies" v-model="filter.filters.replies"></v-switch>
-            <v-radio-group v-model="filter.filters.repliesValue" v-if="filter.filters.replies">
-              <v-radio label="Include replies and original Tweets" value="replies-and-tweets"></v-radio>
-              <v-radio label="Only show replies" value="only-replies"></v-radio>
-            </v-radio-group>
-            <v-switch label="Links" v-model="filter.filters.links"></v-switch>
-            <v-text-field
-                v-model.trim="filter.filters.linksValue"
-                label="Link to filter"
-            ></v-text-field>
-            <v-radio-group v-model="filter.filters.linksValue" v-if="filter.filters.links">
-              <v-radio label="Include Tweets with links" value="include-links"></v-radio>
-              <v-radio label="Only show Tweets with links" value="only-links"></v-radio>
-            </v-radio-group>
-          </v-card-text>
-        </v-card>
--->
-          <!--
-                   <v-card class="mb-5">
-                      <v-card-title>Engagement</v-card-title>
-                      <v-card-text>
-                        <v-text-field
-                            v-for="item in labels.engagement"
-                            v-model="filter.engagement[item.key]"
-                            :key="item.label"
-                            :hint="item.hint"
-                            :label="item.label"
-                            clearable
-                        ></v-text-field>
-                      </v-card-text>
-                    </v-card>
-          -->
         </v-col>
       </v-row>
     </v-form>
@@ -435,6 +397,7 @@ import axios from "axios";
 import language from "@/assets/language.json"
 import StatusCodes from 'http-status-codes'
 import positionInput from "@/components/charts/positionInput";
+import Filter from "@/js/Filter";
 
 export default {
   name: 'FilterMenu',
@@ -451,60 +414,8 @@ export default {
     ],
     languageArray: null,
     notify_me: false,
-    overlay: false, // Booleano per mostrare pop up con info bot telegram
-    posting: {
-      active: false,
-      frequency: {
-        days: null,
-        hours: null,
-        minutes: null
-      },
-      from: {
-        date: null,
-        time: null
-      },
-      to: {
-        date: null,
-        time: null
-      }
-    },
-    filter: {
-      coordinates: [],
-      words: {
-        all: [],
-        exact: [],
-        any: [],
-        none: [],
-        hashtags: [],
-        language: null
-      },
-      accounts: {
-        from: [],
-        to: [],
-        mentioning: []
-      },
-
-      context: {
-        entities: []
-      },
-      /* filters: {
-       //replies: true,
-       //repliesValue: "replies-and-tweets",
-       links: true,
-       linksValue: null
-     },*/
-      /*
-    engagement: {
-      minReplies: "",
-      minLikes: "",
-      minRetweets: ""
-    },
-    */
-      dates: {
-        from: null,
-        to: null
-      }
-    },
+    overlay: false, // Booleano per mostrare pop up con info bot telegram,
+    filter: new Filter(),
     showFromTimePostingMenu: false,
     showToTimePostingMenu: false,
     showFromDatePostingMenu: false,
@@ -570,23 +481,6 @@ export default {
 
         },
       }
-      /*engagement: {
-      minReplies: {
-        hint: "Example: 280 · Tweets with at least 280 replies",
-        label: "Minimum replies",
-        key: "minReplies"
-      },
-      minLikes: {
-        hint: "Example: 280 · Tweets with at least 280 Likes",
-        label: "Minimum Likes",
-        key: "minLikes"
-      },
-      minRetweets: {
-        hint: "Example: 280 · Tweets with at least 280 Retweets",
-        label: "Minimum Retweets",
-        key: "minRetweets"
-      },
-    }*/
     },
 
     onlyNumbers: [
@@ -661,7 +555,6 @@ export default {
     deleteRectangle(event, index) {
       this.rectangles.splice(index, 1);
       this.filter.coordinates.splice(index, 1);
-
     },
     associateEvent() {
       this.notify_me = !this.notify_me;
