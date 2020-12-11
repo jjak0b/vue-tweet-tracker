@@ -14,7 +14,7 @@
       <p>{{LineData}}</p>
       <p>{{labelDates}}</p>
 
-      <div v-if="selectedState" align="right">
+      <div v-if="selectedState">
         <v-btn v-if="(slice+7<=labelDates.length) || (slice>0 && slice<labelDates.length)"
                @click="seeMore(1)"
         >
@@ -25,8 +25,8 @@
       </div>
     </v-card>
     <v-card v-if="labelWords.length > 0 && wordsFrequency.length > 0" class="pa-4 mt-4">
-      <v-card-title>Chart words frequency</v-card-title>
-      <div align="right">
+      <v-card-title>Words frequency chart</v-card-title>
+      <div>
         <v-btn v-if="(sliceWords+10<=labelWords.length) || (sliceWords>0 && sliceWords<labelWords.length)"
                @click="seeMore(2)"
         >
@@ -36,6 +36,20 @@
         <bar-chart :chart-data = "BarData"></bar-chart>
       </div>
     </v-card>
+    <v-card v-if="labelHashtags.length > 0 && hashtagsFrequency.length > 0" class="pa-4 mt-4">
+      <v-card-title>Hashtags frequency chart</v-card-title>
+      <div>
+        <v-btn v-if="(sliceHashtag+10<=labelHashtags.length) || (sliceHashtag>0 && sliceHashtag<labelHashtags.length)"
+               @click="seeMore(3)"
+        >
+          See other hashtags
+          <v-icon right>mdi-arrow-right-drop-circle-outline</v-icon>
+        </v-btn>
+
+        <bar-chart :chart-data = "HashtagBarData"></bar-chart>
+      </div>
+    </v-card>
+
   </div>
 </template>
 
@@ -44,7 +58,7 @@ import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
 //import exampletweets from "../../repositories/context/ama/collection.json";
 //import Rainbow from "rainbowvis.js";
-import {getWordMapFromStringArray} from "@/js/shared"
+import {getWordMapFromStringArray, getHashtags} from "@/js/shared";
 
 export default {
   name: "Analytics",
@@ -70,7 +84,13 @@ export default {
     BarData:[],
     labelWords:[],
     wordsFrequency:[],
-    sliceWords: 0
+    sliceWords: 0,
+      //BarChart per frequenza hashtag
+    HashtagBarData:[],
+    labelHashtags:[],
+    hashtagsFrequency:[],
+    sliceHashtag: 0
+
   }),
 
 
@@ -82,6 +102,8 @@ export default {
       this.LineData = this.createLineData();
       this.createWordsData();
       this.BarData = this.createBarData();
+      this.createHashtagsData();
+      this.HashtagBarData = this.createBarDataForHashtags();
     },
 
     slice: function (){
@@ -90,6 +112,10 @@ export default {
 
     sliceWords: function (){
       this.BarData = this.createBarData();
+    },
+
+    sliceHashtags: function(){
+      this.HashtagBarData = this.createHashtagsData();
     },
 
     selectedState: function (newVal){
@@ -105,6 +131,8 @@ export default {
     this.tweetsCountry = this.addCountriesData();
     this.createWordsData();
     this.BarData = this.createBarData();
+    this.createHashtagsData();
+    this.HashtagBarData = this.createBarDataForHashtags();
   },
 
   methods: {
@@ -226,6 +254,13 @@ export default {
           this.sliceWords += difference;
         }
       }
+      else if(buttonNumber == 3){ //BUTTON BAR CHART FOR HASHTAGS
+        if(this.sliceHashtag+10 <= this.labelHashtags.length) this.sliceHashtag += 10;
+        else if(this.sliceHashtag > 0 && this.sliceHashtag< this.labelHashtags.length){
+          let difference = this.labelHashtags.length - this.sliceHashtag;
+          this.sliceHashtag += difference;
+        }
+      }
     },
 
     //FUNZIONI BARCHART
@@ -288,7 +323,66 @@ export default {
       }
 
       return chartData;
+    },
+    //BARCHART PER GLI HASHTAG
+    createHashtagsData:function (){
+      let hashMap = getHashtags(this.tweets);
+      console.log(hashMap);
+      let orderedEntries = Array.from(hashMap.entries());
+      orderedEntries.sort((a, b) => (b[1].count - a[1].count));
+      console.log(orderedEntries);
+      let labelHashtags = orderedEntries.map((item)=>item[0]);
+      let hashtagsFrequency = orderedEntries.map((item)=>item[1].count);
+
+      this.labelHashtags = labelHashtags;
+      this.hashtagsFrequency = hashtagsFrequency;
+    },
+
+    createBarDataForHashtags: function (){
+      let sliceHashtags = this.labelHashtags.slice(this.sliceHashtag,this.sliceHashtag+10);
+      let sliceFrequency = this.hashtagsFrequency.slice(this.sliceHashtag, this.sliceHashtag+10)
+      let dataset = [];
+
+      let obj = new Object({
+        label: 'HashTags',
+        borderWidth: 1,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255,159,64,0.2)',
+          'rgba(24,90,132,0.2)',
+          'rgba(90, 90, 2, 0.2)',
+          'rgba(45, 206, 80, 0.2)',
+          'rgba(90, 15, 50, 0.2)',
+        ],
+        borderColor: [
+          'rgba(255,99,132,1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgb(255,64,64)',
+          'rgba(24,90,132,1)',
+          'rgba(90, 90, 2, 1)',
+          'rgba(45, 206, 80, 1)',
+          'rgba(90, 15, 50, 1)',
+        ],
+        pointBorderColor: '#2554FF',
+        data: sliceFrequency
+      })
+      dataset.push(obj);
+
+      let chartData = {
+        labels: sliceHashtags,
+        datasets: dataset
+      }
+
+      return chartData;
     }
+
   }
 }
 </script>

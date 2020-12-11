@@ -44,8 +44,8 @@ export function getHashtags( tweets ) {
     let hashtagMap = new Map();
     if( tweets && tweets.length > 0 ) {
         for (const tweet of tweets) {
-            if (tweet.entities && tweet.entities.hashtags && tweet.entities.hashtags.length > 0) {
-                for ( const { tag } of tweet.entities.hashtags ) {
+            if (tweet.data.entities && tweet.data.entities.hashtags && tweet.data.entities.hashtags.length > 0) {
+                for ( const { tag } of tweet.data.entities.hashtags ) {
                     let data = hashtagMap.get( tag );
                     if (!data) {
                         hashtagMap.set( tag, {
