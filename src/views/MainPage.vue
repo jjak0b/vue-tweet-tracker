@@ -4,6 +4,10 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title class="white--text">Twitter tracker</v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-btn text class="white--text mr-2" to="/app/analytics">
+        <v-icon left>mdi-chart-areaspline</v-icon>
+        Analytics
+      </v-btn>
       <v-btn text class="white--text mr-2" to="/app/gallery">
         <v-icon left>mdi-folder-multiple-image</v-icon>
         Gallery
@@ -94,7 +98,11 @@
         <router-view
             :selectedSampleTag="selectedSampleTag"
             :selectedSample="selectedSample"
+            :localSample="localSample"
+            :localFilter="localFilter"
             @update-samples="updateSampleList()"
+            @setLocalSample="localSample = $event"
+            @setLocalFilter="localFilter = $event"
         ></router-view>
       </v-container>
     </v-main>
@@ -104,6 +112,7 @@
 <script>
 import axios from "axios";
 import {StatusCodes} from "http-status-codes";
+import Filter from "@/js/Filter";
 
 export default {
   name: "MainPage",
@@ -116,11 +125,19 @@ export default {
     samples: {
       active: [],
       paused: []
-    }
+    },
+    localSample: null,
+    localFilter: new Filter()
   }),
   computed: {
     samplesList() {
       return this.samples.active.concat( this.samples.paused );
+    }
+  },
+  watch: {
+    selectedSample(newVal) {
+      this.localSample = newVal;
+      this.localFilter = new Filter();
     }
   },
   created() {

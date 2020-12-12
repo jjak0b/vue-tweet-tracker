@@ -1,5 +1,5 @@
 <template>
-  <div v-if="filteredSample && filteredSample.length > 0">
+  <div v-if="selectedSample && selectedSample.length > 0">
     <v-container>
       <v-row>
         <v-col>
@@ -190,7 +190,9 @@ export default {
 
   name: "Dashboard",
   props: {
-    selectedSample: Array
+    selectedSample: Array,
+    localSample: Array,
+    localFilter: Filter
   },
   components: {
     ImageWindow,
@@ -198,6 +200,9 @@ export default {
     Map,
     Tweet,
     localFilter
+  },
+  created() {
+    this.filteredSample = this.localSample;
   },
   computed: {
     isGeoInData: function () {
@@ -212,7 +217,7 @@ export default {
       if (this.selectedTweet && this.selectedTweet[0]) {
         let coordinates;
         if (this.isGeoInData) {
-          let coordinates = this.selectedTweet[0].data.geo.coordinates.coordinates;
+          coordinates = this.selectedTweet[0].data.geo.coordinates.coordinates;
           return new Position(coordinates[1], coordinates[0])
         } else if (this.isGeoInPlaces) {
           coordinates = this.selectedTweet[0].places.geo.bbox;
@@ -228,7 +233,9 @@ export default {
   watch: {
     selectedSample: function (newVal) {
       this.filteredSample = newVal;
-      this.localFilter = new Filter();
+    },
+    filteredSample(newVal) {
+      this.$emit("setLocalSample", newVal );
     }
   },
   methods: {
@@ -238,6 +245,7 @@ export default {
     },
     resetLocalFilter() {
       this.filteredSample = this.selectedSample;
+      this.$emit( "setLocalFilter", new Filter() );
     },
     filterSample() {
       if (!this.localFilter) return;
@@ -360,16 +368,10 @@ export default {
       return date.toLocaleString('en-US');
     },
     thereAreImages(tweet) {
-      if (tweet.media && tweet.media.some((media) =>
-          media.type === 'photo')) {
-        return true
-      } else {
-        return false
-      }
+      return (tweet.media && tweet.media.some((media) => media.type === 'photo'));
     }
   },
   data: () => ({
-    localFilter: new Filter(),
     showLocalFilter: false,
     filteredSample: null,
     selectedTweet: [],

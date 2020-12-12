@@ -132,7 +132,7 @@ export default {
       this.countWordMax = 0;
       this.computeWordsBySamples( wordToFilter );
       this.updateWordsWeight();
-      this.color.rainbow.setNumberRange(1, this.countWordMax );
+      this.color.rainbow.setNumberRange(0, this.countWordMax || 1 );
       this.$forceUpdate();
     },
     computeWordsBySamples( wordToFilter ) {
@@ -168,7 +168,10 @@ export default {
       end = performance.now();
       console.log( `[WordCloud]`, `sorted in ${end-start} ms`);
 
-      this.countWordMax = this.wordMap.get( wordsWeights[ 0 ][ 0 ] ).count;
+      if( wordsWeights.length > 0 )
+        this.countWordMax = this.wordMap.get( wordsWeights[ 0 ][ 0 ] ).count;
+      else
+        this.countWordMax = 0;
 
       if( wordsWeights.length >= max ) {
         console.log( `[WordCloud]`, `slicing max ${max} words`);

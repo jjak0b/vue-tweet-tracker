@@ -34,3 +34,80 @@ export function getWordMapFromStringArray(texts) {
     }
     return wordMap;
 }
+
+/**
+ *
+ * @param tweets
+ * @return {Map<String, {count: Number}>}
+ */
+export function getHashtags( tweets ) {
+    let hashtagMap = new Map();
+    if( tweets && tweets.length > 0 ) {
+        for (const tweet of tweets) {
+            if (tweet.data.entities && tweet.data.entities.hashtags && tweet.data.entities.hashtags.length > 0) {
+                for ( const { tag } of tweet.data.entities.hashtags ) {
+                    let data = hashtagMap.get( tag );
+                    if (!data) {
+                        hashtagMap.set( tag, {
+                            count: 1
+                        });
+                    }
+                    else {
+                        data.count++;
+                    }
+                }
+            }
+        }
+    }
+    return hashtagMap;
+}
+
+/**
+ * return Map with keys the domain name and value as a Map with key the entity's name and value a { count : Number }
+ * @param tweets
+ * @return {Map<String, Map<String, {count: Number}>>}
+ */
+export function getContextEntities(tweets) {
+
+    /**
+     * K: domain context
+     * V: entities context
+     * @type {Map<String, Map<String, {count: Number}>>}
+     */
+    let contextMap = new Map();
+    if( tweets && tweets.length > 0 ) {
+        for (const tweet of tweets) {
+            if (tweet.data.context_annotations && tweet.data.context_annotations.length > 0) {
+                for ( const { domain, entity } of tweet.data.context_annotations) {
+                    let entityMap = contextMap.get( domain.name );
+                    if (!entityMap) {
+                        contextMap.set(
+                            domain.name,
+                            new Map([
+                                [
+                                    entity.name,
+                                    {
+                                        count: 1
+                                    }
+                                ]
+                            ]),
+                        );
+                    }
+                    else {
+                        let entityData = entityMap.get( entity.name );
+                        if( !entityData ) {
+                            entityData = {
+                                count: 1
+                            }
+                            entityMap.set( entity.name, entityData );
+                        }
+                        else {
+                            entityData.count++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return contextMap;
+}

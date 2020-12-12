@@ -1,12 +1,22 @@
 <template>
-  <v-container v-if="selectedSample">
-    <v-row v-for="(mediaList, id) in places" v-bind:key="id">
-      <v-row>
+  <v-container v-if="localSample">
+    <v-pagination
+        v-model="pageIndex"
+        :length="pageCount"
+        :total-visible="15"
+    >
+    </v-pagination>
+    <div v-if="placesPerPage.length > 0">
+      <v-row
+          v-for="(id, index) in placesPerPage[pageIndex-1]"
+          :key="'place_' + index + '_' + id"
+      >
         <v-col>
-          <p>{{ id }}</p>
+          <article>
+          <h3 v-text="id"></h3>
           <v-row>
             <v-col
-                v-for="(media, i ) in mediaList"
+                v-for="(media, i ) in places[ id ]"
                 :key="id + '_' + i + '_' + media.media_key"
                 class="d-flex child-flex"
                 cols="4"
@@ -31,9 +41,10 @@
               </v-img>
             </v-col>
           </v-row>
+          </article>
         </v-col>
       </v-row>
-    </v-row>
+    </div>
   </v-container>
 </template>
 
@@ -42,22 +53,56 @@
 export default {
   name: "Gallery",
   props: {
-    selectedSample: Array,
+    localSample: Array,
   },
   data: () => ({
     tweets: [],
-    places: {}
+    places: {},
+    pageIndex: 1,
+    pageCount: 0,
+    maxPlacesPerPage: 10,
+    placeKeys: [],
+    pagePlaceKeys: [],
+    notGeoTaggedPlaceID: "Not geotagged",
+    placesPerPage: []
   }),
 
   watch: {
-    selectedSample: function (newVal) {
-      this.tweets = newVal;
+    localSample: function (newVal) {
+      this.pageIndex = 1;
+      this.pageCount = 0;
+      this.tweets = newVal || [];
       this.places = this.getPlaces();
+    },
+    places() {
+
+      this.placeKeys = Object.keys( this.places );
+      let index = this.placeKeys.indexOf( this.notGeoTaggedPlaceID );
+      // push not geotagged places to end of place names array
+      let notGeoTaggedKeys = null;
+      if( index >= 0 ) {
+        notGeoTaggedKeys = this.placeKeys.splice( index, 1 );
+      }
+      this.pageCount = Math.ceil(this.placeKeys.length / this.maxPlacesPerPage );
+
+      this.placesPerPage = new Array(this.pageCount + (index >= 0 ? 1 : 0) );
+      let i
+      for ( i = 0; i < this.pageCount; i++) {
+        let startIndex = Math.min ( i * this.maxPlacesPerPage, this.placeKeys.length );
+        let endIndex = startIndex + Math.min( this.placeKeys.length - startIndex, this.maxPlacesPerPage );
+        this.placesPerPage[ i ] = this.placeKeys.slice( startIndex, endIndex );
+      }
+      if( notGeoTaggedKeys ) {
+        this.placesPerPage[ i ] = notGeoTaggedKeys ;
+        this.pageCount++;
+      }
     }
   },
 
   created() {
-    this.tweets = this.selectedSample;
+    this.pageIndex = 1;
+    this.pageCount = 0;
+    this.tweets = this.localSample || [];
     this.places = this.getPlaces();
   },
 
@@ -76,14 +121,15 @@ export default {
       let priority;
       let place;
       for (let tweet of this.tweets) {
-        priority = 0;
-        place = null;
+        // priority = 0;
+        // place = null;
         if (tweet.media) {
           if (tweet.places && tweet.places.full_name) {
             place = tweet.places.full_name;
             priority = 2;
-          } else if (tweet.users && tweet.users.location) {
-            place = tweet.users.location;
+          }
+          else { // if( tweet.users && tweet.users.location )
+            place = this.notGeoTaggedPlaceID; // tweet.users.location;
             priority = 1;
           }
 
