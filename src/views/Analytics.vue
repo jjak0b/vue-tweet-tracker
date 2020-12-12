@@ -1,5 +1,5 @@
 <template>
-  <div v-if="selectedSample">
+  <div v-if="localSample">
     <v-card v-if="labelDates.length > 0" class="pa-4">
       <v-card-title>Geographical tweets chart</v-card-title>
 
@@ -84,7 +84,7 @@ export default {
   },
 
   props: {
-    selectedSample: Array,
+    localSample: Array,
   },
 
   data: () => ({
@@ -129,7 +129,7 @@ export default {
 
   watch: {
 
-    selectedSample: function (newVal) {
+    localSample: function (newVal) {
       this.updateCharts(newVal);
     },
 
@@ -167,7 +167,7 @@ export default {
   created() {
     // when page load first time and there is no current sample selected, then  will be wasted
     // but this is neded to show charts when user visit this page and the came from another page
-    this.updateCharts( this.selectedSample );
+    this.updateCharts( this.localSample );
   },
 
   methods: {

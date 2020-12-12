@@ -1,5 +1,5 @@
 <template>
-  <v-container v-if="selectedSample">
+  <v-container v-if="localSample">
     <v-pagination
         v-model="pageIndex"
         :length="pageCount"
@@ -53,7 +53,7 @@
 export default {
   name: "Gallery",
   props: {
-    selectedSample: Array,
+    localSample: Array,
   },
   data: () => ({
     tweets: [],
@@ -68,7 +68,7 @@ export default {
   }),
 
   watch: {
-    selectedSample: function (newVal) {
+    localSample: function (newVal) {
       this.pageIndex = 1;
       this.pageCount = 0;
       this.tweets = newVal || [];
@@ -102,7 +102,7 @@ export default {
   created() {
     this.pageIndex = 1;
     this.pageCount = 0;
-    this.tweets = this.selectedSample || [];
+    this.tweets = this.localSample || [];
     this.places = this.getPlaces();
   },
 

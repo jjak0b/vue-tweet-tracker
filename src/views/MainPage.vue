@@ -98,7 +98,11 @@
         <router-view
             :selectedSampleTag="selectedSampleTag"
             :selectedSample="selectedSample"
+            :localSample="localSample"
+            :localFilter="localFilter"
             @update-samples="updateSampleList()"
+            @setLocalSample="localSample = $event"
+            @setLocalFilter="localFilter = $event"
         ></router-view>
       </v-container>
     </v-main>
@@ -108,6 +112,7 @@
 <script>
 import axios from "axios";
 import {StatusCodes} from "http-status-codes";
+import Filter from "@/js/Filter";
 
 export default {
   name: "MainPage",
@@ -120,11 +125,19 @@ export default {
     samples: {
       active: [],
       paused: []
-    }
+    },
+    localSample: null,
+    localFilter: new Filter()
   }),
   computed: {
     samplesList() {
       return this.samples.active.concat( this.samples.paused );
+    }
+  },
+  watch: {
+    selectedSample(newVal) {
+      this.localSample = newVal;
+      this.localFilter = new Filter();
     }
   },
   created() {
