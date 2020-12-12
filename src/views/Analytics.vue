@@ -107,7 +107,7 @@ export default {
     sliceHashtag: 0,
      //PieChart per i domini
     tweetsDomain: {},
-    BarCakeData:[],
+    BarCakeData: {},
     selectedDomain:"",
     RainbowColors: {
       rainbow: new Rainbow(),
@@ -130,17 +130,7 @@ export default {
   watch: {
 
     selectedSample: function (newVal) {
-      this.tweets = newVal;
-      this.tweetsCountry = this.addCountriesData();
-      this.LineData = this.createLineData();
-      this.createWordsData();
-      this.BarData = this.createBarData();
-      //Se cambiano i tweets ricomincio da capo
-      this.sliceWords = 0;
-      this.slice = 0;
-      this.createHashtagsData();
-      this.HashtagBarData = this.createBarDataForHashtags();
-      this.tweetDomains = this.addDomains();
+      this.updateCharts(newVal);
     },
 
     slice: function (){
@@ -162,23 +152,33 @@ export default {
     },
     selectedDomain: function(newVal){
       this.BarCakeData = this.createCakeForDomains(newVal);
-      console.log(this.BarCakeData);
     }
 
   },
 
   created() {
-    this.tweets = this.selectedSample;
-    this.tweetsCountry = this.addCountriesData();
-    this.createWordsData();
-    this.BarData = this.createBarData();
-    this.createHashtagsData();
-    this.HashtagBarData = this.createBarDataForHashtags();
-    this.tweetDomains = this.addDomains();
+    // when page load first time and there is no current sample selected, then  will be wasted
+    // but this is neded to show charts when user visit this page and the came from another page
+    this.updateCharts( this.selectedSample );
   },
 
   methods: {
-
+    updateCharts(tweets) {
+      if( !tweets ) tweets = [];
+      this.tweets = tweets;
+      this.tweetsCountry = this.addCountriesData();
+      if( this.selectedState ) {
+        this.LineData = this.createLineData();
+      }
+      this.createWordsData();
+      this.BarData = this.createBarData();
+      //Se cambiano i tweets ricomincio da capo
+      this.sliceWords = 0;
+      this.slice = 0;
+      this.createHashtagsData();
+      this.HashtagBarData = this.createBarDataForHashtags();
+      this.tweetDomains = this.addDomains();
+    },
     //LINECHART FUNCTIONS
     addCountriesData:function() {
       let countriesData = {};
@@ -222,7 +222,7 @@ export default {
       let datasets = [];
       let sliceDates = this.labelDates.slice(this.slice,this.slice+7);
       this.RainbowColors.rainbow.setSpectrumByArray(this.RainbowColors.colorSpectrum);
-      this.RainbowColors.rainbow.setNumberRange(0, regions.length);
+      this.RainbowColors.rainbow.setNumberRange(0, regions.length+1);
 
       for (let i = 0; i < regions.length; i++) {
         let region = regions[i];
@@ -272,7 +272,7 @@ export default {
     },
 
     setTweetsXDay: function (region, sliceDates){
-      let tweetsXDay = new Array();
+      let tweetsXDay = [];
       //labelDates da prendere solo lo slice
       sliceDates.forEach(date => {
         if (!(this.tweetsCountry[this.selectedState][region][date])) {
@@ -285,21 +285,21 @@ export default {
     },
 
     seeMore: function (buttonNumber){
-      if(buttonNumber == 1){ //BUTTON LINE CHART
+      if(buttonNumber === 1){ //BUTTON LINE CHART
         if(this.slice+7 <= this.labelDates.length) this.slice += 7;
         else if(this.slice > 0 && this.slice< this.labelDates.length){
           let difference = this.labelDates.length - this.slice;
           this.slice += difference;
         }
       }
-      else if(buttonNumber == 2){ //BUTTON BAR CHART
+      else if(buttonNumber === 2){ //BUTTON BAR CHART
         if(this.sliceWords+10 <= this.labelWords.length) this.sliceWords += 10;
         else if(this.sliceWords > 0 && this.sliceWords< this.labelWords.length){
           let difference = this.labelWords.length - this.sliceWords;
           this.sliceWords += difference;
         }
       }
-      else if(buttonNumber == 3){ //BUTTON BAR CHART FOR HASHTAGS
+      else if(buttonNumber === 3){ //BUTTON BAR CHART FOR HASHTAGS
         if(this.sliceHashtag+10 <= this.labelHashtags.length) this.sliceHashtag += 10;
         else if(this.sliceHashtag > 0 && this.sliceHashtag< this.labelHashtags.length){
           let difference = this.labelHashtags.length - this.sliceHashtag;
@@ -340,7 +340,7 @@ export default {
       })
       let colors = new Array(sliceWords.length);
       this.RainbowColors.rainbow.setSpectrumByArray(this.RainbowColors.colorSpectrum);
-      this.RainbowColors.rainbow.setNumberRange(0, sliceWords.length);
+      this.RainbowColors.rainbow.setNumberRange(0, sliceWords.length+1);
       for (let i = 0; i < sliceWords.length; i++) {
         colors[i]="#"+this.RainbowColors.rainbow.colorAt(i);
       }
@@ -358,10 +358,8 @@ export default {
     //BARCHART PER GLI HASHTAG
     createHashtagsData:function (){
       let hashMap = getHashtags(this.tweets);
-      console.log(hashMap);
       let orderedEntries = Array.from(hashMap.entries());
       orderedEntries.sort((a, b) => (b[1].count - a[1].count));
-      console.log(orderedEntries);
       let labelHashtags = orderedEntries.map((item)=>item[0]);
       let hashtagsFrequency = orderedEntries.map((item)=>item[1].count);
 
@@ -384,7 +382,7 @@ export default {
       })
       let colors = new Array(sliceHashtags.length);
       this.RainbowColors.rainbow.setSpectrumByArray(this.RainbowColors.colorSpectrum);
-      this.RainbowColors.rainbow.setNumberRange(0, sliceHashtags.length);
+      this.RainbowColors.rainbow.setNumberRange(0, sliceHashtags.length+1);
       for (let i = 0; i < sliceHashtags.length; i++) {
         colors[i]="#"+this.RainbowColors.rainbow.colorAt(i);
       }
@@ -404,7 +402,6 @@ export default {
     addDomains: function(){
       this.tweetsDomain = {};
       let domainMap = getContextEntities(this.tweets);
-      console.log(domainMap);
       let frequencies;
       let entityNames;
       domainMap.forEach((entityMap, domainName)=>{
@@ -423,7 +420,6 @@ export default {
 
     createCakeForDomains: function (domainName){
       let frequencies = this.tweetsDomain[domainName].frequencies;
-      console.log(domainName, frequencies, names);
       let names = this.tweetsDomain[domainName].entityNames;
       let dataset = [];
 
@@ -436,7 +432,7 @@ export default {
       })
       let colors = new Array(names.length);
       this.RainbowColors.rainbow.setSpectrumByArray(this.RainbowColors.colorSpectrum);
-      this.RainbowColors.rainbow.setNumberRange(0, names.length);
+      this.RainbowColors.rainbow.setNumberRange(0, names.length+1);
       for (let i = 0; i < names.length; i++) {
         colors[i]="#"+this.RainbowColors.rainbow.colorAt(i);
       }
