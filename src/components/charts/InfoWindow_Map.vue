@@ -69,7 +69,7 @@ import {Tweet} from 'vue-tweet-embed';
 export default {
   name: "InfoWindow_Map",
   props: {
-    selectedInfoTweet: Array,
+    selectedInfoTweet: Object,
     //ImageMarked: Boolean
   },
 
