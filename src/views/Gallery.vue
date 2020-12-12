@@ -134,7 +134,6 @@ export default {
           }
 
           if (place) {
-            console.log( place );
             if (!places.has(place)) {
               places.set(place, []);
             }
