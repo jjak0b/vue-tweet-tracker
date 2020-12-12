@@ -141,17 +141,25 @@ export default {
       this.BarData = this.createBarData();
     },
 
-    sliceHashtags: function(){
-      this.HashtagBarData = this.createHashtagsData();
+    sliceHashtag: function(){
+      this.HashtagBarData = this.createBarDataForHashtags();
     },
 
     selectedState: function (newVal){
-      this.selectedState = newVal;
-      this.LineData = this.createLineData();
-      this.slice = 0; //Ricomincio dall'inizio
+      if( newVal ) {
+        this.slice = 0; //Ricomincio dall'inizio
+        this.LineData = this.createLineData();
+      }
+      else {
+        this.LineData = {};
+        this.slice = 0;
+      }
     },
     selectedDomain: function(newVal){
-      this.BarCakeData = this.createCakeForDomains(newVal);
+      if( newVal )
+        this.BarCakeData = this.createCakeForDomains(newVal);
+      else
+        this.BarCakeData = {};
     }
 
   },
@@ -166,6 +174,7 @@ export default {
     updateCharts(tweets) {
       if( !tweets ) tweets = [];
       this.tweets = tweets;
+      this.selectedState = null;
       this.tweetsCountry = this.addCountriesData();
       if( this.selectedState ) {
         this.LineData = this.createLineData();
@@ -175,8 +184,10 @@ export default {
       //Se cambiano i tweets ricomincio da capo
       this.sliceWords = 0;
       this.slice = 0;
+      this.sliceHashtag = 0;
       this.createHashtagsData();
       this.HashtagBarData = this.createBarDataForHashtags();
+      this.selectedDomain = 0;
       this.tweetDomains = this.addDomains();
     },
     //LINECHART FUNCTIONS
