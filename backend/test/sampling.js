@@ -12,7 +12,7 @@ let samples_API_URL = `${httpProtocol}://${host}:${process.env.PORT}/api/samples
 
 async function awaitTimeout( time ) {
     return new Promise( (resolve) => {
-       setTimeout( resolve, time );
+        setTimeout( resolve, time );
     });
 }
 
@@ -254,6 +254,7 @@ describe( "Test sampling API" , function () {
 
         describe( "posting some statuses to verify later", function () {
             it('should post some statuses', async function () {
+                this.timeout( 10000 );
                 statusIds = await publishSomeTweets(
                     [ tests.get( "valid").sample.words.exact[0] ]
                 )
@@ -455,36 +456,3 @@ describe( "Test sampling API" , function () {
         });
     });
 });
-/*
-describe( "Test use cases", function () {
-    describe( "Use case - sampling and gather tweet", function () {
-
-        describe( "Use case - sampling tweet geo-tagged in specific area", function () {
-            let sampleName = "Use case geo"
-            let url = `${samples_API_URL}/${sampleName}`;
-            describe( "Create sample with bounding box locations", function () {
-                describe( `Requesting ${samples_API_URL}`, function() {
-                    it( "should return a Map of active/paused samples", function ( done ) {
-                        client.request("get", samples_API_URL, {}, { json: true }, function ( err, response ) {
-                            assert.strictEqual( !!err,false, err );
-                            assert.strictEqual( response.statusCode, StatusCodes.OK );
-                            let body = response.body;
-                            assert.strictEqual( body.active && body.active.length >= 0 , true, "No active key in response body")
-                            assert.strictEqual( body.paused && body.paused.length >= 0 , true, "No paused key in response body")
-                            done();
-                        })
-                    })
-                });
-            })
-        })
-
-        describe( "Use case - sampling tweet with keywords", function () {
-
-        })
-
-        describe( "Use case - sampling tweet geo-tagged of a specific user", function () {
-
-        })
-    });
-})
-*/

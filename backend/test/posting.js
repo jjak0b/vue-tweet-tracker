@@ -249,7 +249,7 @@ describe( "Test Word Cloud posting", function () {
             }
 
             describe( "TwitterPostingHandler", function () {
-                this.timeout(5000);
+                this.timeout(10000);
                 it( "#handlePosting", function (done) {
                     assert.notStrictEqual( imageWordCloud, null, "WorCloud Media not defined");
                     let promises = twitterHandler.handlePosting(publishPostText, [ imageWordCloud ] );
@@ -266,7 +266,7 @@ describe( "Test Word Cloud posting", function () {
             });
 
             describe( "Post to all registered social media ", function () {
-                this.timeout(5000);
+                this.timeout(10000);
                 it( "should return responses with no error", async function () {
                     let socialProvider = new SocialContentProvider();
                     let responses = await socialProvider.publishWordCloud(publishPostText, wordMap )
