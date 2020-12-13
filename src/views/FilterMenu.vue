@@ -242,7 +242,7 @@
               ></v-select>
             </v-card-text>
           </v-card>
-
+<!--
           <v-card class="mb-5">
             <v-card-title>Dates</v-card-title>
             <v-card-text>
@@ -295,6 +295,7 @@
               </v-menu>
             </v-card-text>
           </v-card>
+          -->
         </v-col>
 
         <v-col>
