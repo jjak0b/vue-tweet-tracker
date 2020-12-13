@@ -531,8 +531,8 @@ export default {
       let value = {
         north: event.Wa.j,
         south: event.Wa.i,
-        east: event.Sa.j,
-        west: event.Sa.i
+        east: event.Ra.j,
+        west: event.Ra.i
       }
       let arr = [
         [value.west, value.north],
