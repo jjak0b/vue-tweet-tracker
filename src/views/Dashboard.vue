@@ -288,8 +288,8 @@ export default {
       let nord, sud, est, ovest;
       let point = {lat: null, long: null};
       let bbox = {nord: null, sud: null, est: null, ovest: null};
-      for (const coord of this.localFilter.coordinates) {
-        this.filteredSample = this.filteredSample.filter((tweet) => {
+      this.filteredSample = this.filteredSample.filter((tweet) => {
+        for (const coord of this.localFilter.coordinates) {
           ovest = coord[0][0] + 180;
           nord = coord[0][1] + 90;
           est = coord[1][0] + 180;
@@ -309,9 +309,9 @@ export default {
               return true
             }
           }
-          return false
-        })
-      }
+        }
+        return false
+      })
       if (this.localFilter.dates.from) {
         this.filteredSample = this.filteredSample.filter((tweet) => {
           return (Date.parse(this.localFilter.dates.from) < Date.parse(tweet.data.created_at));
