@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const {StatusCodes} = require( "http-status-codes" );
 const SamplingFacade = require("../js/SamplingFacade");
 const Timer = require("../js/events/Timer");
 const samplingFacade = SamplingFacade.getInstance();
@@ -63,7 +64,13 @@ function API_addSample(req, res) {
                 if( statusCode >= 200 && statusCode < 300 ) {
                     if (filter.posting && filter.posting.active) {
                         let timer = new Timer(sampleTag, filter.posting);
-                        periodicSocialPostingTimersHandler.add(timer);
+                        if( timer.getEndTime() > Date.now() && timer.getPeriod() > 0 ) {
+                            periodicSocialPostingTimersHandler.add(timer);
+                        }
+                        else {
+                            res.sendStatus( StatusCodes.NOT_ACCEPTABLE );
+                            return;
+                        }
                     }
                 }
 
