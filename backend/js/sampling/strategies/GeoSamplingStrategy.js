@@ -1,8 +1,8 @@
 const StatusCodes =require( "http-status-codes" ).StatusCodes;
 const GeocodedFilter = require("../building/parts/filters/GeocodedFilter");
-const FSResourceStorage = require("../../FSResourceStorage");
-const JSONBufferedItemsCollection = require("../../JSONBufferedItemsCollection");
-const path = require("path");
+// const FSResourceStorage = require("../../FSResourceStorage");
+// const JSONBufferedItemsCollection = require("../../JSONBufferedItemsCollection");
+// const path = require("path");
 const AbstractSamplingStrategy = require("./AbstractSamplingStrategy");
 const SamplingController = require("../controllers/SamplingController");
 const GeoSampleBuilder = require("../building/builders/GeoSampleBuilder");
@@ -52,7 +52,7 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
             console.log(`[${this.constructor.name}]`, "starting active sample", activeTag );
             let sample = this.getController().getActive( activeTag );
             let result = await this.resume( sample );
-            if( result != StatusCodes.OK ) {
+            if( result !== StatusCodes.OK ) {
                 console.log(`[${this.constructor.name}]`, "Unable to start -> pausing", activeTag );
                 this.getController().setPaused( activeTag, sample );
             }
@@ -65,7 +65,7 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
         let handlers = {
             // will be popolated below, justy here to reference "reconnect" function
         };
-        let self = this;
+
 
         let attempts = 0;
         async function wait( time ) {
@@ -74,7 +74,7 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
             });
         }
 
-        async function waitTimeout( predictWaitTime) {
+        async function waitTimeout() {
             let waitTime = 2 ** attempts;
             await wait( waitTime );
             attempts++;
@@ -88,9 +88,7 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
         };
         handlers.timeout = waitTimeout;
 
-        handlers.response = (item) => {
-
-        };
+        // handlers.response = (item) => {};
         console.log(`[${this.constructor.name}]`, "End of stream ...", response);
         this.stream                 .on("ping", () =>
             console.log(`[${this.constructor.name}]`, "ping detected")
@@ -99,7 +97,8 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
         do {
             retry = false;
             try {
-                let response = await this.streamConnect( handlers );
+                // let response;
+                await this.streamConnect( handlers );
                 this.stream
                 .on("data", async (item) => {
                     console.error(`[${this.constructor.name}]`, "received data", item);
@@ -116,7 +115,7 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
                         // Twitter API error
                         if (reason.errors[0].code === 88) {
                             // rate limit exceeded
-                            let predictWaitTime = new Date(reason._headers.get("x-rate-limit-reset") * 1000);
+                            predictWaitTime = new Date(reason._headers.get("x-rate-limit-reset") * 1000);
                             console.warn(`[${this.constructor.name}]`, "rate limit exceeded" );
                             console.warn(`[${this.constructor.name}]`, 'Rate limit will reset on', predictWaitTime, "ms"  );
                             await this.stop();
@@ -138,8 +137,7 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
                         // non-API error, e.g. network problem or invalid JSON in response
                     }
                 })
-                .on("timeout", async (response) => {
-                })
+                // .on("timeout", async (response) => {})
             }
             catch (reason) {
                 console.error(`[${this.constructor.name}]`, 'connection stopped, A connection error occurred',reason);
@@ -161,7 +159,10 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
             try {
                 this.stream = client.stream("statuses/filter", this.parameters);
                 this.stream
-                    .on("start", response => resolve(response) )
+                    .on("start", response => {
+                        handlers.start();
+                        resolve(response)
+                    })
                     .on("end", response => reject(response) );
             }
             catch (e) {
@@ -181,7 +182,7 @@ class GeoSamplingStrategy extends AbstractSamplingStrategy {
 
     async add( /*String*/tag, filter ) {
         if( filter ) {
-            if( filter.coordinates && filter.coordinates.length > 0 && filter.coordinates.length % 4 == 0 ) {
+            if( filter.coordinates && filter.coordinates.length > 0 && filter.coordinates.length % 4 === 0 ) {
                 await super.add( tag, filter );
                 return StatusCodes.OK;
             }

@@ -2,6 +2,8 @@ const StatusCodes = require("http-status-codes").StatusCodes;
 
 const ISampler = require("../ISampler");
 
+const Timer = require('../../events/Timer');
+
 class SamplesHandler extends ISampler {
     /**
      *
@@ -103,6 +105,7 @@ class SamplesHandler extends ISampler {
     }
 
     async addSample( tag, filter ) {
+
         this.sampler.setStrategy( this.strategy );
         // Force unique tag samples for all handler
         let isHandledByAny = false;

@@ -1,5 +1,5 @@
 const SampleDirector = require("../building/directors/SampleDirector");
-const SampledEvent = require("../events/SampledEvent");
+const SampledEvent = require("../../events/SampledEvent");
 
 class AbstractSamplingStrategy {
     /**

@@ -25,7 +25,6 @@ class SamplingController extends AbstractStorableResource {
      */
     async fetch() {
         try {
-            console.log(`[${this.constructor.name}] fetching`, this.samplesStates.getLocation() );
             return await this.samplesStates.fetch();
         }
         catch ( e ) {
@@ -45,7 +44,6 @@ class SamplingController extends AbstractStorableResource {
         this.samplesStates.paused = this.getPausedTags();
 
         try {
-            console.log(`[${this.constructor.name}]`, "Storing", this.samplesStates.getLocation() );
             await this.samplesStates.store();
         }
         catch ( e ) {

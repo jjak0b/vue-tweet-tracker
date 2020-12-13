@@ -1,17 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const {StatusCodes} = require( "http-status-codes" );
 const SamplingFacade = require("../js/SamplingFacade");
-const EventsManager = require("../js/sampling/services/EventsManager");
-const UserConditionEventListener = require("../js/sampling/eventListeners/UserConditionEventListener");
-const SampledEventListener = require("../js/sampling/eventListeners/SampledEventListener");
+const Timer = require("../js/events/Timer");
 const samplingFacade = SamplingFacade.getInstance();
-const eventManager = EventsManager.getInstance();
-const userConditionEventListener = new UserConditionEventListener();
-const sampledEventListener = new SampledEventListener();
-
-eventManager.addListener( EventsManager.ENUM.EVENTS.SAMPLED, sampledEventListener.getHandler() );
-eventManager.addListener( EventsManager.ENUM.EVENTS.USER_CONDITION, userConditionEventListener.getHandler() );
-
+const periodicSocialPostingTimersHandler = require("../js/posting/handlers/PeriodicSocialPostingTimersHandler").getInstance();
 router.get( "/", API_getSamples );
 /**
  * Get samples list in some states
@@ -65,8 +58,22 @@ function API_addSample(req, res) {
     let sampleTag = req.params.tag;
     let filter = req.body;
 
+    console.log( JSON.stringify( filter, null, 4 ) );
         samplingFacade.addSample( sampleTag, filter )
             .then( (statusCode) => {
+                if( statusCode >= 200 && statusCode < 300 ) {
+                    if (filter.posting && filter.posting.active) {
+                        let timer = new Timer(sampleTag, filter.posting);
+                        if( timer.getEndTime() > Date.now() && timer.getPeriod() > 0 ) {
+                            periodicSocialPostingTimersHandler.add(timer);
+                        }
+                        else {
+                            res.sendStatus( StatusCodes.NOT_ACCEPTABLE );
+                            return;
+                        }
+                    }
+                }
+
                 res.sendStatus( statusCode );
             })
             .catch( (errCode) => {
@@ -92,6 +99,7 @@ function API_deleteSample( req, res ) {
 
         samplingFacade.deleteSample( sampleTag )
         .then( (statusCode) => {
+            periodicSocialPostingTimersHandler.deleteTimer( sampleTag );
             res.sendStatus( statusCode );
         })
         .catch( (errCode) => {
@@ -148,33 +156,5 @@ function API_pauseSample( req, res ) {
             res.sendStatus( errCode );
         })
 }
-
-
-function exitHandler (exitCode) {
-    samplingFacade.storeSamples()
-        .finally(() => {
-            if (exitCode || exitCode === 0)
-                console.log(exitCode);
-            process.exit();
-        });
-}
-
-// flush data when app is closing
-[
-    "uncaughtException", //catches uncaught exceptions
-    // "exit",// when process.exit has been called
-    'SIGUSR1', // catches "kill pid" (for example: nodemon restart)
-    'SIGUSR2',
-    // 'SIGHUP',
-    'SIGINT',//catches ctrl+c event
-    // 'SIGQUIT',
-    // 'SIGILL',
-    // 'SIGTRAP',
-    // 'SIGABRT',
-    // 'SIGBUS',
-    // 'SIGFPE',
-    // 'SIGSEGV',
-    // 'SIGTERM'
-].forEach( (sig) => process.on(sig, exitHandler ) );
 
 module.exports = router;

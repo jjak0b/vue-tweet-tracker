@@ -6,6 +6,12 @@
       :loading="loadingPercentage < 100"
   >
     <vue-word-cloud
+        :animation-duration="1000"
+        :animation-easing="'linear'"
+        :enter-animation="'fade'"
+        :leave-animation="'fade'"
+        :rotation-unit="'deg'"
+        :rotation="0"
         :words="wordsWeights"
         :color="colorCallback"
         font-family="Roboto"
@@ -35,18 +41,18 @@
             >
               <v-row>
                 <v-col
-                >Frequenza</v-col>
+                >Frequency</v-col>
                 <v-col
                 >
-                  <output>{{ weight }}</output>
+                  <output>{{ wordMap.has( text ) ? (100 * wordMap.get( text ).percentage).toFixed( 2 ) : "?" }} %</output>
                 </v-col>
               </v-row>
               <v-row>
                 <v-col
-                >Percentuale totale</v-col>
+                >Count</v-col>
                 <v-col
                 >
-                  <output>{{ countWordMax > 0 ? `${ ( weight / countWordMax ).toFixed(2) } %` : "" }}</output>
+                  <output>{{ wordMap.has( text ) ? wordMap.get( text ).count : "?" }} </output>
                 </v-col>
               </v-row>
             </v-card-text>
@@ -60,7 +66,8 @@
 <script>
 
 import VueWordCloud from 'vuewordcloud';
-import Rainbow from "../../../node_modules/rainbowvis.js/rainbowvis";
+import Rainbow from "rainbowvis.js";
+import {getWordMapFromStringArray} from "@/js/shared"
 
 /***
  * ## props
@@ -73,7 +80,7 @@ import Rainbow from "../../../node_modules/rainbowvis.js/rainbowvis";
 export default {
   name: "WordCloud",
   components: {
-    [VueWordCloud.name]: VueWordCloud,
+    "vueWordCloud": VueWordCloud,
   },
   props: {
     //value: String,
@@ -82,8 +89,11 @@ export default {
   },
   data() {
     return {
+      /**
+       * @type {Map<String,*>}
+       */
+      wordMap: null,
       countWordMax: 0,
-      weights: {},
       wordsWeights : [],
       loadingProgress: null,
       color: {
@@ -94,11 +104,11 @@ export default {
     }
   },
   computed: {
-      loadingPercentage() {
-        return this.loadingProgress && this.loadingProgress.totalWords !== 0
-            ? Math.round(this.loadingProgress.completedWords / this.loadingProgress.totalWords * 100)
-            : 100;
-      }
+    loadingPercentage() {
+      return this.loadingProgress && this.loadingProgress.totalWords !== 0
+          ? Math.round(this.loadingProgress.completedWords / this.loadingProgress.totalWords * 100)
+          : 100;
+    }
   },
   watch: {
     /*value: function ( wordToFilter ) {
@@ -114,56 +124,63 @@ export default {
   created() {
     this.color.rainbow.setSpectrum( this.color.start , this.color.end );
   },
-  /*mounted() {
+  mounted() {
     this.updateWordCloud( this.value );
-  },*/
+  },
   methods: {
     updateWordCloud( wordToFilter ) {
       this.countWordMax = 0;
       this.computeWordsBySamples( wordToFilter );
       this.updateWordsWeight();
-      this.color.rainbow.setNumberRange(1, this.countWordMax );
+      this.color.rainbow.setNumberRange(0, this.countWordMax || 1 );
+      this.$forceUpdate();
     },
     computeWordsBySamples( wordToFilter ) {
-      for (let i = 0; i < this.samples.length; i++) {
-        if( this.samples[ i ] && this.samples[ i ].data.text ) {
-          let text = this.samples[ i ].data.text;
-          if( !wordToFilter || text.includes( wordToFilter ) ) {
-            this.computeWords( text );
-          }
-        }
-      }
-    },
-    computeWords( string ) {
-      if( !string || string.length < 1 ) return;
-      // remove punctuation
-      let tempWords = string.replace(/[.,/?!$%^&*;:{}=\-_"'`~()]/gm, " ").split( " " );
-
-      // count the words and add them to the list of those used
-      tempWords.forEach( ( word ) => {
-        // Pick only meaningful words
-        /* Note:  it is necessary because a combination like "," ("," + "") is converted to ""
-                  and then in [""] using split()
-         */
-
-        let wordCount = 0;
-        if( word.length > 0 ) {
-          if( !(word in this.weights) ) {
-            wordCount = this.weights[ word ] = 1;
-          }
-          else {
-            wordCount = 1 + (this.weights[ word ] ++)
-          }
-          this.countWordMax = Math.max( this.countWordMax, wordCount );
-        }
-      });
+      let texts = this.samples.map( (sample) => sample.data ? sample.data.text : "" );
+      texts = texts.filter( (text) => text.length > 0 && ( !wordToFilter || text.includes( wordToFilter ) ) );
+      console.log( `[WordCloud]`, `computing words of ${this.samples.length} samples`);
+      this.wordMap = getWordMapFromStringArray( texts );
+      console.log( `[WordCloud]`, `computing complete, ${ this.wordMap.size} keywords found`);
     },
     updateWordsWeight() {
-      let words = Object.keys( this.weights );
-      this.wordsWeights = new Array( words.length );
+      const max = 128;
+      this.wordsWeights = [];
+      let wordsWeights = new Array( this.wordMap.size );
+      console.log( `[WordCloud]`, `creating entries`);
+      let totalWordsCount = 0;
+      let start = performance.now();
+      this.wordMap.forEach( (item) => {
+        totalWordsCount += item.count;
+      });
+      let i = 0;
+      const wordSizeBase = 12;
+      this.wordMap.forEach( (item, word) => {
+        item.percentage = item.count / totalWordsCount;
+        wordsWeights[ i ] = [ word, ( wordSizeBase * Math.sqrt( item.count ) ) ];
+        i++;
+      });
+      let end = performance.now();
+      console.log( `[WordCloud]`, `created entries in ${end-start} ms` );
 
-      words
-          .forEach( (word, i ) => this.wordsWeights[ i ] = [ word, this.weights[ word ] ] );
+      console.log( `[WordCloud]`, `sorting entries`);
+      start = performance.now();
+      wordsWeights.sort( (l, r ) =>  r[1] - l[1] );
+      end = performance.now();
+      console.log( `[WordCloud]`, `sorted in ${end-start} ms`);
+
+      if( wordsWeights.length > 0 )
+        this.countWordMax = this.wordMap.get( wordsWeights[ 0 ][ 0 ] ).count;
+      else
+        this.countWordMax = 0;
+
+      if( wordsWeights.length >= max ) {
+        console.log( `[WordCloud]`, `slicing max ${max} words`);
+        wordsWeights.splice(max, i);
+      }
+      console.log( `[WordCloud]`, `words weight computing complete`);
+      // console.log( wordsWeights );
+      this.wordsWeights = wordsWeights;
+
     },
     onWordClick( event, wordAndWeight ) {
       let word = wordAndWeight[ 0 ];
@@ -171,9 +188,10 @@ export default {
       this.$emit( "input", word );
     },
     colorCallback( args ) {
-      // let word = args[ 0 ];
-      let weight = args[ 1 ];
-      return "#" + this.color.rainbow.colourAt( weight );
+      let word = args[ 0 ];
+      // let weight = args[ 1 ];
+      let wordItem = this.wordMap.get( word );
+      return "#" + this.color.rainbow.colourAt( wordItem.count );
     }
   },
 }
