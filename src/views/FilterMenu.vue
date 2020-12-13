@@ -395,7 +395,7 @@
 <script>
 import axios from "axios";
 import language from "@/assets/language.json"
-import StatusCodes from 'http-status-codes'
+import { StatusCodes } from 'http-status-codes'
 import positionInput from "@/components/charts/positionInput";
 import Filter from "@/js/Filter";
 
@@ -509,7 +509,13 @@ export default {
               this.snackbarText = "Add more filters."
               this.snackbar = true;
             } else if (error.response.status === StatusCodes.TOO_MANY_REQUESTS) {
-              this.snackbarText = "Maximum number of active samples reached. Deactivate a sample before submitting a new one."
+              this.snackbarText = "Maximum number of active samples reached. Pause a sample before submitting a new one."
+              this.snackbar = true;
+            } else if (error.response.status === StatusCodes.NOT_ACCEPTABLE ) {
+              this.snackbarText = "Some filters contains invalid values: change them or add other filter fields and try again"
+              this.snackbar = true;
+            } else if (error.response.status === StatusCodes.BAD_GATEWAY ) {
+              this.snackbarText = "Service temporarily unavailable. Try again later"
               this.snackbar = true;
             }
           });
