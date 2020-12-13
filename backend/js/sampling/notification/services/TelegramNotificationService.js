@@ -180,11 +180,11 @@ class TelegramNotificationService extends NotificationService {
             await this.registerUser( ctx.chat.id, ctx.chat.first_name );
             let user = this.getContactByID( ctx.chat.id );
 
-            if( this.getSubscribedTagsForContact( ctx.chat.id ).includes( tag ) ) {
+            if( this.getSubscribedTagsForContact( ctx.chat.id ).indexOf( tag ) >= 0 ) {
                 console.log(`[${this.constructor.name}]`, `event tag "${tag}" already registered for user`, ctx.chat.id );
                 ctx.editMessageText( `You are already subscribed at event "${tag}"` );
             }
-            else if( this.getUnsubscribedTagsForContact( ctx.chat.id ).includes( tag ) ) {
+            else if( this.getUnsubscribedTagsForContact( ctx.chat.id ).indexOf( tag ) >= 0 ) {
                 console.log(`[${this.constructor.name}]`, `registering event tag "${tag}" to user`, ctx.chat.id );
                 user.events.push( tag );
                 ctx.editMessageText( `You subscribed at event "${tag}"` )
@@ -195,14 +195,16 @@ class TelegramNotificationService extends NotificationService {
             }
         });
 
-        this.bot.action(/^unsubscribe ([\s\S]+)/, async (ctx) => {
+        this.bot.action(/^unsubscribe ([\s\S]+)/g, async (ctx) => {
             let tag = ctx.match[1];
             await this.registerUser( ctx.chat.id, ctx.chat.first_name );
             let user = this.getContactByID( ctx.chat.id );
 
-            if( this.getSubscribedTagsForContact( ctx.chat.id ).includes( tag ) ) {
+            let events = this.getSubscribedTagsForContact( ctx.chat.id );
+            let eventIndex = events.indexOf( tag );
+            if( eventIndex >= 0 ) {
                 console.log(`[${this.constructor.name}]`, `removing event tag "${tag}" for user`, ctx.chat.id );
-                user.events.splice( user.events.indexOf( tag ) );
+                user.events.splice( eventIndex, 1 );
                 ctx.editMessageText( `You are now unsubscribed from event "${tag}"` );
             }
             else {
