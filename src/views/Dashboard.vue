@@ -285,33 +285,35 @@ export default {
           return (tweet.data.lang === this.localFilter.words.language);
         })
       }
-      let nord, sud, est, ovest;
-      let point = {lat: null, long: null};
-      let bbox = {nord: null, sud: null, est: null, ovest: null};
-      this.filteredSample = this.filteredSample.filter((tweet) => {
-        for (const coord of this.localFilter.coordinates) {
-          ovest = coord[0][0] + 180;
-          nord = coord[0][1] + 90;
-          est = coord[1][0] + 180;
-          sud = coord[1][1] + 90;
-          if (tweet.data.geo && tweet.data.geo.coordinates) {
-            point.lat = tweet.data.geo.coordinates.coordinates[1] + 90;
-            point.long = tweet.data.geo.coordinates.coordinates[0] + 180;
-            if (ovest <= point.long && point.long <= est && sud <= point.lat && point.lat <= nord) {
-              return true
-            }
-          } else if (tweet.places && tweet.places.geo) {
-            bbox.ovest = tweet.places.geo.bbox[0] + 180;
-            bbox.sud = tweet.places.geo.bbox[1] + 90;
-            bbox.est = tweet.places.geo.bbox[2] + 180;
-            bbox.nord = tweet.places.geo.bbox[3] + 90;
-            if (ovest < bbox.est && bbox.ovest < est && sud < bbox.nord && bbox.sud < nord) {
-              return true
+      if (this.localFilter.coordinates.length > 0) {
+        let nord, sud, est, ovest;
+        let point = {lat: null, long: null};
+        let bbox = {nord: null, sud: null, est: null, ovest: null};
+        this.filteredSample = this.filteredSample.filter((tweet) => {
+          for (const coord of this.localFilter.coordinates) {
+            ovest = coord[0][0] + 180;
+            nord = coord[0][1] + 90;
+            est = coord[1][0] + 180;
+            sud = coord[1][1] + 90;
+            if (tweet.data.geo && tweet.data.geo.coordinates) {
+              point.lat = tweet.data.geo.coordinates.coordinates[1] + 90;
+              point.long = tweet.data.geo.coordinates.coordinates[0] + 180;
+              if (ovest <= point.long && point.long <= est && sud <= point.lat && point.lat <= nord) {
+                return true
+              }
+            } else if (tweet.places && tweet.places.geo) {
+              bbox.ovest = tweet.places.geo.bbox[0] + 180;
+              bbox.sud = tweet.places.geo.bbox[1] + 90;
+              bbox.est = tweet.places.geo.bbox[2] + 180;
+              bbox.nord = tweet.places.geo.bbox[3] + 90;
+              if (ovest < bbox.est && bbox.ovest < est && sud < bbox.nord && bbox.sud < nord) {
+                return true
+              }
             }
           }
-        }
-        return false
-      })
+          return false
+        })
+      }
       if (this.localFilter.dates.from) {
         this.filteredSample = this.filteredSample.filter((tweet) => {
           return (Date.parse(this.localFilter.dates.from) < Date.parse(tweet.data.created_at));
