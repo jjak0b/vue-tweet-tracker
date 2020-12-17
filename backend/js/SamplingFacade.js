@@ -36,7 +36,6 @@ class SamplingFacade extends ISampler {
          */
         this.startHandler = this.contextHandler;
 
-        this.startHandler.fetchSamples();
     }
 
 
