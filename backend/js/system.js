@@ -21,8 +21,13 @@ function init() {
     eventManager.addListener( EventsManager.ENUM.EVENTS.USER_CONDITION, userConditionEventListener.getHandler() );
     eventManager.addListener( EventsManager.ENUM.EVENTS.POST_SAMPLE_SUMMARY, postSocialContentListener.getHandler() );
 
-    periodicSocialPostingTimersHandler.fetch()
-        .catch( (e) => console.warn( e ) );
+
+    samplingFacade.fetchSamples()
+        .catch( error => console.error(error) )
+        .finally( () => {
+            periodicSocialPostingTimersHandler.fetch()
+                .catch( (e) => console.warn( e ) );
+        })
 
     function exitHandler (exitCode) {
         console.log("Exit Handler:", exitCode );

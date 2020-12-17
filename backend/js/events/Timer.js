@@ -43,14 +43,16 @@ class Timer {
      * @param endCallback {Function}
      */
     run( startCallback, endCallback ) {
+
         let now = Date.now();
         if( now >= this.getEndTime() ) {
+            console.log( `[${this.constructor.name}] Time difference`, this.endTime.toString(), new Date( now ).toString(), this.getEndTime() - now );
             return
         }
 
         let waitStartTime = this.getStartTime() - now;
         waitStartTime = waitStartTime > 0 ? waitStartTime : 0;
-
+        console.log( `[${this.constructor.name}] Waiting`, waitStartTime, "for", this.getName() );
         this.timeoutHandler = setTimeout(
             () => {
                 now = Date.now();
