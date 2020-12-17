@@ -68,7 +68,7 @@ class TimersHandler extends ItemsCollection {
              */
             let timer = array[ index ];
             timer.startTime = new Date( timer.startTime );
-            timer.endTime = new Date( timer.startTime );
+            timer.endTime = new Date( timer.endTime );
             this.startTimer( timer );
         });
         return items;
