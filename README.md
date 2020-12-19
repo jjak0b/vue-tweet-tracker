@@ -1,4 +1,13 @@
 # Tweet Tracker
+[![Twitter API v1.1](https://img.shields.io/endpoint?url=https%3A%2F%2Ftwbadges.glitch.me%2Fbadges%2Fstandard)](https://developer.twitter.com/en/docs/twitter-api/v1)
+[![Twitter API v2](https://img.shields.io/endpoint?url=https%3A%2F%2Ftwbadges.glitch.me%2Fbadges%2Fv2)](https://developer.twitter.com/en/docs/twitter-api/early-access)
+
+The app includes a back-end express app with REST APIs and a front-end client app.
+The backend app allows you to create samples and sampling realtime tweets that match with some options of a filter form, pause and resume samples using REST APIs.  
+The frontend app allows you to graphically check Analytics on the sampled tweets through charts and visualize geo-tagged tweets in a map. It allows you to pause and resume the samples you need in any time using the backend REST API.  
+The App uses also a Telegram Bot to allows any user to subscribe at any sample and receive an event notification when the sampled items count reach an arbitrary number set by the author of the sample. Chatting with the bot allow you to check sample status and current count of sampled tweets and allows you to unsubsribe from events of a sample. All of this using the Telegram App installed in your device.  
+The backend app allows you to post periodically a word-cloud of most used words in sampled tweets of a sample using a twitter service account. 
+The event notification condition and the setup of periodic posting is set by the frontend app through the backend REST API when a new sample has been added.  
 
 # App Setup and API
 
@@ -11,7 +20,7 @@ Where the value 3000 is assigned to the key "PORT" to use a custom port for the 
 
 ### Twitter API
 Note: This tweet tracker use [twitter api v2](https://developer.twitter.com/en/docs/twitter-api/early-access).
-this information is request ang [get your own twitter api keys and secrets](https://developer.twitter.com/content/developer-twitter/en/portal/projects-and-apps).
+this information is required to [get your own twitter api keys and secrets](https://developer.twitter.com/content/developer-twitter/en/portal/projects-and-apps).
 In App settings set as App permissions: `Read and Write - Read and Post Tweets and profile information`
 Note: Write permission is required to post periodically a word-cloud of a specific sample and for testing scripts.
 After that add the following text to your `.env` file:
